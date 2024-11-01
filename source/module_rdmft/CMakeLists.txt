@@ -6,6 +6,7 @@ if(ENABLE_LCAO)
         rdmft_tools.cpp
         cal_V_rdmft.cpp
         update_state_rdmft.cpp
+        optimizer/iter_diag_NOs.cpp
     )
 endif()
 
