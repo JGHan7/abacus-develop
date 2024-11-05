@@ -80,6 +80,11 @@ std::string determine_type()
         {
             esolver_type = "lr_lcao";
         }
+        // added by jghan, 2024-11-05
+        else if (PARAM.inp.esolver_type == "rdmft")
+        {
+            esolver_type = "rdmft_lcao";
+        }
 #else
 		ModuleBase::WARNING_QUIT("ESolver", "Calculation involving numerical orbitals must be compiled with __LCAO");
 #endif
@@ -240,6 +245,22 @@ ESolver* init_esolver(const Input_para& inp, UnitCell& ucell)
         ModuleESolver::clean_esolver(p_esolver, false); // do not call Cblacs_exit, remain it for the 2nd ESolver
         return p_esolver_lr;
     }
+    // added by jghan, 2024-11-05
+    else if (esolver_type == "rdmft_lcao")
+	{
+		if (PARAM.globalv.gamma_only_local)
+		{
+			return new ESolver_RDMFT<double, double>();
+		}
+		else if (PARAM.inp.nspin < 4)
+		{
+			return new ESolver_RDMFT<std::complex<double>, double>();
+		}
+		else
+		{
+			return new ESolver_RDMFT<std::complex<double>, std::complex<double>>();
+		}
+	}
 #endif
 	else if(esolver_type == "ofdft")
 	{
