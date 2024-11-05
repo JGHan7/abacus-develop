@@ -49,18 +49,18 @@
 #include "module_ri/test_code/test_function.h"
 
 // used by class Veff_rdmft
-#include "module_base/timer.h"
-#include "module_elecstate/potentials/potential_new.h"
+// #include "module_base/timer.h"
+// #include "module_elecstate/potentials/potential_new.h"
 // #include "module_hamilt_lcao/hamilt_lcaodft/local_orbital_charge.h"
 //#include "module_hamilt_lcao/module_gint/gint_gamma.h"
 //#include "module_hamilt_lcao/module_gint/gint_k.h"
 //#include "operator_lcao.h"
 //#include "module_cell/module_neighbor/sltk_grid_driver.h"
 //#include "module_cell/unitcell.h"
-#include "module_elecstate/potentials/H_Hartree_pw.h"
-#include "module_elecstate/potentials/pot_local.h"
-#include "module_elecstate/potentials/pot_xc.h"
-#include "module_hamilt_pw/hamilt_pwdft/structure_factor.h"
+// #include "module_elecstate/potentials/H_Hartree_pw.h"
+// #include "module_elecstate/potentials/pot_local.h"
+// #include "module_elecstate/potentials/pot_xc.h"
+// #include "module_hamilt_pw/hamilt_pwdft/structure_factor.h"
 
 
 #include <iostream>
@@ -69,6 +69,7 @@
 #include <vector>
 #include <iomanip>
 
+#include "module_esolver/esolver_ks_lcao.h"
 
 
 namespace rdmft
@@ -76,7 +77,7 @@ namespace rdmft
 
 
 template <typename TK, typename TR>
-class RDMFT
+class RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 {
   public:
     RDMFT();
@@ -86,24 +87,21 @@ class RDMFT
     /****** these parameters are passed in from outside, don't need delete ******/
     Parallel_Orbitals* ParaV = nullptr;
     Parallel_2D para_Eij;
-    // Parallel_Orbitals para_Eij;
     
     // GK and GG are used for multi-k grid integration and gamma only algorithms respectively
-    Gint_k* GK = nullptr;
-    Gint_Gamma* GG = nullptr;
+    // Gint_k* GK = nullptr;
+    // Gint_Gamma* GG = nullptr;
     Charge* charge = nullptr;
-    elecstate::ElecState* pelec = nullptr;  // just to gain Ewald and this->pelec->pot
+    // elecstate::ElecState* pelec = nullptr;  // just to gain Ewald and this->pelec->pot
 
     // update after ion step
     UnitCell* ucell = nullptr;
-    K_Vectors* kv = nullptr;
-    // LCAO_Matrix* LM = nullptr;
+    // K_Vectors* kv = nullptr;
     ModulePW::PW_Basis* rho_basis = nullptr;
     ModuleBase::matrix* vloc = nullptr;
     ModuleBase::ComplexMatrix* sf = nullptr;
     LCAO_Orbitals* orb = nullptr;
     TwoCenterBundle* two_center_bundle = nullptr;
-    // Local_Orbital_Charge* loc = nullptr;  // would be delete in the future
     /****** these parameters are passed in from outside, don't need delete ******/
 
     int nk_total = 0;
@@ -185,12 +183,23 @@ class RDMFT
     bool only_exx_type = false;
     const int cal_E_type = 1;   // cal_type = 2 just support XC-functional without exx
 
-    void init(Gint_Gamma& GG_in, Gint_k& GK_in, Parallel_Orbitals& ParaV_in, UnitCell& ucell_in,
-                        K_Vectors& kv_in, elecstate::ElecState& pelec_in, LCAO_Orbitals& orb_in, TwoCenterBundle& two_center_bundle_in, std::string XC_func_rdmft_in, double alpha_power_in);
+    // void init(Gint_Gamma& GG_in, 
+    //             Gint_k& GK_in, 
+    //             Parallel_Orbitals& ParaV_in, 
+    //             UnitCell& ucell_in,
+    //             K_Vectors& kv_in, 
+    //             elecstate::ElecState& pelec_in, 
+    //             LCAO_Orbitals& orb_in, 
+    //             TwoCenterBundle& two_center_bundle_in, 
+    //             std::string XC_func_rdmft_in, 
+    //             double alpha_power_in);
+
+    void init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in);
 
     // update in ion-step and get V_TV
-    void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
-                        ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in);
+    // void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
+    //                     ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in);
+    void update_ion(UnitCell& ucell_in);
 
     // update in elec-step
     // Or we can use rdmft_solver.wfc/occ_number directly when optimizing, so that the update_elec() function does not require parameters.

@@ -15,14 +15,21 @@ namespace rdmft
 
 
 
+// template <typename TK, typename TR>
+// void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
+//                                 ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in)
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
-                                ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in)
+void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in)
 {
+    // ucell = &ucell_in;
+    // rho_basis = &rho_basis_in;
+    // vloc = &vloc_in;
+    // sf = &sf_in;
+
     ucell = &ucell_in;
-    rho_basis = &rho_basis_in;
-    vloc = &vloc_in;
-    sf = &sf_in;
+    rho_basis = this->pw_rho;
+    vloc = &GlobalC::ppcell.vloc;
+    sf = &(this->sf.strucFac);
 
     HR_TV->set_zero();
     this->cal_V_TV();

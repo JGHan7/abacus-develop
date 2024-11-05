@@ -81,7 +81,7 @@ class ESolver_KS_LCAO : public ESolver_KS<TK> {
 
     TwoCenterBundle two_center_bundle_;
 
-    rdmft::RDMFT<TK, TR> rdmft_solver;  // added by jghan for rdmft calculation, 2024-03-16
+    // rdmft::RDMFT<TK, TR> rdmft_solver;  // added by jghan for rdmft calculation, 2024-03-16
 
     // temporary introduced during removing GlobalC::ORB
     LCAO_Orbitals orb_;

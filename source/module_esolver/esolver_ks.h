@@ -93,9 +93,6 @@ class ESolver_KS : public ESolver_FP
 
 		wavefunc wf;
 
-        // // TR need be std::complex<double> when NSPIN = 4
-        // rdmft::RDMFT<T, double> rdmft_solver;  // add by jghan for rdmft calculation
-
         // wavefunction coefficients
         psi::Psi<T>* psi = nullptr;
 

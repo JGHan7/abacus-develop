@@ -263,12 +263,12 @@ void ESolver_KS_LCAO<TK, TR>::before_all_runners(const Input_para& inp, UnitCell
     }
 
 
-    // 15) initialize rdmft, added by jghan
-    if( PARAM.inp.rdmft == true )
-    {
-        rdmft_solver.init( this->GG, this->GK, this->pv, ucell, this->kv, *(this->pelec),
-                                this->orb_, two_center_bundle_, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
-    }
+    // // 15) initialize rdmft, added by jghan
+    // if( PARAM.inp.rdmft == true )
+    // {
+    //     rdmft_solver.init( this->GG, this->GK, this->pv, ucell, this->kv, *(this->pelec),
+    //                             this->orb_, two_center_bundle_, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
+    // }
 
     // 16) if kpar is not divisible by nks, print a warning
     if (GlobalV::KPAR_LCAO > 1)
@@ -1101,21 +1101,21 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(int& iter)
         GlobalC::dftu.initialed_locale = true;
     }
 
-    // 7) rdmft, added by jghan, 2024-10-25
-    if ( PARAM.inp.rdmft == true  && get_init_value_rdmft )
-    {
-            ModuleBase::matrix occ_number_ks(this->pelec->wg);
-            for(int ik=0; ik < occ_number_ks.nr; ++ik) { for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= this->kv.wk[ik]; }
-            this->rdmft_solver.update_elec(occ_number_ks, *(this->psi));
+    // // 7) rdmft, added by jghan, 2024-10-25
+    // if ( PARAM.inp.rdmft == true  && get_init_value_rdmft )
+    // {
+    //         ModuleBase::matrix occ_number_ks(this->pelec->wg);
+    //         for(int ik=0; ik < occ_number_ks.nr; ++ik) { for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= this->kv.wk[ik]; }
+    //         this->rdmft_solver.update_elec(occ_number_ks, *(this->psi));
 
-            //initialize the gradients of Etotal on occupation numbers and wfc, and set all elements to 0. 
-            ModuleBase::matrix dE_dOccNum(this->pelec->wg.nr, this->pelec->wg.nc, true);
-            psi::Psi<TK> dE_dWfc(this->psi->get_nk(), this->psi->get_nbands(), this->psi->get_nbasis()); 
-            dE_dWfc.zero_out();
+    //         //initialize the gradients of Etotal on occupation numbers and wfc, and set all elements to 0. 
+    //         ModuleBase::matrix dE_dOccNum(this->pelec->wg.nr, this->pelec->wg.nc, true);
+    //         psi::Psi<TK> dE_dWfc(this->psi->get_nk(), this->psi->get_nbands(), this->psi->get_nbasis()); 
+    //         dE_dWfc.zero_out();
 
-            double Etotal_RDMFT = this->rdmft_solver.run(dE_dOccNum, dE_dWfc);
-            // break;
-    }
+    //         double Etotal_RDMFT = this->rdmft_solver.run(dE_dOccNum, dE_dWfc);
+    //         // break;
+    // }
 
 }
 
@@ -1211,21 +1211,21 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
     ModuleBase::timer::tick("ESolver_KS_LCAO", "out_deepks_labels");
 #endif
 
-    /******** test RDMFT *********/
-    if ( PARAM.inp.rdmft == true ) // rdmft, added by jghan, 2024-10-17
-    {
-        ModuleBase::matrix occ_number_ks(this->pelec->wg);
-        for(int ik=0; ik < occ_number_ks.nr; ++ik) { for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= this->kv.wk[ik]; }
-        this->rdmft_solver.update_elec(occ_number_ks, *(this->psi));
+    // /******** test RDMFT *********/
+    // if ( PARAM.inp.rdmft == true ) // rdmft, added by jghan, 2024-10-17
+    // {
+    //     ModuleBase::matrix occ_number_ks(this->pelec->wg);
+    //     for(int ik=0; ik < occ_number_ks.nr; ++ik) { for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= this->kv.wk[ik]; }
+    //     this->rdmft_solver.update_elec(occ_number_ks, *(this->psi));
 
-        //initialize the gradients of Etotal on occupation numbers and wfc, and set all elements to 0. 
-        ModuleBase::matrix dE_dOccNum(this->pelec->wg.nr, this->pelec->wg.nc, true);
-        psi::Psi<TK> dE_dWfc(this->psi->get_nk(), this->psi->get_nbands(), this->psi->get_nbasis()); 
-        dE_dWfc.zero_out();
+    //     //initialize the gradients of Etotal on occupation numbers and wfc, and set all elements to 0. 
+    //     ModuleBase::matrix dE_dOccNum(this->pelec->wg.nr, this->pelec->wg.nc, true);
+    //     psi::Psi<TK> dE_dWfc(this->psi->get_nk(), this->psi->get_nbands(), this->psi->get_nbasis()); 
+    //     dE_dWfc.zero_out();
 
-        double Etotal_RDMFT = this->rdmft_solver.run(dE_dOccNum, dE_dWfc);
-    }
-    /******** test RDMFT *********/
+    //     double Etotal_RDMFT = this->rdmft_solver.run(dE_dOccNum, dE_dWfc);
+    // }
+    // /******** test RDMFT *********/
 
 
 #ifdef __EXX

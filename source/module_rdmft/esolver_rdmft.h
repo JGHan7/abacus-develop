@@ -19,12 +19,15 @@ class ESolver_RDMFT: public ESolver_FP
     ESolver_RDMFT();
     ~ESolver_RDMFT();
 
-    virtual void before_all_runners(const Input_para& inp, UnitCell& cell) override;
-	virtual void runner(const int istep, UnitCell& cell) override;
+    virtual void before_all_runners(const Input_para& inp, UnitCell& ucell) override;
+
+	virtual void runner(const int istep, UnitCell& ucell) override;
+
+	int maxniter;     // maximum iter steps for scf
 
   private:
 
-    RDMFT* rdmft_solver;
+    RDMFT rdmft_solver;
 
 
 

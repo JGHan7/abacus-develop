@@ -78,19 +78,36 @@ RDMFT<TK, TR>::~RDMFT()
     delete V_hartree_XC;
 }
 
+// template <typename TK, typename TR>
+// void RDMFT<TK, TR>::init(Gint_Gamma& GG_in, 
+//                             Gint_k& GK_in, 
+//                             Parallel_Orbitals& ParaV_in, 
+//                             UnitCell& ucell_in,
+//                             K_Vectors& kv_in, 
+//                             elecstate::ElecState& pelec_in, 
+//                             LCAO_Orbitals& orb_in, 
+//                             TwoCenterBundle& two_center_bundle_in, 
+//                             std::string XC_func_rdmft_in, 
+//                             double alpha_power_in)
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::init(Gint_Gamma& GG_in, Gint_k& GK_in, Parallel_Orbitals& ParaV_in, UnitCell& ucell_in,
-                                    K_Vectors& kv_in, elecstate::ElecState& pelec_in, LCAO_Orbitals& orb_in, TwoCenterBundle& two_center_bundle_in, std::string XC_func_rdmft_in, double alpha_power_in)
+void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in)
 {
-    GG = &GG_in;
-    GK = &GK_in;
-    ParaV = &ParaV_in;
+    // GG = &GG_in;
+    // GK = &GK_in;
+    // ParaV = &ParaV_in;
+    // ucell = &ucell_in;
+    // kv = &kv_in;
+    // charge = pelec_in.charge;
+    // pelec = &pelec_in;
+    // orb = &orb_in;
+    // two_center_bundle = &two_center_bundle_in;
+
+    ParaV = &this->pv;
     ucell = &ucell_in;
-    kv = &kv_in;
-    charge = pelec_in.charge;
-    pelec = &pelec_in;
-    orb = &orb_in;
-    two_center_bundle = &two_center_bundle_in;
+    charge = this->pelec.charge;
+    orb = &this->orb_;
+    two_center_bundle = &this->two_center_bundle_;
+
     XC_func_rdmft = XC_func_rdmft_in;
     alpha_power = alpha_power_in;
 
