@@ -6,6 +6,7 @@
 #define ESOLVER_RDMFT_H
 
 #include "module_rdmft/rdmft.h"
+#include "module_esolver/esolver_fp.h"
 
 namespace rdmft
 {
@@ -13,7 +14,7 @@ namespace rdmft
 
 
 template<typename TK, typename TR>
-class ESolver_RDMFT: public ESolver_FP
+class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 {
   public:
     ESolver_RDMFT();
@@ -27,7 +28,7 @@ class ESolver_RDMFT: public ESolver_FP
 
   private:
 
-    RDMFT rdmft_solver;
+    rdmft::RDMFT<TK, TR> rdmft_solver;
 
 
 

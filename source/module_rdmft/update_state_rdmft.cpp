@@ -24,12 +24,11 @@ void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in)
     // ucell = &ucell_in;
     // rho_basis = &rho_basis_in;
     // vloc = &vloc_in;
-    // sf = &sf_in;
+    // sf = &sf_in; // &(this->sf.strucFac);
 
     ucell = &ucell_in;
     rho_basis = this->pw_rho;
     vloc = &GlobalC::ppcell.vloc;
-    sf = &(this->sf.strucFac);
 
     HR_TV->set_zero();
     this->cal_V_TV();
@@ -62,8 +61,8 @@ void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix& occ_number_in, const p
     {
         for(int inb=0; inb < wg.nc; ++inb)
         {
-            wg(ik, inb) *= kv->wk[ik];
-            wk_fun_occNum(ik, inb) = kv->wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+            wg(ik, inb) *= this->kv.wk[ik];
+            wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
         }
     }
 
@@ -109,9 +108,9 @@ void RDMFT<TK, TR>::update_charge()
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
 
-        GG->transfer_DM2DtoGrid(DM_gamma_only.get_DMR_vector());
+        this->GG->transfer_DM2DtoGrid(DM_gamma_only.get_DMR_vector());
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
-        GG->cal_gint(&inout);
+        this->GG->cal_gint(&inout);
 
         if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
         {
@@ -120,7 +119,7 @@ void RDMFT<TK, TR>::update_charge()
             //     ModuleBase::GlobalFunc::ZEROS(charge->kin_r[is], charge->nrxx);
             // }
             // Gint_inout inout1(charge->kin_r, Gint_Tools::job_type::tau);
-            // GG->cal_gint(&inout1);
+            // this->GG->cal_gint(&inout1);
             this->pelec->cal_tau(wfc);
         }
 
@@ -129,7 +128,7 @@ void RDMFT<TK, TR>::update_charge()
     else
     {
         // calculate DMK and DMR
-        elecstate::DensityMatrix<TK, double> DM(ParaV, nspin, kv->kvec_d, nk_total);
+        elecstate::DensityMatrix<TK, double> DM(ParaV, nspin, this->kv.kvec_d, nk_total);
         elecstate::cal_dm_psi(ParaV, wg, wfc, DM);
         DM.init_DMR(&GlobalC::GridD, &GlobalC::ucell);
         DM.cal_DMR();
@@ -139,9 +138,9 @@ void RDMFT<TK, TR>::update_charge()
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
 
-        GK->transfer_DM2DtoGrid(DM.get_DMR_vector());
+        this->GK->transfer_DM2DtoGrid(DM.get_DMR_vector());
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
-        GK->cal_gint(&inout);
+        this->GK->cal_gint(&inout);
 
         if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
         {
@@ -150,7 +149,7 @@ void RDMFT<TK, TR>::update_charge()
             //     ModuleBase::GlobalFunc::ZEROS(charge->kin_r[is], charge->nrxx);
             // }
             // Gint_inout inout1(charge->kin_r, Gint_Tools::job_type::tau);
-            // GK->cal_gint(&inout1);
+            // this->GK->cal_gint(&inout1);
             this->pelec->cal_tau(wfc);
         }
 
@@ -188,27 +187,27 @@ void RDMFT<TK, TR>::update_occNumber(const ModuleBase::matrix& occ_number_in)
     {
         for(int inb=0; inb < wg.nc; ++inb)
         {
-            wg(ik, inb) *= kv->wk[ik];
-            wk_fun_occNum(ik, inb) = kv->wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+            wg(ik, inb) *= this->kv.wk[ik];
+            wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
         }
     }
 }
 
 
-template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_wg(const ModuleBase::matrix& wg_in)
-{
-    wg = (wg_in);
-    occ_number = (wg);
-    for(int ik=0; ik < wg.nr; ++ik)
-    {
-        for(int inb=0; inb < wg.nc; ++inb)
-        {
-            occ_number(ik, inb) /= kv->wk[ik];
-            wk_fun_occNum(ik, inb) = kv->wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
-        }
-    }
-}
+// template <typename TK, typename TR>
+// void RDMFT<TK, TR>::update_wg(const ModuleBase::matrix& wg_in)
+// {
+//     wg = (wg_in);
+//     occ_number = (wg);
+//     for(int ik=0; ik < wg.nr; ++ik)
+//     {
+//         for(int inb=0; inb < wg.nc; ++inb)
+//         {
+//             occ_number(ik, inb) /= this->kv.wk[ik];
+//             wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+//         }
+//     }
+// }
 
 
 template class RDMFT<double, double>;

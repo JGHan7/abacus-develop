@@ -96,7 +96,7 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
     // GK = &GK_in;
     // ParaV = &ParaV_in;
     // ucell = &ucell_in;
-    // kv = &kv_in;
+    // this->kv = &kv_in;
     // charge = pelec_in.charge;
     // pelec = &pelec_in;
     // orb = &orb_in;
@@ -113,7 +113,7 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
 
     nspin = PARAM.inp.nspin;
     nbands_total = PARAM.inp.nbands;
-    nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? kv->get_nkstot_full(): kv->get_nks();
+    nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? this->kv->get_nkstot_full(): this->kv->get_nks();
     nk_total *= nspin;
     only_exx_type = ( XC_func_rdmft == "hf" || XC_func_rdmft == "muller" || XC_func_rdmft == "power" );
 
@@ -190,21 +190,21 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
         exx_spacegroup_symmetry = (PARAM.inp.nspin < 4 && ModuleSymmetry::Symmetry::symm_flag == 1);
         if (exx_spacegroup_symmetry)
         {
-            const std::array<int, 3>& period = RI_Util::get_Born_vonKarmen_period(*kv);
+            const std::array<int, 3>& period = RI_Util::get_Born_vonKarmen_period(this->kv);
             this->symrot_exx.find_irreducible_sector(ucell->symm, ucell->atoms, ucell->st,
                     RI_Util::get_Born_von_Karmen_cells(period), period, ucell->lat);
-            this->symrot_exx.cal_Ms(*kv, *ucell, *ParaV);
+            this->symrot_exx.cal_Ms(this->kv, *ucell, *ParaV);
         }
 
         if (GlobalC::exx_info.info_ri.real_number)
         {
             Vxc_fromRI_d = new Exx_LRI<double>(GlobalC::exx_info.info_ri);
-            Vxc_fromRI_d->init(MPI_COMM_WORLD, *kv, *orb);
+            Vxc_fromRI_d->init(MPI_COMM_WORLD, this->kv, *orb);
         }
         else
         {
             Vxc_fromRI_c = new Exx_LRI<std::complex<double>>(GlobalC::exx_info.info_ri);
-            Vxc_fromRI_c->init(MPI_COMM_WORLD, *kv, *orb);
+            Vxc_fromRI_c->init(MPI_COMM_WORLD, this->kv, *orb);
         }
     }
 #endif
@@ -305,13 +305,13 @@ double RDMFT<TK, TR>::cal_E_gradient()
 
     // !this would transfer the value of H_wfc_TV, H_wfc_hartree, H_wfc_XC --> occNum_H_wfc
     // get the gradient of energy with respect to the wfc, i.e., Wk_occNum_HamiltWfc
-    add_psi(ParaV, kv, occ_number, H_wfc_TV, H_wfc_hartree, H_wfc_dft_XC, H_wfc_exx_XC, occNum_HamiltWfc, XC_func_rdmft, alpha_power);
+    add_psi(ParaV, &this->kv, occ_number, H_wfc_TV, H_wfc_hartree, H_wfc_dft_XC, H_wfc_exx_XC, occNum_HamiltWfc, XC_func_rdmft, alpha_power);
 
     // get the gradient of energy with respect to the natural occupation numbers, i.e., Wk_occNum_wfcHamiltWfc
-    add_occNum(*kv, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
+    add_occNum(this->kv, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
 
     // get the total energy
-    // add_wfcHwfc(kv->wk, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_XC, Etotal_n_k, XC_func_rdmft, alpha_power);
+    // add_wfcHwfc(this->kv.wk, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_XC, Etotal_n_k, XC_func_rdmft, alpha_power);
     // add_wfcHwfc(wg, wk_fun_occNum, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_XC, Etotal_n_k, XC_func_rdmft, alpha_power);
     // E_RDMFT[3] = getEnergy(Etotal_n_k);
     // Parallel_Reduce::reduce_all(E_RDMFT[3]);

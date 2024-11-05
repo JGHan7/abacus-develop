@@ -12,8 +12,8 @@
 #include "module_basis/module_nao/two_center_bundle.h"
 #include "module_io/output_mat_sparse.h"
 
-// added by jghan for rdmft calculation
-#include "module_rdmft/rdmft.h"
+// // added by jghan for rdmft calculation
+// #include "module_rdmft/rdmft.h"
 
 #include <memory>
 

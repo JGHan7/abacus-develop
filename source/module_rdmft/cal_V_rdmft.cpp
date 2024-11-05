@@ -45,7 +45,7 @@ void RDMFT<TK, TR>::cal_V_TV()
     
     V_ekinetic_potential = new hamilt::EkineticNew<hamilt::OperatorLCAO<TK, TR>>(
         hsk_TV,
-        kv->kvec_d,
+        this->kv.kvec_d,
         HR_TV,
         &GlobalC::ucell,
         orb->cutoffs(),
@@ -55,7 +55,7 @@ void RDMFT<TK, TR>::cal_V_TV()
 
     V_nonlocal = new hamilt::NonlocalNew<hamilt::OperatorLCAO<TK, TR>>(
         hsk_TV,
-        kv->kvec_d,
+        this->kv.kvec_d,
         HR_TV,
         &GlobalC::ucell,
         orb->cutoffs(),
@@ -66,9 +66,9 @@ void RDMFT<TK, TR>::cal_V_TV()
     if( PARAM.inp.gamma_only )
     {
         V_local = new rdmft::Veff_rdmft<TK,TR>(
-            GG,
+            this->GG,
             hsk_TV,
-            kv->kvec_d,
+            this->kv.kvec_d,
             this->pelec->pot,
             HR_TV,
             &GlobalC::ucell,
@@ -79,16 +79,16 @@ void RDMFT<TK, TR>::cal_V_TV()
             charge,
             rho_basis,
             vloc,
-            sf,
+            &(this->sf.strucFac),
             "local"
         );
     }
     else
     {
         V_local = new rdmft::Veff_rdmft<TK,TR>(
-            GK,
+            this->GK,
             hsk_TV,
-            kv->kvec_d,
+            this->kv.kvec_d,
             this->pelec->pot,
             HR_TV,
             &GlobalC::ucell,
@@ -99,7 +99,7 @@ void RDMFT<TK, TR>::cal_V_TV()
             charge,
             rho_basis,
             vloc,
-            sf,
+            &(this->sf.strucFac),
             "local"
         );
     }
@@ -120,9 +120,9 @@ void RDMFT<TK, TR>::cal_V_hartree()
     if( PARAM.inp.gamma_only )
     {
         V_hartree = new rdmft::Veff_rdmft<TK,TR>(
-            GG,
+            this->GG,
             hsk_hartree,
-            kv->kvec_d,
+            this->kv.kvec_d,
             this->pelec->pot,
             HR_hartree,
             &GlobalC::ucell,
@@ -133,7 +133,7 @@ void RDMFT<TK, TR>::cal_V_hartree()
             charge,
             rho_basis,
             vloc,
-            sf,
+            &(this->sf.strucFac),
             "hartree"
         );
     }
@@ -141,9 +141,9 @@ void RDMFT<TK, TR>::cal_V_hartree()
     {
         // this can be optimized, use potHartree.update_from_charge()
         V_hartree = new rdmft::Veff_rdmft<TK,TR>(
-            GK,
+            this->GK,
             hsk_hartree,
-            kv->kvec_d,
+            this->kv.kvec_d,
             this->pelec->pot,
             HR_hartree,
             &GlobalC::ucell,
@@ -154,7 +154,7 @@ void RDMFT<TK, TR>::cal_V_hartree()
             charge,
             rho_basis,
             vloc,
-            sf,
+            &(this->sf.strucFac),
             "hartree"
         );
     }
@@ -176,7 +176,7 @@ void RDMFT<TK, TR>::cal_V_XC()
     // // //test
     // DM_XC_pass = DM_XC;
 
-    // elecstate::DensityMatrix<TK, double> DM_test(ParaV, nspin, kv->kvec_d, nk_total);
+    // elecstate::DensityMatrix<TK, double> DM_test(ParaV, nspin, this->kv.kvec_d, nk_total);
     // elecstate::cal_dm_psi(ParaV, wg, wfc, DM_test);
     // DM_test.init_DMR(&GlobalC::GridD, &GlobalC::ucell);
     // DM_test.cal_DMR();
@@ -206,9 +206,9 @@ void RDMFT<TK, TR>::cal_V_XC()
         {
             // this can be optimized, use potXC.update_from_charge()
             V_dft_XC = new rdmft::Veff_rdmft<TK,TR>(
-                GG,
+                this->GG,
                 hsk_dft_XC,
-                kv->kvec_d,
+                this->kv.kvec_d,
                 this->pelec->pot,
                 HR_dft_XC,
                 &GlobalC::ucell,
@@ -219,7 +219,7 @@ void RDMFT<TK, TR>::cal_V_XC()
                 charge,
                 rho_basis,
                 vloc,
-                sf,
+                &(this->sf.strucFac),
                 "xc",
                 &etxc,
                 &vtxc
@@ -229,9 +229,9 @@ void RDMFT<TK, TR>::cal_V_XC()
         {   
             // this can be optimized, use potXC.update_from_charge()
             V_dft_XC = new rdmft::Veff_rdmft<TK,TR>(
-                GK,
+                this->GK,
                 hsk_dft_XC,
-                kv->kvec_d,
+                this->kv.kvec_d,
                 this->pelec->pot,
                 HR_dft_XC,
                 &GlobalC::ucell,
@@ -242,7 +242,7 @@ void RDMFT<TK, TR>::cal_V_XC()
                 charge,
                 rho_basis,
                 vloc,
-                sf,
+                &(this->sf.strucFac),
                 "xc",
                 &etxc,
                 &vtxc
@@ -261,7 +261,7 @@ void RDMFT<TK, TR>::cal_V_XC()
         // get DM_XC of all k points
         if( exx_spacegroup_symmetry )
         {
-            DM_XC = symrot_exx.restore_dm(*this->kv, DM_XC, *ParaV); // class vector could be auto resize()
+            DM_XC = symrot_exx.restore_dm(this->kv, DM_XC, *ParaV); // class vector could be auto resize()
         }
         std::vector< const std::vector<TK>* > DM_XC_pointer(DM_XC.size());
         for(int ik=0; ik<DM_XC.size(); ++ik) DM_XC_pointer[ik] = &DM_XC[ik];
@@ -271,8 +271,8 @@ void RDMFT<TK, TR>::cal_V_XC()
             // transfer the DM_XC to appropriate format
             std::vector<std::map<int,std::map<std::pair<int,std::array<int,3>>,RI::Tensor<double>>>> 
                 Ds_XC_d = std::is_same<TK, double>::value //gamma_only_local
-                ? RI_2D_Comm::split_m2D_ktoR<double>(*kv, DM_XC_pointer, *ParaV, nspin)
-                : RI_2D_Comm::split_m2D_ktoR<double>(*kv, DM_XC_pointer, *ParaV, nspin, this->exx_spacegroup_symmetry);
+                ? RI_2D_Comm::split_m2D_ktoR<double>(this->kv, DM_XC_pointer, *ParaV, nspin)
+                : RI_2D_Comm::split_m2D_ktoR<double>(this->kv, DM_XC_pointer, *ParaV, nspin, this->exx_spacegroup_symmetry);
 
             // provide the Ds_XC to Vxc_fromRI(V_exx_XC)
             if (this->exx_spacegroup_symmetry && GlobalC::exx_info.info_global.exx_symmetry_realspace)
@@ -288,7 +288,7 @@ void RDMFT<TK, TR>::cal_V_XC()
             V_exx_XC = new hamilt::OperatorEXX<hamilt::OperatorLCAO<TK, TR>>(
                 hsk_exx_XC,
                 HR_exx_XC,
-                *kv,
+                this->kv,
                 &Vxc_fromRI_d->Hexxs,
                 nullptr,
                 hamilt::Add_Hexx_Type::k
@@ -299,8 +299,8 @@ void RDMFT<TK, TR>::cal_V_XC()
             // transfer the DM_XC to appropriate format
             std::vector<std::map<int,std::map<std::pair<int,std::array<int,3>>,RI::Tensor<std::complex<double>>>>> 
                 Ds_XC_c = std::is_same<TK, double>::value //gamma_only_local
-                ? RI_2D_Comm::split_m2D_ktoR<std::complex<double>>(*kv, DM_XC_pointer, *ParaV, nspin)
-                : RI_2D_Comm::split_m2D_ktoR<std::complex<double>>(*kv, DM_XC_pointer, *ParaV, nspin, this->exx_spacegroup_symmetry);
+                ? RI_2D_Comm::split_m2D_ktoR<std::complex<double>>(this->kv, DM_XC_pointer, *ParaV, nspin)
+                : RI_2D_Comm::split_m2D_ktoR<std::complex<double>>(this->kv, DM_XC_pointer, *ParaV, nspin, this->exx_spacegroup_symmetry);
 
             // // provide the Ds_XC to Vxc_fromRI(V_exx_XC)
             if (this->exx_spacegroup_symmetry && GlobalC::exx_info.info_global.exx_symmetry_realspace)
@@ -316,7 +316,7 @@ void RDMFT<TK, TR>::cal_V_XC()
             V_exx_XC = new hamilt::OperatorEXX<hamilt::OperatorLCAO<TK, TR>>(
                 hsk_exx_XC,
                 HR_exx_XC,
-                *kv,
+                this->kv,
                 nullptr,
                 &Vxc_fromRI_c->Hexxs,
                 hamilt::Add_Hexx_Type::k

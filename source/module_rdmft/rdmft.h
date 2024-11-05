@@ -77,7 +77,7 @@ namespace rdmft
 
 
 template <typename TK, typename TR>
-class RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 {
   public:
     RDMFT();
@@ -99,7 +99,7 @@ class RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // K_Vectors* kv = nullptr;
     ModulePW::PW_Basis* rho_basis = nullptr;
     ModuleBase::matrix* vloc = nullptr;
-    ModuleBase::ComplexMatrix* sf = nullptr;
+    // ModuleBase::ComplexMatrix* sf = nullptr;
     LCAO_Orbitals* orb = nullptr;
     TwoCenterBundle* two_center_bundle = nullptr;
     /****** these parameters are passed in from outside, don't need delete ******/
@@ -208,8 +208,8 @@ class RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // update occ_number for optimization algorithms that depend on Hamilton
     void update_occNumber(const ModuleBase::matrix& occ_number_in);
 
-    // update occ_number for optimization algorithms that depend on Hamilton
-    void update_wg(const ModuleBase::matrix& wg_in);
+    // // update occ_number for optimization algorithms that depend on Hamilton
+    // void update_wg(const ModuleBase::matrix& wg_in);
 
     // do all calculation after update occNum&wfc, get Etotal and the gradient of energy with respect to the occNum&wfc
     double run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E_gradient_wfc);
