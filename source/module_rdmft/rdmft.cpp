@@ -104,7 +104,7 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
 
     ParaV = &this->pv;
     ucell = &ucell_in;
-    charge = this->pelec.charge;
+    charge = this->pelec->charge;
     orb = &this->orb_;
     two_center_bundle = &this->two_center_bundle_;
 
@@ -113,7 +113,7 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
 
     nspin = PARAM.inp.nspin;
     nbands_total = PARAM.inp.nbands;
-    nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? this->kv->get_nkstot_full(): this->kv->get_nks();
+    nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? this->kv.get_nkstot_full(): this->kv.get_nks();
     nk_total *= nspin;
     only_exx_type = ( XC_func_rdmft == "hf" || XC_func_rdmft == "muller" || XC_func_rdmft == "power" );
 
@@ -327,14 +327,14 @@ double RDMFT<TK, TR>::cal_E_gradient()
 template <typename TK, typename TR>
 void RDMFT<TK, TR>::cal_Energy(const int cal_type)
 {
-    double E_Ewald = pelec->f_en.ewald_energy;
-    double E_entropy = pelec->f_en.demet;
-    double E_descf = pelec->f_en.descf = 0.0;
+    double E_Ewald = this->pelec->f_en.ewald_energy;
+    double E_entropy = this->pelec->f_en.demet;
+    double E_descf = this->pelec->f_en.descf = 0.0;
     // double E_descf = 0.0;
-    double E_xc_KS = pelec->f_en.etxc - pelec->f_en.etxcc;
-    double E_exx_KS = pelec->f_en.exx;
-    double E_deband_KS = pelec->f_en.deband;
-    double E_deband_harris_KS = pelec->f_en.deband_harris;
+    double E_xc_KS = this->pelec->f_en.etxc - this->pelec->f_en.etxcc;
+    double E_exx_KS = this->pelec->f_en.exx;
+    double E_deband_KS = this->pelec->f_en.deband;
+    double E_deband_harris_KS = this->pelec->f_en.deband_harris;
 
     double E_exxType_rdmft = 0.0; // delete in the future
 
@@ -377,7 +377,7 @@ void RDMFT<TK, TR>::cal_Energy(const int cal_type)
     else
     {
         this->pelec->f_en.deband  = this->pelec->cal_delta_eband();
-        E_descf = pelec->f_en.descf = 0.0;
+        E_descf = this->pelec->f_en.descf = 0.0;
         this->pelec->cal_energies(2);
         Etotal = this->pelec->f_en.etot;
 

@@ -9,6 +9,8 @@
 #include "esolver_ks_lcao.h"
 #include "esolver_ks_lcao_tddft.h"
 #include "module_lr/esolver_lrtd_lcao.h"
+// added by jghan, 2024-11-06
+#include "module_rdmft/esolver_rdmft.h"
 extern "C"
 {
 #include "module_base/blacs_connector.h"
@@ -250,15 +252,15 @@ ESolver* init_esolver(const Input_para& inp, UnitCell& ucell)
 	{
 		if (PARAM.globalv.gamma_only_local)
 		{
-			return new ESolver_RDMFT<double, double>();
+			return new rdmft::ESolver_RDMFT<double, double>();
 		}
 		else if (PARAM.inp.nspin < 4)
 		{
-			return new ESolver_RDMFT<std::complex<double>, double>();
+			return new rdmft::ESolver_RDMFT<std::complex<double>, double>();
 		}
 		else
 		{
-			return new ESolver_RDMFT<std::complex<double>, std::complex<double>>();
+			return new rdmft::ESolver_RDMFT<std::complex<double>, std::complex<double>>();
 		}
 	}
 #endif

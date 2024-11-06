@@ -37,7 +37,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
 template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 {
-    rdmft_solver.before_scf(istep);
+    // rdmft_solver.before_scf(istep);
     rdmft_solver.update_ion(ucell);
 
     // before the iterative electronic step, get initial value by one KS step
@@ -57,7 +57,9 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
     {
         for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= rdmft_solver.kv.wk[ik];
     }
-    this->rdmft_solver.update_elec(occ_number_ks, *(rdmft_solver.psi));
+    // delete in the future
+    this->rdmft_solver.get_inital_wfc();
+    this->rdmft_solver.update_elec(occ_number_ks, this->rdmft_solver.wfc);
 
 
     for(int iter=1; iter <= this->maxniter; ++iter)
@@ -70,10 +72,31 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
 
 
+template <typename TK, typename TR>
+double ESolver_RDMFT<TK, TR>::cal_energy()
+{
+    return 0.0;
+}
+
+
+template <typename TK, typename TR>
+void ESolver_RDMFT<TK, TR>::cal_force(ModuleBase::matrix& force)
+{
+    ;
+}
+
+
+template <typename TK, typename TR>
+void ESolver_RDMFT<TK, TR>::cal_stress(ModuleBase::matrix& stress)
+{
+    ;
+}
 
 
 
-
+template class ESolver_RDMFT<double, double>;
+template class ESolver_RDMFT<std::complex<double>, double>;
+template class ESolver_RDMFT<std::complex<double>, std::complex<double>>;
 
 }
 

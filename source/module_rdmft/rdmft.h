@@ -199,7 +199,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // update in ion-step and get V_TV
     // void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
     //                     ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in);
-    void update_ion(UnitCell& ucell_in);
+    void update_ion(const int istep, UnitCell& ucell_in);
 
     // update in elec-step
     // Or we can use rdmft_solver.wfc/occ_number directly when optimizing, so that the update_elec() function does not require parameters.
@@ -213,6 +213,9 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     // do all calculation after update occNum&wfc, get Etotal and the gradient of energy with respect to the occNum&wfc
     double run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E_gradient_wfc);
+
+    // delete in the future
+    void get_inital_wfc();
 
 
 

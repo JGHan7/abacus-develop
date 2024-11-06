@@ -24,6 +24,12 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
 	virtual void runner(const int istep, UnitCell& ucell) override;
 
+    virtual double cal_energy() override;
+
+    virtual void cal_force(ModuleBase::matrix& force) override;
+
+    virtual void cal_stress(ModuleBase::matrix& stress) override;
+
 	int maxniter;     // maximum iter steps for scf
 
   private:

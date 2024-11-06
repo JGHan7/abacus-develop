@@ -19,12 +19,14 @@ namespace rdmft
 // void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
 //                                 ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in)
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in)
+void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
 {
     // ucell = &ucell_in;
     // rho_basis = &rho_basis_in;
     // vloc = &vloc_in;
     // sf = &sf_in; // &(this->sf.strucFac);
+
+    this->rdmft_solver.before_scf(istep);
 
     ucell = &ucell_in;
     rho_basis = this->pw_rho;
@@ -108,9 +110,9 @@ void RDMFT<TK, TR>::update_charge()
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
 
-        this->GG->transfer_DM2DtoGrid(DM_gamma_only.get_DMR_vector());
+        this->GG.transfer_DM2DtoGrid(DM_gamma_only.get_DMR_vector());
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
-        this->GG->cal_gint(&inout);
+        this->GG.cal_gint(&inout);
 
         if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
         {
@@ -119,7 +121,7 @@ void RDMFT<TK, TR>::update_charge()
             //     ModuleBase::GlobalFunc::ZEROS(charge->kin_r[is], charge->nrxx);
             // }
             // Gint_inout inout1(charge->kin_r, Gint_Tools::job_type::tau);
-            // this->GG->cal_gint(&inout1);
+            // this->GG.cal_gint(&inout1);
             this->pelec->cal_tau(wfc);
         }
 
@@ -138,9 +140,9 @@ void RDMFT<TK, TR>::update_charge()
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
 
-        this->GK->transfer_DM2DtoGrid(DM.get_DMR_vector());
+        this->GK.transfer_DM2DtoGrid(DM.get_DMR_vector());
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
-        this->GK->cal_gint(&inout);
+        this->GK.cal_gint(&inout);
 
         if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
         {
@@ -149,7 +151,7 @@ void RDMFT<TK, TR>::update_charge()
             //     ModuleBase::GlobalFunc::ZEROS(charge->kin_r[is], charge->nrxx);
             // }
             // Gint_inout inout1(charge->kin_r, Gint_Tools::job_type::tau);
-            // this->GK->cal_gint(&inout1);
+            // this->GK.cal_gint(&inout1);
             this->pelec->cal_tau(wfc);
         }
 
@@ -171,7 +173,7 @@ void RDMFT<TK, TR>::update_charge()
         // update Gint_K
         if (!PARAM.globalv.gamma_only_local)
         {
-            this->GK->renew();
+            this->GK.renew();
         }
     }
 
@@ -193,6 +195,14 @@ void RDMFT<TK, TR>::update_occNumber(const ModuleBase::matrix& occ_number_in)
     }
 }
 
+
+template <typename TK, typename TR>
+void RDMFT<TK, TR>::get_inital_wfc()
+{
+    TK* pwfc_in = &this->psi(0, 0, 0);
+    TK* pwfc = &wfc(0, 0, 0);
+    for(int i=0; i<wfc.size(); ++i) pwfc[i] = pwfc_in[i];
+}
 
 // template <typename TK, typename TR>
 // void RDMFT<TK, TR>::update_wg(const ModuleBase::matrix& wg_in)
