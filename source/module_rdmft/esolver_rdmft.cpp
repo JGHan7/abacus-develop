@@ -43,23 +43,22 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
     // before the iterative electronic step, get initial value by one KS step
     if(GlobalC::exx_info.info_global.cal_exx)
     {
-        GlobalC::exx_info.info_global.hybrid_step = 1;
+        // the command to stop the runner is in the exx_iter_finish() function of Exx_LRI_interface.hpp
         rdmft_solver.runner(istep, ucell);
-        GlobalC::exx_info.info_global.hybrid_step = PARAM.inp.exx_hybrid_step;
     }
     else
     {
         rdmft_solver.maxniter = 1;
         rdmft_solver.runner(istep, ucell);
     }
-    ModuleBase::matrix occ_number_ks(rdmft_solver.pelec->wg);
-    for(int ik=0; ik < occ_number_ks.nr; ++ik)
-    {
-        for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= rdmft_solver.kv.wk[ik];
-    }
-    // delete in the future
-    this->rdmft_solver.get_inital_wfc();
-    this->rdmft_solver.update_elec(occ_number_ks, this->rdmft_solver.wfc);
+    // ModuleBase::matrix occ_number_ks(rdmft_solver.pelec->wg);
+    // for(int ik=0; ik < occ_number_ks.nr; ++ik)
+    // {
+    //     for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= rdmft_solver.kv.wk[ik];
+    // }
+    this->rdmft_solver.update_wg(rdmft_solver.pelec->wg);
+    this->rdmft_solver.get_inital_wfc(); // delete in the future
+    this->rdmft_solver.update_elec(this->rdmft_solver.occ_number, this->rdmft_solver.wfc);
 
 
     for(int iter=1; iter <= this->maxniter; ++iter)

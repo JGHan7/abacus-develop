@@ -204,7 +204,7 @@ void Exx_LRI_Interface<T, Tdata>::exx_iter_finish(const K_Vectors& kv, const Uni
             elec.f_en.etot,
             scf_ene_thr);
     }
-    //else if ( PARAM.inp.rdmft && two_level_step ) { conv_esolver = true; }    // for RDMFT in the future to quit after the first iter of the exx-loop
+    else if ( PARAM.inp.esolver_type == "rdmft" && two_level_step ) { conv_esolver = true; }    // for RDMFT in the future to quit after the first iter of the exx-loop
 }
 
 template<typename T, typename Tdata>
