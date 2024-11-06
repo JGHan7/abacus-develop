@@ -199,27 +199,36 @@ void RDMFT<TK, TR>::update_occNumber(const ModuleBase::matrix& occ_number_in)
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::get_inital_wfc()
+void RDMFT<TK, TR>::inital_wfc_occNum()
 {
-    TK* pwfc_in = &( this->psi->operator()(0, 0, 0) );
-    TK* pwfc = &wfc(0, 0, 0);
-    for(int i=0; i<wfc.size(); ++i) pwfc[i] = pwfc_in[i];
-}
-
-template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_wg(const ModuleBase::matrix& wg_in)
-{
-    wg = (wg_in);
-    occ_number = (wg);
-    for(int ik=0; ik < wg.nr; ++ik)
+    ModuleBase::matrix occ_number_ks = (this->pelec->wg);
+    for(int ik=0; ik < occ_number_ks.nr; ++ik)
     {
-        for(int inb=0; inb < wg.nc; ++inb)
+        for(int inb=0; inb < occ_number_ks.nc; ++inb)
         {
-            occ_number(ik, inb) /= this->kv.wk[ik];
-            wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+            occ_number_ks(ik, inb) /= this->kv.wk[ik];
         }
     }
+    // TK* pwfc_in = &( this->psi->operator()(0, 0, 0) );
+    // TK* pwfc = &wfc(0, 0, 0);
+    // for(int i=0; i<wfc.size(); ++i) pwfc[i] = pwfc_in[i];
+    this->update_elec(occ_number_ks, *(this->psi) );
 }
+
+// template <typename TK, typename TR>
+// void RDMFT<TK, TR>::update_wg(const ModuleBase::matrix& wg_in)
+// {
+//     wg = (wg_in);
+//     occ_number = (wg);
+//     for(int ik=0; ik < wg.nr; ++ik)
+//     {
+//         for(int inb=0; inb < wg.nc; ++inb)
+//         {
+//             occ_number(ik, inb) /= this->kv.wk[ik];
+//             wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+//         }
+//     }
+// }
 
 
 template class RDMFT<double, double>;

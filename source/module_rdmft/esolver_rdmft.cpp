@@ -51,21 +51,15 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
         rdmft_solver.maxniter = 1;
         rdmft_solver.runner(istep, ucell);
     }
-    // ModuleBase::matrix occ_number_ks(rdmft_solver.pelec->wg);
-    // for(int ik=0; ik < occ_number_ks.nr; ++ik)
-    // {
-    //     for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= rdmft_solver.kv.wk[ik];
-    // }
-    this->rdmft_solver.update_wg(rdmft_solver.pelec->wg);
-    this->rdmft_solver.get_inital_wfc(); // delete in the future
-    this->rdmft_solver.update_elec(this->rdmft_solver.occ_number, this->rdmft_solver.wfc);
+    this->rdmft_solver.inital_wfc_occNum();
 
 
     for(int iter=1; iter <= this->maxniter; ++iter)
     {
         
     }
-    
+
+    std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;
     std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;
 }
 
