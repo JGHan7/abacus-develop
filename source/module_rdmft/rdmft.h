@@ -157,8 +157,12 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // just for temperate. in the future when realize psiDotPsi() without pzgemm_/pdgemm_,we don't need it
     std::vector<TK> Eij_TV;
     std::vector<TK> Eij_hartree;
-    std::vector<TK> Eij_XC;
     std::vector<TK> Eij_exx_XC;
+    std::vector<TK> Eij_dft_XC;
+    // but iterative diagonalization optimization requires Eij
+    // H_ni_nj represents the Hamiltonian in KS-orbital/nature-orbital representation
+    bool iter_diag = false;
+    std::vector< std::vector<TK> > H_ni_nj; // it can also be passed as an external pointer to cal_Hk_Hpsi().
 
     hamilt::OperatorLCAO<TK, TR>* V_ekinetic_potential = nullptr;
     hamilt::OperatorLCAO<TK, TR>* V_nonlocal = nullptr;

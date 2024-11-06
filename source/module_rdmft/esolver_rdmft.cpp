@@ -31,6 +31,15 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
 
     //initialize rdmft
     rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
+
+    if( 1 ) // rdmft_optimize_type == "iterDiag"
+    {
+        rdmft_solver.iter_diag = true;
+        this->para_H_ni_nj = &rdmft_solver.para_Eij;
+        this->lambda.resize(rdmft_solver.nk_total);
+        for( auto& inner : this->lambda ) { inner.resize( para_H_ni_nj->get_row_size()*para_H_ni_nj->get_col_size() ); }
+    }
+
 }
 
 
@@ -62,6 +71,29 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
     std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;
     std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;
 }
+
+
+
+template <typename TK, typename TR>
+void ESolver_RDMFT<TK, TR>::get_lambda( std::vector< std::vector<TK> >& lambda_in )
+{
+    for(int i=0; i<lambda.size(); ++i) { lambda[i] = rdmft_solver.H_ni_nj[i]; }
+    
+    // times occNum
+
+    
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

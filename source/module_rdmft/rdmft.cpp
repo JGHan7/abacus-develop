@@ -156,8 +156,13 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
 
     Eij_TV.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
     Eij_hartree.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
-    Eij_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
     Eij_exx_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
+    Eij_dft_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
+    if( 1 ) // rdmft_optimize_type == "iterDiag"
+    {
+        H_ni_nj.resize(nk_total);
+        for( auto& inner : H_ni_nj ) { inner.resize( para_Eij.get_row_size()*para_Eij.get_col_size() ); }
+    }
 
     // 
     HR_TV = new hamilt::HContainer<TR>(*ucell, ParaV);
@@ -270,9 +275,21 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
 
             V_dft_XC->contributeHk(ik);
             HkPsi( ParaV, hsk_dft_XC->get_hk()[0], wfc(ik, 0, 0), H_wfc_dft_XC(ik, 0, 0));
-            psiDotPsi( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_dft_XC(ik, 0, 0), Eij_exx_XC, &(wfcHwfc_dft_XC(ik, 0)) );
+            psiDotPsi( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_dft_XC(ik, 0, 0), Eij_dft_XC, &(wfcHwfc_dft_XC(ik, 0)) );
             
             for(int iloc=0; iloc<HK_XC.size(); ++iloc) HK_XC[iloc] += hsk_dft_XC->get_hk()[iloc];
+        }
+
+        if( iter_diag )
+        {
+            for(int iloc=0; iloc<H_ni_nj[ik].size(); ++iloc)
+            {
+                H_ni_nj[ik][iloc] = Eij_TV[iloc] + Eij_hartree[iloc] + Eij_exx_XC[iloc] + Eij_dft_XC[iloc];
+            }
+            set_zero_vector(Eij_TV);
+            set_zero_vector(Eij_hartree);
+            if(GlobalC::exx_info.info_global.cal_exx) { set_zero_vector(Eij_exx_XC); }
+            if( !only_exx_type ) { set_zero_vector(Eij_dft_XC); }
         }
 
         // // store HK_RDMFT
@@ -286,10 +303,6 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
         //         // HK_XC_pass[ik](ir, ic) = HK_XC[ic * ParaV->get_col_size() + ir];
         //     }
         // }
-
-        // using them to the gradient of Etotal is not correct when do hybrid calculation, it's correct just for exx-type functional
-        // HkPsi( ParaV, HK_XC[0], wfc(ik, 0, 0), H_wfc_XC(ik, 0, 0));
-        // psiDotPsi( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_XC(ik, 0, 0), Eij_XC, &(wfcHwfc_XC(ik, 0)) );
 
     }
 

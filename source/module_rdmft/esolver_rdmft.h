@@ -22,19 +22,27 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
     virtual void before_all_runners(const Input_para& inp, UnitCell& ucell) override;
 
-	virtual void runner(const int istep, UnitCell& ucell) override;
+    virtual void runner(const int istep, UnitCell& ucell) override;
 
-    virtual double cal_energy() override;
+    double cal_energy() override;
 
-    virtual void cal_force(ModuleBase::matrix& force) override;
+    void cal_force(ModuleBase::matrix& force) override;
 
-    virtual void cal_stress(ModuleBase::matrix& stress) override;
+    void cal_stress(ModuleBase::matrix& stress) override;
 
-	int maxniter;     // maximum iter steps for scf
+	  int maxniter;     // maximum iter steps for scf
+
+    Parallel_2D* para_H_ni_nj = nullptr;
+
+    void get_lambda( std::vector< std::vector<TK> >& lambda_in );
 
   private:
 
     rdmft::RDMFT<TK, TR> rdmft_solver;
+
+    std::vector< std::vector<TK> > lambda;
+
+    std::vector< std::vector<TK> > Fock_like_mat;
 
 
 
