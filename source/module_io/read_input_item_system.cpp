@@ -110,7 +110,7 @@ void ReadInput::item_system()
         item.annotation = "the energy solver: ksdft, sdft, ofdft, tddft, lj, dp";
         read_sync_string(input.esolver_type);
         item.check_value = [](const Input_Item& item, const Parameter& para) {
-            const std::vector<std::string> esolver_types = { "ksdft", "sdft", "ofdft", "tddft", "lj", "dp", "lr", "ks-lr" };
+            const std::vector<std::string> esolver_types = { "ksdft", "sdft", "ofdft", "tddft", "lj", "dp", "lr", "ks-lr", "rdmft" };
             if (!find_str(esolver_types, para.input.esolver_type))
             {
                 const std::string warningstr = nofound_str(esolver_types, "esolver_type");

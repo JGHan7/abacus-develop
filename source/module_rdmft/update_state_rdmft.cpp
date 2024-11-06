@@ -9,6 +9,7 @@
 #include "module_elecstate/module_dm/density_matrix.h"
 #include "module_elecstate/module_charge/symmetry_rho.h"
 
+// #include "module_esolver/esolver_ks_lcao.h"
 
 namespace rdmft
 {
@@ -26,7 +27,8 @@ void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
     // vloc = &vloc_in;
     // sf = &sf_in; // &(this->sf.strucFac);
 
-    this->rdmft_solver.before_scf(istep);
+    // this->before_scf(istep);
+    ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_scf(istep);
 
     ucell = &ucell_in;
     rho_basis = this->pw_rho;
@@ -199,7 +201,7 @@ void RDMFT<TK, TR>::update_occNumber(const ModuleBase::matrix& occ_number_in)
 template <typename TK, typename TR>
 void RDMFT<TK, TR>::get_inital_wfc()
 {
-    TK* pwfc_in = &this->psi(0, 0, 0);
+    TK* pwfc_in = &( this->psi->operator()(0, 0, 0) );
     TK* pwfc = &wfc(0, 0, 0);
     for(int i=0; i<wfc.size(); ++i) pwfc[i] = pwfc_in[i];
 }

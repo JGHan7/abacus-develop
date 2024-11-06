@@ -38,7 +38,7 @@ template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 {
     // rdmft_solver.before_scf(istep);
-    rdmft_solver.update_ion(ucell);
+    rdmft_solver.update_ion(istep, ucell);
 
     // before the iterative electronic step, get initial value by one KS step
     if(GlobalC::exx_info.info_global.cal_exx)
@@ -64,10 +64,10 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
     for(int iter=1; iter <= this->maxniter; ++iter)
     {
-        std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;
-
-
+        
     }
+    
+    std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;
 }
 
 
