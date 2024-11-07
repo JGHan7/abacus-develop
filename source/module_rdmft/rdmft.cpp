@@ -64,6 +64,10 @@ RDMFT<TK, TR>::~RDMFT()
     delete HR_exx_XC;
     // delete HR_local;
     delete HR_dft_XC;
+    delete hsk_TV;
+    delete hsk_hartree;
+    delete hsk_dft_XC;
+    delete hsk_exx_XC;
 #ifdef __EXX
     delete Vxc_fromRI_d;
     delete Vxc_fromRI_c;
@@ -90,7 +94,7 @@ RDMFT<TK, TR>::~RDMFT()
 //                             std::string XC_func_rdmft_in, 
 //                             double alpha_power_in)
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in)
+void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag)
 {
     // GG = &GG_in;
     // GK = &GK_in;
@@ -110,6 +114,7 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
 
     XC_func_rdmft = XC_func_rdmft_in;
     alpha_power = alpha_power_in;
+    iter_diag = if_iter_diag;
 
     nspin = PARAM.inp.nspin;
     nbands_total = PARAM.inp.nbands;
@@ -158,10 +163,15 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
     Eij_hartree.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
     Eij_exx_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
     Eij_dft_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
-    if( 1 ) // rdmft_optimize_type == "iterDiag"
+    if( iter_diag )
     {
-        H_ni_nj.resize(nk_total);
-        for( auto& inner : H_ni_nj ) { inner.resize( para_Eij.get_row_size()*para_Eij.get_col_size() ); }
+        Hij_no_exx.resize(nk_total);
+        Hij_exx.resize(nk_total);
+        for(int ik=0; ik<nk_total; ++ik)
+        {
+            Hij_no_exx[ik].resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
+            Hij_exx[ik].resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
+        }
     }
 
     // 
@@ -282,15 +292,17 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
 
         if( iter_diag )
         {
-            for(int iloc=0; iloc<H_ni_nj[ik].size(); ++iloc)
+            for(int iloc=0; iloc<Hij_no_exx[ik].size(); ++iloc)
             {
-                H_ni_nj[ik][iloc] = Eij_TV[iloc] + Eij_hartree[iloc] + Eij_exx_XC[iloc] + Eij_dft_XC[iloc];
+                Hij_no_exx[ik][iloc] = Eij_TV[iloc] + Eij_hartree[iloc] + Eij_dft_XC[iloc];
+                Hij_exx[ik][iloc] = Eij_exx_XC[iloc];
             }
             set_zero_vector(Eij_TV);
             set_zero_vector(Eij_hartree);
             if(GlobalC::exx_info.info_global.cal_exx) { set_zero_vector(Eij_exx_XC); }
             if( !only_exx_type ) { set_zero_vector(Eij_dft_XC); }
         }
+
 
         // // store HK_RDMFT
         // for(int ir=0; ir<HK_RDMFT_pass.nr; ++ir)

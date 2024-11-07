@@ -131,10 +131,10 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     hamilt::HContainer<TR>* HR_exx_XC = nullptr;
     // hamilt::HContainer<TR>* HR_local = nullptr;
 
-    hamilt::HS_Matrix_K<TK>* hsk_TV;
-    hamilt::HS_Matrix_K<TK>* hsk_hartree;
-    hamilt::HS_Matrix_K<TK>* hsk_dft_XC;
-    hamilt::HS_Matrix_K<TK>* hsk_exx_XC;
+    hamilt::HS_Matrix_K<TK>* hsk_TV = nullptr;
+    hamilt::HS_Matrix_K<TK>* hsk_hartree = nullptr;
+    hamilt::HS_Matrix_K<TK>* hsk_dft_XC = nullptr;
+    hamilt::HS_Matrix_K<TK>* hsk_exx_XC = nullptr;
 
     std::vector<TK> HK_XC;
     std::vector< std::vector<TK> > DM_XC_pass;
@@ -162,7 +162,8 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // but iterative diagonalization optimization requires Eij
     // H_ni_nj represents the Hamiltonian in KS-orbital/nature-orbital representation
     bool iter_diag = false;
-    std::vector< std::vector<TK> > H_ni_nj; // it can also be passed as an external pointer to cal_Hk_Hpsi().
+    std::vector< std::vector<TK> > Hij_no_exx; // it can also be passed as an external pointer to cal_Hk_Hpsi()
+    std::vector< std::vector<TK> > Hij_exx;
 
     hamilt::OperatorLCAO<TK, TR>* V_ekinetic_potential = nullptr;
     hamilt::OperatorLCAO<TK, TR>* V_nonlocal = nullptr;
@@ -198,7 +199,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     //             std::string XC_func_rdmft_in, 
     //             double alpha_power_in);
 
-    void init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in);
+    void init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag = false);
 
     // update in ion-step and get V_TV
     // void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
@@ -207,9 +208,10 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     // update in elec-step
     // Or we can use rdmft_solver.wfc/occ_number directly when optimizing, so that the update_elec() function does not require parameters.
-    void update_elec(const ModuleBase::matrix& occ_number_in, const psi::Psi<TK>& wfc_in, const Charge* charge_in = nullptr);
+    void update_elec(const ModuleBase::matrix* occ_number_in = nullptr, const psi::Psi<TK>* wfc_in = nullptr, Charge* charge_in = nullptr);
 
     // update occ_number for optimization algorithms that depend on Hamilton
+    // update occ_number, wg, wk_fun_occNum
     void update_occNumber(const ModuleBase::matrix& occ_number_in);
 
     // // update occ_number for optimization algorithms that depend on Hamilton

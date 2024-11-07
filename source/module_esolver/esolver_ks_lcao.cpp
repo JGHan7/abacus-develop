@@ -1041,7 +1041,7 @@ void ESolver_KS_LCAO<TK, TR>::iter_finish(int& iter)
     // {
     //         ModuleBase::matrix occ_number_ks(this->pelec->wg);
     //         for(int ik=0; ik < occ_number_ks.nr; ++ik) { for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= this->kv.wk[ik]; }
-    //         this->rdmft_solver.update_elec(occ_number_ks, *(this->psi));
+    //         this->rdmft_solver.update_elec(&occ_number_ks, this->psi);
 
     //         //initialize the gradients of Etotal on occupation numbers and wfc, and set all elements to 0. 
     //         ModuleBase::matrix dE_dOccNum(this->pelec->wg.nr, this->pelec->wg.nc, true);
@@ -1151,7 +1151,7 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(const int istep)
     // {
     //     ModuleBase::matrix occ_number_ks(this->pelec->wg);
     //     for(int ik=0; ik < occ_number_ks.nr; ++ik) { for(int inb=0; inb < occ_number_ks.nc; ++inb) occ_number_ks(ik, inb) /= this->kv.wk[ik]; }
-    //     this->rdmft_solver.update_elec(occ_number_ks, *(this->psi));
+    //     this->rdmft_solver.update_elec(&occ_number_ks, this->psi);
 
     //     //initialize the gradients of Etotal on occupation numbers and wfc, and set all elements to 0. 
     //     ModuleBase::matrix dE_dOccNum(this->pelec->wg.nr, this->pelec->wg.nc, true);

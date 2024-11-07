@@ -29,16 +29,18 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
     rdmft_solver.before_all_runners(inp, ucell);
     this->maxniter = rdmft_solver.maxniter;
 
-    //initialize rdmft
-    rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
-
-    if( 1 ) // rdmft_optimize_type == "iterDiag"
+    // initialize rdmft
+    // if( rdmft_optimize_type == "iterDiag" )
+    if( 1 )
     {
-        rdmft_solver.iter_diag = true;
-        this->para_H_ni_nj = &rdmft_solver.para_Eij;
-        this->lambda.resize(rdmft_solver.nk_total);
-        for( auto& inner : this->lambda ) { inner.resize( para_H_ni_nj->get_row_size()*para_H_ni_nj->get_col_size() ); }
+        rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha, true);
     }
+    else
+    {
+        rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
+    }
+
+    iter_diag_rdmft.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, rdmft_solver.ParaV);
 
 }
 
@@ -74,15 +76,6 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
 
 
-template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::get_lambda( std::vector< std::vector<TK> >& lambda_in )
-{
-    for(int i=0; i<lambda.size(); ++i) { lambda[i] = rdmft_solver.H_ni_nj[i]; }
-    
-    // times occNum
-
-    
-}
 
 
 

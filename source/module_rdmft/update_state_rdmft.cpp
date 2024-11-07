@@ -55,26 +55,31 @@ void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix& occ_number_in, const psi::Psi<TK>& wfc_in, const Charge* charge_in)
+void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const psi::Psi<TK>* wfc_in, Charge* charge_in)
 {
-    // update occ_number, wg, wk_fun_occNum
-    occ_number = (occ_number_in);
-    wg = (occ_number);
-
-    for(int ik=0; ik < wg.nr; ++ik)
+    if( occ_number_in != nullptr )
     {
-        for(int inb=0; inb < wg.nc; ++inb)
-        {
-            wg(ik, inb) *= this->kv.wk[ik];
-            wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
-        }
+        // // update occ_number, wg, wk_fun_occNum
+        // occ_number = (*occ_number_in);
+        // wg = (occ_number);
+        // for(int ik=0; ik < wg.nr; ++ik)
+        // {
+        //     for(int inb=0; inb < wg.nc; ++inb)
+        //     {
+        //         wg(ik, inb) *= this->kv.wk[ik];
+        //         wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+        //     }
+        // }
+        this->update_occNumber(*occ_number_in);
     }
 
-    // update wfc
-    TK* pwfc_in = &wfc_in(0, 0, 0);
-    TK* pwfc = &wfc(0, 0, 0);
-    for(int i=0; i<wfc.size(); ++i) { pwfc[i] = pwfc_in[i];
-}
+    if( wfc_in != nullptr )
+    {
+        // update wfc
+        TK* pwfc_in = &( wfc_in->operator()(0, 0, 0) );
+        TK* pwfc = &wfc(0, 0, 0);
+        for(int i=0; i<wfc.size(); ++i) { pwfc[i] = pwfc_in[i]; }
+    }
 
     // update charge
     this->update_charge();
@@ -212,7 +217,7 @@ void RDMFT<TK, TR>::inital_wfc_occNum()
     // TK* pwfc_in = &( this->psi->operator()(0, 0, 0) );
     // TK* pwfc = &wfc(0, 0, 0);
     // for(int i=0; i<wfc.size(); ++i) pwfc[i] = pwfc_in[i];
-    this->update_elec(occ_number_ks, *(this->psi) );
+    this->update_elec(&occ_number_ks, this->psi);
 }
 
 // template <typename TK, typename TR>
