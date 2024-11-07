@@ -62,17 +62,17 @@ void IterDiag_NOs<TK, TR>::get_lambda(ModuleBase::matrix& wg,
     // times occNum
     for(int ik=0; ik<Fock_like_mat.size(); ++ik)
     {
-        int nb_col = para_Fij->get_col_size();
-        for(int inb_col=0; inb_col<para_Fij->nb_col; ++inb_col)
+        int nrow = para_Fij->get_row_size();
+        for(int ic=0; ic<para_Fij->nb_col; ++ic)
         {
             // use wg or occ_number???
-            int wg_local = wg(ik, para_Fij->local2global_col(inb_col));
-            int wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_col(inb_col));
+            int wg_local = wg(ik, para_Fij->local2global_col(ic));
+            int wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_col(ic));
 
-            for(int inb_row=0; inb_row<para_Fij->get_row_size(); ++inb_row)
+            for(int ir=0; ir<para_Fij->get_row_size(); ++ir)
             {
-                this->lambda[ik][inb_row*nb_col + inb_col] = H_no_exx[ik][inb_row*nb_col + inb_col]*wg_local 
-                                                        + H_exx[ik][inb_row*nb_col + inb_col]*wk_fun_local;
+                this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local 
+                                                + H_exx[ik][ir + ic*nrow]*wk_fun_local;
             }
         }
     } 
@@ -87,6 +87,8 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
     symmetr_lambda(this->para_Fij, this->lambda, symm_lambda);
 
     // diag(symmlambda), get start_Fii and start_NOs 
+
+    // rdmft_solver.update_elec(nullptr, start_NOs);
 
     // fill_diag_elem(this->para_Fij,  , this->Fock_like_mat);
 }

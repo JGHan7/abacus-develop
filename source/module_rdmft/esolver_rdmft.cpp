@@ -64,12 +64,20 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
     }
     this->rdmft_solver.inital_wfc_occNum();
 
-    // optimize occ_number
+    /****** get start guess natural orbitals and occ_number ******/
+
+    // TODO: optimize occ_number
+
+    // this->rdmft_solver.update_elec(occ_num_temp); // could be in optimize occ_number as opti_occNum(rdmft_solver)
+    
+    // to get start guess natural orbitals
+    iter_diag_rdmft.get_start_guess(rdmft_solver);
+
+    // TODO: optimize occ_number // to get start guess_occNum
 
     // this->rdmft_solver.update_elec(occ_num_temp);
 
-    iter_diag_rdmft.get_start_guess(rdmft_solver);
-
+    /****** get start guess natural orbitals and occ_number ******/
 
     for(int iter=1; iter <= this->maxniter; ++iter)
     {
