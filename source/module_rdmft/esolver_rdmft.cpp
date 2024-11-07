@@ -64,6 +64,12 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
     }
     this->rdmft_solver.inital_wfc_occNum();
 
+    // optimize occ_number
+
+    // this->rdmft_solver.update_elec(occ_num_temp);
+
+    iter_diag_rdmft.get_start_guess(rdmft_solver);
+
 
     for(int iter=1; iter <= this->maxniter; ++iter)
     {

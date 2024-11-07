@@ -24,6 +24,9 @@ class IterDiag_NOs
     // optimizing natural orbitals
     void optimize_orb(RDMFT<TK, TR>& rdmft_solver);
 
+    // use initial values ​​to form a first guess for iterative diagonalization
+    void get_start_guess(RDMFT<TK, TR>& rdmft_solver);
+
     int nk_total = 0;
 
     Parallel_2D* para_Fij = nullptr;
@@ -40,6 +43,16 @@ class IterDiag_NOs
                       ModuleBase::matrix& wk_fun_occNum,
                       std::vector< std::vector<TK> >& H_no_exx, 
                       std::vector< std::vector<TK> >& H_exx);
+
+    // symmetrize lambda
+    void symmetr_lambda(Parallel_2D* para_mat, 
+                          std::vector< std::vector<TK> >& lambda, 
+                          std::vector< std::vector<TK> >& symm_lambda);
+
+    // fill the diagonal elements of F
+    void fill_diag_elem(Parallel_2D* para_mat, 
+                          std::vector< std::vector<TK> >& mat_filling, 
+                          std::vector< std::vector<TK> >& mat_filled);
 
 
 };
