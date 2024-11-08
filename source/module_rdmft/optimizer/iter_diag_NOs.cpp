@@ -26,11 +26,11 @@ IterDiag_NOs<TK, TR>::~IterDiag_NOs()
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::init(int nk_total_in, const Parallel_2D* para_Fij_in, const Parallel_Orbitals* ParaV_in)
+void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in)
 {
     this->nk_total = nk_total_in;
-    this->para_Fij = para_Fij_in;
-    this->ParaV = ParaV_in;
+    this->para_Fij = &para_Fij_in;
+    this->ParaV = &ParaV_in;
 
     this->lambda.resize(nk_total);
     this->Fock_like_mat.resize(nk_total);
@@ -52,10 +52,10 @@ void IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 
 
 template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::get_lambda(ModuleBase::matrix& wg, 
-                                        ModuleBase::matrix& wk_fun_occNum, 
-                                        std::vector< std::vector<TK> >& H_no_exx, 
-                                        std::vector< std::vector<TK> >& H_exx)
+void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg, 
+                                        const ModuleBase::matrix& wk_fun_occNum, 
+                                        const std::vector< std::vector<TK> >& H_no_exx, 
+                                        const std::vector< std::vector<TK> >& H_exx)
 {
     // for(int i=0; i<lambda.size(); ++i) { lambda[i] = lambda_in[i]; }
     
@@ -63,13 +63,13 @@ void IterDiag_NOs<TK, TR>::get_lambda(ModuleBase::matrix& wg,
     for(int ik=0; ik<Fock_like_mat.size(); ++ik)
     {
         int nrow = para_Fij->get_row_size();
-        for(int ic=0; ic<para_Fij->nb_col; ++ic)
+        for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
         {
             // use wg or occ_number???
-            int wg_local = wg(ik, para_Fij->local2global_col(ic));
-            int wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_col(ic));
+            const double wg_local = wg(ik, para_Fij->local2global_col(ic));
+            const double wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_col(ic));
 
-            for(int ir=0; ir<para_Fij->get_row_size(); ++ir)
+            for(int ir=0; ir<nrow; ++ir)
             {
                 this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local 
                                                 + H_exx[ik][ir + ic*nrow]*wk_fun_local;
@@ -95,8 +95,8 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
 
 
 template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::symmetr_lambda(Parallel_2D* para_mat, 
-                                            std::vector< std::vector<TK> >& lambda, 
+void IterDiag_NOs<TK, TR>::symmetr_lambda(const Parallel_2D* para_mat, 
+                                            const std::vector< std::vector<TK> >& lambda, 
                                             std::vector< std::vector<TK> >& symm_lambda)
 {
     for(int ik=0; ik<lambda.size(); ++ik)
@@ -107,14 +107,14 @@ void IterDiag_NOs<TK, TR>::symmetr_lambda(Parallel_2D* para_mat,
 
 
 template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::fill_diag_elem(Parallel_2D* para_mat, 
-                                            std::vector< std::vector<TK> >& mat_filling, 
+void IterDiag_NOs<TK, TR>::fill_diag_elem(const Parallel_2D* para_mat, 
+                                            const std::vector< std::vector<TK> >& mat_filling, 
                                             std::vector< std::vector<TK> >& mat_filled)
 {
     for(int ik=0; ik<mat_filled.size(); ++ik)
     {
-        const int nrow = para_mat.get_row_size();
-        const int ncol = para_mat.get_col_size();
+        const int nrow = para_mat->get_row_size();
+        const int ncol = para_mat->get_col_size();
         
         for(int i=0; i<nrow; ++i)
         {
@@ -130,7 +130,9 @@ void IterDiag_NOs<TK, TR>::fill_diag_elem(Parallel_2D* para_mat,
 
 
 
-
+template class IterDiag_NOs<double, double>;
+template class IterDiag_NOs<std::complex<double>, double>;
+template class IterDiag_NOs<std::complex<double>, std::complex<double>>;
 
 
 

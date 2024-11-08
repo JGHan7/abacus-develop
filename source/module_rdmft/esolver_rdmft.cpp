@@ -40,7 +40,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
         rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
     }
 
-    iter_diag_rdmft.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, rdmft_solver.ParaV);
+    iter_diag_rdmft.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV));
 
 }
 
@@ -63,6 +63,11 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
         rdmft_solver.runner(istep, ucell);
     }
     this->rdmft_solver.inital_wfc_occNum();
+
+    // test
+    GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
+    this->rdmft_solver.cal_Hk_Hpsi();
+    this->rdmft_solver.cal_Energy();
 
     /****** get start guess natural orbitals and occ_number ******/
 

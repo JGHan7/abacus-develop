@@ -210,17 +210,18 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // Or we can use rdmft_solver.wfc/occ_number directly when optimizing, so that the update_elec() function does not require parameters.
     void update_elec(const ModuleBase::matrix* occ_number_in = nullptr, const psi::Psi<TK>* wfc_in = nullptr, Charge* charge_in = nullptr);
 
-    // update occ_number for optimization algorithms that depend on Hamilton
-    // update occ_number, wg, wk_fun_occNum
-    void update_occNumber(const ModuleBase::matrix& occ_number_in);
-
-    // // update occ_number for optimization algorithms that depend on Hamilton
-    // void update_wg(const ModuleBase::matrix& wg_in);
-
     // do all calculation after update occNum&wfc, get Etotal and the gradient of energy with respect to the occNum&wfc
     double run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E_gradient_wfc);
 
-    // delete in the future?
+    // get the total Hamilton in k-space
+    void cal_Hk_Hpsi();
+
+    // get the gradient of energy with respect to the natural occupation numbers and narure orbitals
+    double cal_E_gradient();
+
+    void cal_Energy(const int cal_type = 1);
+
+    // delete in the future? save?
     // get the initial value, can only be called once after one or several KS steps
     void inital_wfc_occNum();
 
@@ -231,25 +232,27 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // get the special density matrix DM_XC(nk*nbasis_local*nbasis_local)
     void get_DM_XC(std::vector< std::vector<TK> >& DM_XC);
 
+    void update_charge();
+
+
+
+
+
+  private:
+
+    // update occ_number for optimization algorithms that depend on Hamilton
+    // update occ_number, wg, wk_fun_occNum
+    void update_occNumber(const ModuleBase::matrix& occ_number_in);
+
+    // // update occ_number for optimization algorithms that depend on Hamilton
+    // void update_wg(const ModuleBase::matrix& wg_in);
+
     void cal_V_TV();
 
     void cal_V_hartree();
 
     // construct V_XC based on different XC_functional( i.e. RDMFT class member XC_func_rdmft)
     void cal_V_XC();
-
-    double cal_E_gradient();
-
-    void cal_Energy(const int cal_type = 1);
-
-
-
-  private:
-
-    // get the total Hamilton in k-space
-    void cal_Hk_Hpsi();
-    
-    void update_charge();
 
 
 

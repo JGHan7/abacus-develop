@@ -19,7 +19,7 @@ class IterDiag_NOs
     IterDiag_NOs();
     ~IterDiag_NOs();
 
-    void init(int nk_total_in, const Parallel_2D* para_Fij_in, const Parallel_Orbitals* ParaV_in);
+    void init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in);
 
     // optimizing natural orbitals
     void optimize_orb(RDMFT<TK, TR>& rdmft_solver);
@@ -29,9 +29,9 @@ class IterDiag_NOs
 
     int nk_total = 0;
 
-    Parallel_2D* para_Fij = nullptr;
+    const Parallel_2D* para_Fij = nullptr;
 
-    Parallel_Orbitals* ParaV = nullptr;
+    const Parallel_Orbitals* ParaV = nullptr;
 
   private:
 
@@ -39,19 +39,19 @@ class IterDiag_NOs
 
     std::vector< std::vector<TK> > Fock_like_mat;
 
-    void get_lambda(ModuleBase::matrix& wg,
-                      ModuleBase::matrix& wk_fun_occNum,
-                      std::vector< std::vector<TK> >& H_no_exx, 
-                      std::vector< std::vector<TK> >& H_exx);
+    void get_lambda(const ModuleBase::matrix& wg,
+                      const ModuleBase::matrix& wk_fun_occNum,
+                      const std::vector< std::vector<TK> >& H_no_exx, 
+                      const std::vector< std::vector<TK> >& H_exx);
 
     // symmetrize lambda
-    void symmetr_lambda(Parallel_2D* para_mat, 
-                          std::vector< std::vector<TK> >& lambda, 
+    void symmetr_lambda(const Parallel_2D* para_mat, 
+                          const std::vector< std::vector<TK> >& lambda, 
                           std::vector< std::vector<TK> >& symm_lambda);
 
     // fill the diagonal elements of F
-    void fill_diag_elem(Parallel_2D* para_mat, 
-                          std::vector< std::vector<TK> >& mat_filling, 
+    void fill_diag_elem(const Parallel_2D* para_mat, 
+                          const std::vector< std::vector<TK> >& mat_filling, 
                           std::vector< std::vector<TK> >& mat_filled);
 
 
