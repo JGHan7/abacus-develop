@@ -209,6 +209,51 @@ double occNum_func(double eta, int symbol, const std::string XC_func_rdmft, doub
 }
 
 
+// void pdsyev_(const char* jobz, const char* uplo, const int* n, double* A, const int* ia, const int* ja, 
+//             const int* desca, double* w, double* z, const int* iz, const int* jz, const int* descz,
+//             double* work, int* lwork, int* info);
+
+template <>
+void pdiag_scalapack<double>(const Parallel_2D* para_mat,
+                                const int global_row_mat,
+                                double* mat,
+                                double* egienvalue,
+                                double* egienvector)
+{
+    const char jobz = 'V', uplo = 'U';
+    const int one = 1;
+    int info = 0;
+
+    // these settings refer to the scalapack source code documentation
+    int tmp0 = global_row_mat*( global_row_mat>2 ? global_row_mat: 2 );
+    int tmp_num = tmp0 > (2*global_row_mat-2) ? tmp0: (2*global_row_mat-2);
+    int lwork = static_cast<int>( ( global_row_mat*( 5 + para_mat->get_col_size()) + tmp_num + 1) * 1.1 );
+
+    std::vector<double> work(lwork, 0);
+
+#ifdef __MPI
+    pdsyev_(&jobz,
+            &uplo,
+            &global_row_mat,
+            mat,
+            &one,
+            &one,
+            para_mat->desc,
+            egienvalue,
+            egienvector,
+            &one,
+            &one,
+            para_mat->desc,
+            work.data(),
+            &lwork,
+            &info);
+#endif
+
+    if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzheev_()" << "\n***\n" << std::endl; }
+
+}
+
+
 
 
 template class Veff_rdmft<double, double>;
