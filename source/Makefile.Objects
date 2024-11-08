@@ -735,7 +735,7 @@ OBJS_TENSOR=tensor.o\
 
 OBJS_RDMFT=rdmft.o\
         rdmft_tools.o\
-        cal_V_rdmft.o\
-        update_state_rdmft.o\
+        rdmft_cal_V.o\
+        rdmft_update_state.o\
         esolver_rdmft.o\
         iter_diag_NOs.o\
