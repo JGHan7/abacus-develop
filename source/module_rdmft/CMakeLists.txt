@@ -4,8 +4,8 @@ if(ENABLE_LCAO)
         OBJECT
         rdmft.cpp
         rdmft_tools.cpp
-        cal_V_rdmft.cpp
-        update_state_rdmft.cpp
+        rdmft_cal_V.cpp
+        rdmft_update_state.cpp
         esolver_rdmft.cpp
         optimizer/iter_diag_NOs.cpp
     )
