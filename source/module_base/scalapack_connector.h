@@ -75,6 +75,11 @@ extern "C"
 		std::complex<double> *A, const int *IA, const int *JA, const int *DESCA,
 		int *ipiv,  int *info);
 
+	// pzheev_() added by jghan, for iterative diagonalization of rdmft
+	void pzheev_(const char* jobz, const char* uplo, const int* n, std::complex<double>* A, const int* ia, const int* ja, 
+             const int* desca, double* w, std::complex<double>* z, const int* iz, const int* jz, const int* descz,
+			 std::complex<double>* work, int* lwork, double* rwork, int* lrwork, int* info);
+
 	void pdsygvx_(const int* itype, const char* jobz, const char* range, const char* uplo,
 		const int* n, double* A, const int* ia, const int* ja, const int*desca, double* B, const int* ib, const int* jb, const int*descb,
 		const double* vl, const double* vu, const int* il, const int* iu,

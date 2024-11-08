@@ -31,6 +31,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     this->nk_total = nk_total_in;
     this->para_Fij = &para_Fij_in;
     this->ParaV = &ParaV_in;
+    identi_mat = get_identi_mat(this->para_Fij); // temporary
 
     this->lambda.resize(nk_total);
     this->Fock_like_mat.resize(nk_total);
@@ -84,6 +85,7 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
 {
     this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
     std::vector< std::vector<TK> > symm_lambda = lambda;
+    // std::vector< std::vector<TK> > symm_lambda( this->lambda.size(), std::vector<TK>( this->lambda[0].size() ) );
     symmetr_lambda(this->para_Fij, this->lambda, symm_lambda);
 
     // diag(symmlambda), get start_Fii and start_NOs 
@@ -127,6 +129,34 @@ void IterDiag_NOs<TK, TR>::fill_diag_elem(const Parallel_2D* para_mat,
         }
     }
 }
+
+
+
+
+
+
+
+
+template<typename TK, typename TR>
+std::vector<TK> IterDiag_NOs<TK, TR>::get_identi_mat(const Parallel_2D* para_mat)
+{
+    std::vector<TK> tmp_mat(para_mat->get_local_size(), TK(0.0));
+    const int nrow = para_mat->get_row_size();
+    const int ncol = para_mat->get_col_size();
+
+    for(int i=0; i<nrow; ++i)
+    {
+        const int i_global = para_mat->local2global_row(i);
+        for(int j=0; j<ncol; ++j)
+        {
+            int j_global = para_mat->local2global_col(j);
+            if( i_global == j_global ) { tmp_mat[ i+j*nrow ] = 1.0; }
+        }
+    }
+    
+    return tmp_mat;
+}
+
 
 
 

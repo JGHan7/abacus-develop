@@ -54,6 +54,10 @@ class IterDiag_NOs
                           const std::vector< std::vector<TK> >& mat_filling, 
                           std::vector< std::vector<TK> >& mat_filled);
 
+    // temp, because there is no pzheev interface, only pzhegvx can be used
+    std::vector<TK> identi_mat;
+    std::vector<TK> get_identi_mat(const Parallel_2D* para_mat);
+
 
 };
 
