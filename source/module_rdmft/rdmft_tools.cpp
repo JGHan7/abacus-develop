@@ -5,8 +5,8 @@
 // #include "rdmft.h"
 #include "module_rdmft/rdmft_tools.h"
 
-#include "module_base/blas_connector.h"
-#include "module_base/scalapack_connector.h"
+// #include "module_base/blas_connector.h"
+// #include "module_base/scalapack_connector.h"
 #include "module_base/timer.h"
 #include "module_psi/psi.h"
 #include "module_hamilt_pw/hamilt_pwdft/global.h"

@@ -28,6 +28,9 @@
 #include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/nonlocal_new.h"
 #include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/veff_lcao.h"
 
+#include "module_base/blas_connector.h"
+#include "module_base/scalapack_connector.h"
+
 #include "module_hamilt_lcao/hamilt_lcaodft/hs_matrix_k.hpp"
 
 // used by Exx&LRI
@@ -298,6 +301,43 @@ void add_wfcHwfc(const ModuleBase::matrix& wg,
 //give certain occNum_wfcHwfc, get the corresponding energy
 double getEnergy(const ModuleBase::matrix& occNum_wfcHwfc);
 
+
+
+// void pdsyev_(const char* jobz, const char* uplo, const int* n, double* A, const int* ia, const int* ja, 
+//             const int* desca, double* w, double* z, const int* iz, const int* jz, const int* descz,
+//             double* work, int* lwork, int* info);
+// void pzheev_(const char* jobz, const char* uplo, const int* n, std::complex<double>* A, const int* ia, const int* ja, 
+//             const int* desca, double* w, std::complex<double>* z, const int* iz, const int* jz, const int* descz,
+//             std::complex<double>* work, int* lwork, double* rwork, int* lrwork, int* info);
+
+
+template <typename TK>
+void pzheev_scalapack(const Parallel_Orbitals* ParaV, const TK& HK, const TK& wfc, TK& H_wfc)
+{
+
+
+
+
+//     const int one_int = 1;
+//     //const double one_double = 1.0, zero_double = 0.0;
+//     const std::complex<double> one_complex = {1.0, 0.0};
+//     const std::complex<double> zero_complex = {0.0, 0.0};
+//     const char N_char = 'N';
+//     const char C_char = 'C';    // Using 'C' is consistent with the formula
+
+// #ifdef __MPI
+//     const int nbasis = ParaV->desc[2];
+//     const int nbands = ParaV->desc_wfc[3];
+
+//     //because wfc(bands, basis'), H(basis, basis'), we do wfc*H^T(in the perspective of cpp, not in fortran). And get H_wfc(bands, basis) is correct.
+//     pzgemm_( &C_char, &N_char, &nbasis, &nbands, &nbasis, &one_complex, &HK, &one_int, &one_int, ParaV->desc,
+//         &wfc, &one_int, &one_int, ParaV->desc_wfc, &zero_complex, &H_wfc, &one_int, &one_int, ParaV->desc_wfc );
+// #endif
+}
+
+
+template <>
+void pzheev_scalapack<double>(const Parallel_Orbitals* ParaV, const double& HK, const double& wfc, double& H_wfc);
 
 
 
