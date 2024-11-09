@@ -11,6 +11,7 @@
 // #include "module_base/blas_connector.h"
 // #include "module_base/scalapack_connector.h"
 
+// #include "module_psi/psi.h"
 
 namespace rdmft
 {
@@ -56,6 +57,8 @@ template<typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 {
     this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
+    this->get_Fock();
+
 
 }
 
@@ -75,7 +78,12 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, symm_lambda[ik].data, diag_Fii[ik].data(), nos_rep_wfc[ik].data());
     }
 
+    // wfc = nos_rep_wfc * wfc
+    psi::Psi<TK> new_wfc(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
+
     // rdmft_solver.update_elec(nullptr, start_NOs);
+
+
 
     // fill_diag_elem(this->para_Fij,  , this->Fock_like_mat);
 }
@@ -109,6 +117,7 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
     } 
 }
 
+
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_Fock()
 {
@@ -118,20 +127,43 @@ void IterDiag_NOs<TK, TR>::get_Fock()
         antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->Fock_like_mat[ik].data(), 1.0);
 
         // fortran perspective: only the lower triangle of F is correct (excluding the diagonal)
-        // now make the upper triangle correct as well
+        // now make the upper triangle and diagonal elements correct as well
         int nrow = para_Fij->get_row_size();
         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
         {
             const int ic_global = para_Fij->local2global_col(ic);
+
             for(int ir=0; ir<nrow; ++ir)
             {
                 int ir_global = para_Fij->local2global_row(ir);
-                
-                if(ic_global > ir_global) this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
+
+                if(ic_global > ir_global) 
+                {
+                    this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
+                }
+                else if (ic_global == ir_global)
+                {
+                    // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
+                    this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global];
+                }
+
             }
         }
 
+        // scaling Fock?
+
     }
+
+    // scaling Fock?
+
+    // rotate Fock?
+}
+
+
+template <typename TK, typename TR>
+void IterDiag_NOs<TK, TR>::scaling_Fock()
+{
+
 }
 
 
@@ -147,31 +179,27 @@ void IterDiag_NOs<TK, TR>::symmetr_lambda(const Parallel_2D* para_mat,
 }
 
 
-template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::fill_diag_elem(const Parallel_2D* para_mat, 
-                                            const std::vector< std::vector<TK> >& mat_filling, 
-                                            std::vector< std::vector<TK> >& mat_filled)
-{
-    for(int ik=0; ik<mat_filled.size(); ++ik)
-    {
-        const int nrow = para_mat->get_row_size();
-        const int ncol = para_mat->get_col_size();
+// template <typename TK, typename TR>
+// void IterDiag_NOs<TK, TR>::fill_diag_elem(const Parallel_2D* para_mat, 
+//                                             const std::vector< std::vector<TK> >& mat_filling, 
+//                                             std::vector< std::vector<TK> >& mat_filled)
+// {
+//     for(int ik=0; ik<mat_filled.size(); ++ik)
+//     {
+//         const int nrow = para_mat->get_row_size();
+//         const int ncol = para_mat->get_col_size();
         
-        for(int i=0; i<nrow; ++i)
-        {
-            int i_global = para_mat->local2global_row(i);
-            for(int j=0; j<ncol; ++j)
-            {
-                int j_global = para_mat->local2global_col(j);
-                if( i_global == j_global ) { mat_filled[ i+j*nrow ] = mat_filling[ i+j*nrow ]; }
-            }
-        }
-    }
-}
-
-
-
-
+//         for(int i=0; i<nrow; ++i)
+//         {
+//             int i_global = para_mat->local2global_row(i);
+//             for(int j=0; j<ncol; ++j)
+//             {
+//                 int j_global = para_mat->local2global_col(j);
+//                 if( i_global == j_global ) { mat_filled[ i+j*nrow ] = mat_filling[ i+j*nrow ]; }
+//             }
+//         }
+//     }
+// }
 
 
 

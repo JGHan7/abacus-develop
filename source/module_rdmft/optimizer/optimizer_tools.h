@@ -46,6 +46,7 @@ void antisymm_mat<double>(const Parallel_2D* para_mat,
 
 // !!! Note: the upper triangular part of mat will be destroyed
 // the scale of egienvalue is global, mat and egienvector are local (2d-block)
+// c++ perspective: each row of the egienvector-matrix is ​​an eigenvector
 template <typename TK>
 void pdiag_scalapack(const Parallel_2D* para_mat,
                         const int global_row_mat,
@@ -102,7 +103,37 @@ void pdiag_scalapack<double>(const Parallel_2D* para_mat,
 
 
 
+// // wfc and H_wfc need to be k_firest and provide wfc(ik, 0, 0) and H_wfc(ik, 0, 0)
+// // contraction index: nbasis
+// template <typename TK>
+// void HkPsi(const Parallel_Orbitals* ParaV, const TK& HK, const TK& wfc, TK& H_wfc)
+// {
 
+//     const int one_int = 1;
+//     //const double one_double = 1.0, zero_double = 0.0;
+//     const std::complex<double> one_complex = {1.0, 0.0};
+//     const std::complex<double> zero_complex = {0.0, 0.0};
+//     const char N_char = 'N';
+//     const char C_char = 'C';    // Using 'C' is consistent with the formula
+
+// #ifdef __MPI
+//     const int nbasis = ParaV->desc[2];
+//     const int nbands = ParaV->desc_wfc[3];
+
+//     //because wfc(bands, basis'), H(basis, basis'), we do wfc*H^T(in the perspective of cpp, not in fortran). And get H_wfc(bands, basis) is correct.
+//     pzgemm_( &C_char, &N_char, &nbasis, &nbands, &nbasis, &one_complex, &HK, &one_int, &one_int, ParaV->desc,
+//         &wfc, &one_int, &one_int, ParaV->desc_wfc, &zero_complex, &H_wfc, &one_int, &one_int, ParaV->desc_wfc );
+// #endif
+// }
+
+
+
+
+
+
+
+// template <>
+// void HkPsi<double>(const Parallel_Orbitals* ParaV, const double& HK, const double& wfc, double& H_wfc);
 
 
 

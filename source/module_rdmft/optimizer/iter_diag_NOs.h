@@ -58,19 +58,18 @@ class IterDiag_NOs
 
     void get_Fock();
 
-    // 
+    // scale the off-diagonal elements of Fock
     void scaling_Fock();
 
-    // symmetrize lambda
+    // // fill the diagonal elements of F
+    // void fill_diag_elem(const Parallel_2D* para_mat, 
+    //                       const std::vector< std::vector<TK> >& mat_filling, 
+    //                       std::vector< std::vector<TK> >& mat_filled);
+
+    // symmetrize lambda, delete in the future?
     void symmetr_lambda(const Parallel_2D* para_mat, 
                           const std::vector< std::vector<TK> >& lambda, 
                           std::vector< std::vector<TK> >& symm_lambda);
-
-
-    // fill the diagonal elements of F
-    void fill_diag_elem(const Parallel_2D* para_mat, 
-                          const std::vector< std::vector<TK> >& mat_filling, 
-                          std::vector< std::vector<TK> >& mat_filled);
 
     // // temp, because there is no pzheev interface, only pzhegvx can be used
     // std::vector<TK> identi_mat;
