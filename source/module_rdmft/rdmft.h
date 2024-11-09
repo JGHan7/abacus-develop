@@ -105,7 +105,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     /****** these parameters are passed in from outside, don't need delete ******/
 
     int nk_total = 0;
-    int nbands_total;
+    int nbands_total = 0;
     int nspin = 1;
     std::string XC_func_rdmft;
     double alpha_power = 0.656; // 0.656 for soilds, 0.525 for dissociation of H2, 0.55~0.58 for HEG

@@ -27,11 +27,16 @@ class IterDiag_NOs
     // use initial values ​​to form a first guess for iterative diagonalization
     void get_start_guess(RDMFT<TK, TR>& rdmft_solver);
 
-    int nk_total = 0;
-
     const Parallel_2D* para_Fij = nullptr;
 
     const Parallel_Orbitals* ParaV = nullptr;
+
+
+  protected:
+
+    int nk_total = 0;
+
+    int nbands_total = 0;
 
   private:
 
@@ -39,24 +44,37 @@ class IterDiag_NOs
 
     std::vector< std::vector<TK> > Fock_like_mat;
 
+    std::vector< std::vector<double> > diag_Fii;
+
+    // wfc under the representation of natural orbitals
+    std::vector< std::vector<TK> > nos_rep_wfc;
+
+    std::vector< std::vector<TK> > nos_rep_wfc0;
+
     void get_lambda(const ModuleBase::matrix& wg,
                       const ModuleBase::matrix& wk_fun_occNum,
                       const std::vector< std::vector<TK> >& H_no_exx, 
                       const std::vector< std::vector<TK> >& H_exx);
+
+    void get_Fock();
+
+    // 
+    void scaling_Fock();
 
     // symmetrize lambda
     void symmetr_lambda(const Parallel_2D* para_mat, 
                           const std::vector< std::vector<TK> >& lambda, 
                           std::vector< std::vector<TK> >& symm_lambda);
 
+
     // fill the diagonal elements of F
     void fill_diag_elem(const Parallel_2D* para_mat, 
                           const std::vector< std::vector<TK> >& mat_filling, 
                           std::vector< std::vector<TK> >& mat_filled);
 
-    // temp, because there is no pzheev interface, only pzhegvx can be used
-    std::vector<TK> identi_mat;
-    std::vector<TK> get_identi_mat(const Parallel_2D* para_mat);
+    // // temp, because there is no pzheev interface, only pzhegvx can be used
+    // std::vector<TK> identi_mat;
+    // std::vector<TK> get_identi_mat(const Parallel_2D* para_mat);
 
 
 };

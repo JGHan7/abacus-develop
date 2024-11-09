@@ -8,6 +8,7 @@ if(ENABLE_LCAO)
         rdmft_update_state.cpp
         esolver_rdmft.cpp
         optimizer/iter_diag_NOs.cpp
+        optimizer/optimizer_tools.cpp
     )
 endif()
 
