@@ -28,6 +28,10 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
 {
     rdmft_solver.before_all_runners(inp, ucell);
     this->maxniter = rdmft_solver.maxniter;
+    this->maxniter_occ_num = this->maxniter;
+    this->maxniter_orb = 100;
+
+    this->iter_diag_ethr = 1e-10;
 
     // initialize rdmft
     // if( rdmft_optimize_type == "iterDiag" )
@@ -40,7 +44,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
         rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
     }
 
-    iter_diag_rdmft.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV));
+    this->iter_diag_rdmft.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV));
 
 }
 
@@ -66,26 +70,37 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
     // test
     GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
-    this->rdmft_solver.cal_Hk_Hpsi();
+    // this->rdmft_solver.cal_Hk_Hpsi(); // has done in update_elec()
     this->rdmft_solver.cal_Energy();
 
     /****** get start guess natural orbitals and occ_number ******/
 
     // TODO: optimize occ_number
-
     // this->rdmft_solver.update_elec(occ_num_temp); // could be in optimize occ_number as opti_occNum(rdmft_solver)
     
     // to get start guess natural orbitals
-    iter_diag_rdmft.get_start_guess(rdmft_solver);
+    this->iter_diag_rdmft.get_start_guess(rdmft_solver);
 
     // TODO: optimize occ_number // to get start guess_occNum
-
     // this->rdmft_solver.update_elec(occ_num_temp);
 
     /****** get start guess natural orbitals and occ_number ******/
 
-    for(int iter=1; iter <= this->maxniter; ++iter)
+    for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
+        for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
+        {
+            double diff_etotal = this->iter_diag_rdmft.optimize_orb(this->rdmft_solver);
+
+            std::cout << "\n******\nEtotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl;
+
+            if( diff_etotal < iter_diag_ethr ) break;
+        }
+
+
+        // TODO: optimize occ_number
+        // this->rdmft_solver.update_elec(occ_num_temp);
+        break;
         
     }
 

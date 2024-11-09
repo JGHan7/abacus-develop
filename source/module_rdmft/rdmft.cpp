@@ -350,7 +350,7 @@ double RDMFT<TK, TR>::cal_E_gradient()
 
 // cal_type = 2 just support XC-functional without exx
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::cal_Energy(const int cal_type)
+double RDMFT<TK, TR>::cal_Energy(const int cal_type)
 {
     double E_Ewald = this->pelec->f_en.ewald_energy;
     double E_entropy = this->pelec->f_en.demet;
@@ -463,6 +463,8 @@ void RDMFT<TK, TR>::cal_Energy(const int cal_type)
                 <<"\n******\n" << std::endl;
     }
     std::cout << std::defaultfloat;
+
+    return Etotal;
 
 }
 

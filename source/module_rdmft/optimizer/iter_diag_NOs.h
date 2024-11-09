@@ -22,7 +22,7 @@ class IterDiag_NOs
     void init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in);
 
     // optimizing natural orbitals
-    void optimize_orb(RDMFT<TK, TR>& rdmft_solver);
+    double optimize_orb(RDMFT<TK, TR>& rdmft_solver);
 
     // use initial values ​​to form a first guess for iterative diagonalization
     void get_start_guess(RDMFT<TK, TR>& rdmft_solver);
@@ -51,6 +51,11 @@ class IterDiag_NOs
 
     std::vector< std::vector<TK> > nos_rep_wfc0;
 
+    // new wfc in NAOs
+    psi::Psi<TK> new_wfc;
+
+    double energy0 = 0.0, energy1 = 0.0;
+
     void get_lambda(const ModuleBase::matrix& wg,
                       const ModuleBase::matrix& wk_fun_occNum,
                       const std::vector< std::vector<TK> >& H_no_exx, 
@@ -60,6 +65,9 @@ class IterDiag_NOs
 
     // scale the off-diagonal elements of Fock
     void scaling_Fock();
+
+    // rotate the Fock to the natural orbital representation of step 1
+    void rotate_Fock();
 
     // // fill the diagonal elements of F
     // void fill_diag_elem(const Parallel_2D* para_mat, 

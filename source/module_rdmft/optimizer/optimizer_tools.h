@@ -8,10 +8,13 @@
 #include "module_base/blas_connector.h"
 #include "module_base/scalapack_connector.h"
 #include "module_basis/module_ao/parallel_2d.h"
-// #include "module_basis/module_ao/parallel_orbitals.h"
+#include "module_basis/module_ao/parallel_orbitals.h"
+#include "module_parameter/parameter.h"
 // #include "module_base/parallel_reduce.h"
 // #include "module_lr/utils/lr_util.h"
 // #include "module_hamilt_pw/hamilt_pwdft/global.h"
+
+#include <iostream>
 
 namespace rdmft
 {
@@ -40,7 +43,7 @@ void antisymm_mat<double>(const Parallel_2D* para_mat,
                             const int gloabl_row_mat,
                             const double* mat, 
                             double* asym_mat,
-                            double alpha = 0.5);
+                            double alpha);
 
 
 
@@ -101,39 +104,41 @@ void pdiag_scalapack<double>(const Parallel_2D* para_mat,
                                 double* egienvector);
 
 
+// contraction index: nbands
+template <typename TK>
+void GkPsi(const Parallel_2D* para_mat, 
+            const Parallel_Orbitals* ParaV, 
+            const TK& G, 
+            const TK& wfc, 
+            TK& G_wfc)
+{
+    const int one_int = 1;
+    // const std::complex<double> one_complex = {1.0, 0.0};
+    // const std::complex<double> zero_complex = {0.0, 0.0};
+    const TK one_complex = 1.0;
+    const TK zero_complex = 0.0;
+    const char N_char = 'N';
+    // const char T_char = 'T';
+
+#ifdef __MPI
+    const int nbasis = ParaV->desc[2];
+    const int nbands = ParaV->desc_wfc[3];
+
+    // cpp perspective: G(nbands, nbands') * wfc(nbands', nbasis) 
+    // = fortran perspective: wfc(nbasis, nbands') * G(nbands', nbands)
+    pzgemm_( &N_char, &N_char, &nbasis, &nbands, &nbands, &one_complex, &wfc, &one_int, &one_int, ParaV->desc_wfc,
+        &G, &one_int, &one_int, para_mat->desc, &zero_complex, &G_wfc, &one_int, &one_int, ParaV->desc_wfc );
+#endif
+}
 
 
-// // wfc and H_wfc need to be k_firest and provide wfc(ik, 0, 0) and H_wfc(ik, 0, 0)
-// // contraction index: nbasis
-// template <typename TK>
-// void HkPsi(const Parallel_Orbitals* ParaV, const TK& HK, const TK& wfc, TK& H_wfc)
-// {
+template <>
+void GkPsi<double>(const Parallel_2D* para_mat, 
+                    const Parallel_Orbitals* ParaV, 
+                    const double& G, 
+                    const double& wfc, 
+                    double& G_wfc);
 
-//     const int one_int = 1;
-//     //const double one_double = 1.0, zero_double = 0.0;
-//     const std::complex<double> one_complex = {1.0, 0.0};
-//     const std::complex<double> zero_complex = {0.0, 0.0};
-//     const char N_char = 'N';
-//     const char C_char = 'C';    // Using 'C' is consistent with the formula
-
-// #ifdef __MPI
-//     const int nbasis = ParaV->desc[2];
-//     const int nbands = ParaV->desc_wfc[3];
-
-//     //because wfc(bands, basis'), H(basis, basis'), we do wfc*H^T(in the perspective of cpp, not in fortran). And get H_wfc(bands, basis) is correct.
-//     pzgemm_( &C_char, &N_char, &nbasis, &nbands, &nbasis, &one_complex, &HK, &one_int, &one_int, ParaV->desc,
-//         &wfc, &one_int, &one_int, ParaV->desc_wfc, &zero_complex, &H_wfc, &one_int, &one_int, ParaV->desc_wfc );
-// #endif
-// }
-
-
-
-
-
-
-
-// template <>
-// void HkPsi<double>(const Parallel_Orbitals* ParaV, const double& HK, const double& wfc, double& H_wfc);
 
 
 

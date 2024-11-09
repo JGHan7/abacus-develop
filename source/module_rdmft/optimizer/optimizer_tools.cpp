@@ -71,7 +71,29 @@ void pdiag_scalapack<double>(const Parallel_2D* para_mat,
 }
 
 
+template <>
+void GkPsi<double>(const Parallel_2D* para_mat, 
+                    const Parallel_Orbitals* ParaV, 
+                    const double& G, 
+                    const double& wfc, 
+                    double& G_wfc)
+{
+    const int one_int = 1;
+    const double one_double = 1.0;
+    const double zero_double = 0.0;
+    const char N_char = 'N';
+    // const char T_char = 'T';
 
+#ifdef __MPI
+    const int nbasis = ParaV->desc[2];
+    const int nbands = ParaV->desc_wfc[3];
+
+    // cpp perspective: G(nbands, nbands') * wfc(nbands', nbasis) 
+    // = fortran perspective: wfc(nbasis, nbands') * G(nbands', nbands)
+    pdgemm_( &N_char, &N_char, &nbasis, &nbands, &nbands, &one_double, &wfc, &one_int, &one_int, ParaV->desc_wfc,
+        &G, &one_int, &one_int, para_mat->desc, &zero_double, &G_wfc, &one_int, &one_int, ParaV->desc_wfc );
+#endif
+}
 
 
 

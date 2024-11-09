@@ -219,7 +219,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // get the gradient of energy with respect to the natural occupation numbers and narure orbitals
     double cal_E_gradient();
 
-    void cal_Energy(const int cal_type = 1);
+    double cal_Energy(const int cal_type = 1);
 
     // delete in the future? save?
     // get the initial value, can only be called once after one or several KS steps

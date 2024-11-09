@@ -4,7 +4,7 @@
 //==========================================================
 
 // #include "module_rdmft/rdmft.h"
-// #include "module_rdmft/rdmft_tools.h"
+#include "module_rdmft/rdmft_tools.h"
 #include "module_rdmft/optimizer/iter_diag_NOs.h"
 #include "module_rdmft/optimizer/optimizer_tools.h"
 #include "module_lr/utils/lr_util.h"
@@ -39,6 +39,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     this->para_Fij = &para_Fij_in;
     this->ParaV = &ParaV_in;
     // identi_mat = get_identi_mat(this->para_Fij); // temporary
+    this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
 
     this->lambda.resize(nk_total);
     this->diag_Fii.resize(nk_total);
@@ -54,12 +55,31 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
+double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 {
+    this->energy0 = this->energy1;
+
     this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
+
     this->get_Fock();
 
+    // diag(Fock)
+    for(int ik=0; ik<nk_total; ++ik)
+    {
+        // get Fii and new_wfc in NOs
+        rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(), diag_Fii[ik].data(), nos_rep_wfc[ik].data());
 
+        // get new_wfc in NAOs
+        rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+    }
+
+    rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
+    this->energy1 = rdmft_solver.cal_Energy();
+
+    this->nos_rep_wfc0 = this->nos_rep_wfc;
+    this->new_wfc.zero_out();
+
+    return std::abs(this->energy1 - this->energy0);
 }
 
 
@@ -68,24 +88,25 @@ template<typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
 {
     this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
-    // std::vector< std::vector<TK> > symm_lambda( this->lambda.size(), std::vector<TK>( this->lambda[0].size() ) );
+
+    // get start_Fock = symm_lambda
     std::vector< std::vector<TK> > symm_lambda = lambda;
     symmetr_lambda(this->para_Fij, this->lambda, symm_lambda);
 
-    // diag(symmlambda), get start_Fii and start_NOs
+    // diag(symm_lambda)
     for(int ik=0; ik<nk_total; ++ik)
     {
-        rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, symm_lambda[ik].data, diag_Fii[ik].data(), nos_rep_wfc[ik].data());
+        // get start_Fii and start_wfc in NOs
+        rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, symm_lambda[ik].data(), diag_Fii[ik].data(), nos_rep_wfc[ik].data());
+
+        // get start_wfc in NAOs
+        rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
     }
 
-    // wfc = nos_rep_wfc * wfc
-    psi::Psi<TK> new_wfc(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
+    rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
 
-    // rdmft_solver.update_elec(nullptr, start_NOs);
-
-
-
-    // fill_diag_elem(this->para_Fij,  , this->Fock_like_mat);
+    this->nos_rep_wfc0 = this->nos_rep_wfc;
+    this->new_wfc.zero_out();
 }
 
 
@@ -150,6 +171,8 @@ void IterDiag_NOs<TK, TR>::get_Fock()
             }
         }
 
+        set_zero_vector(diag_Fii[ik]);
+
         // scaling Fock?
 
     }
@@ -162,6 +185,13 @@ void IterDiag_NOs<TK, TR>::get_Fock()
 
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::scaling_Fock()
+{
+
+}
+
+
+template <typename TK, typename TR>
+void IterDiag_NOs<TK, TR>::rotate_Fock()
 {
 
 }

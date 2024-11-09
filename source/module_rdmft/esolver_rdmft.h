@@ -33,6 +33,16 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
 	  int maxniter;     // maximum iter steps for scf
 
+    int maxniter_occ_num;     // maximum iter steps for ONs
+
+    int maxniter_orb;         // maximum iter steps for NOs
+
+    double iter_diag_ethr;    // energy threshold, in iterDiag of NOs
+
+    double lambda_thr;        // threshold for checking lambda Hermitianity, in iterDiag of NOs
+
+    double occ_num_thr;       // occupation numbers threshold, in ONs optimization
+
     // Parallel_2D* para_H_ni_nj = nullptr;
 
   private:
