@@ -29,9 +29,9 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
     rdmft_solver.before_all_runners(inp, ucell);
     this->maxniter = rdmft_solver.maxniter;
     this->maxniter_occ_num = this->maxniter;
-    this->maxniter_orb = 100;
+    this->maxniter_orb = this->maxniter;
 
-    this->iter_diag_ethr = 1e-10;
+    this->iter_diag_ethr = 1e-8;
     this->lambda_thr = 1e-4;
     this->occ_num_thr = 1e-3; // how much is proper?
 
@@ -99,7 +99,7 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
 
-            if( std::abs(diff_etotal) < iter_diag_ethr ) break;
+            if( std::abs(diff_etotal) < iter_diag_ethr ) break; // reference: relative error < 1e-7
         }
 
 
@@ -114,6 +114,11 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 }
 
 
+template <typename TK, typename TR>
+void ESolver_RDMFT<TK, TR>::opti_occ_num_dft()
+{
+    
+}
 
 
 

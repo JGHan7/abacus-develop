@@ -31,6 +31,9 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
     void cal_stress(ModuleBase::matrix& stress) override;
 
+    // temporary
+    void opti_occ_num_dft();
+
 	  int maxniter;     // maximum iter steps for scf
 
     int maxniter_occ_num;     // maximum iter steps for ONs

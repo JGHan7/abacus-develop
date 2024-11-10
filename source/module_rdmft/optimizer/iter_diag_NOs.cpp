@@ -185,7 +185,7 @@ void IterDiag_NOs<TK, TR>::get_Fock()
         set_zero_vector(diag_Fii[ik]);
     }
 
-    this->scale_Fock();
+    // this->scale_Fock();
 
     // rotate Fock?
 }
@@ -220,8 +220,12 @@ void IterDiag_NOs<TK, TR>::scale_Fock()
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::adjust_scale()
 {
+    // refer to octopus
     if( this->energy_drop > static_cast<int>(1.5*this->energy_rise) ) this->scale_zeta *= 1.01;
     else if( this->energy_drop < static_cast<int>(1.1*this->energy_rise) ) this->scale_zeta *= 0.95;
+
+    // if( this->energy_drop > static_cast<int>(1.5*this->energy_rise) ) this->scale_zeta *= 1.05;
+    // else if( this->energy_drop < static_cast<int>(1.1*this->energy_rise) ) this->scale_zeta *= 0.95;
 }
 
 
