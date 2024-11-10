@@ -21,6 +21,8 @@ class IterDiag_NOs
 
     void init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in);
 
+    void before_inner_loop(int* scale_factor = nullptr);
+
     // optimizing natural orbitals
     double optimize_orb(RDMFT<TK, TR>& rdmft_solver);
 
@@ -44,17 +46,22 @@ class IterDiag_NOs
 
     std::vector< std::vector<TK> > Fock_like_mat;
 
+    // eigenvalues ​​of the Fock matrix, ascending order
     std::vector< std::vector<double> > diag_Fii;
 
     // wfc under the representation of natural orbitals
     std::vector< std::vector<TK> > nos_rep_wfc;
-
     std::vector< std::vector<TK> > nos_rep_wfc0;
 
     // new wfc in NAOs
     psi::Psi<TK> new_wfc;
 
-    double energy0 = 0.0, energy1 = 0.0;
+    // used to scaling the off-diagonal elements of Fock
+    double scale_zeta;
+    int energy_drop = 0;
+    int energy_rise = 0;
+
+    double etotal = 0.0, etotal_old = 0.0;
 
     void get_lambda(const ModuleBase::matrix& wg,
                       const ModuleBase::matrix& wk_fun_occNum,
@@ -64,7 +71,12 @@ class IterDiag_NOs
     void get_Fock();
 
     // scale the off-diagonal elements of Fock
-    void scaling_Fock();
+    // ? the physical reasons still need to be considered
+    void scale_Fock();
+
+    // adjust scale_zeta used in scale_Fock()
+    // any other better solutions?
+    void adjust_scale();
 
     // rotate the Fock to the natural orbital representation of step 1
     void rotate_Fock();

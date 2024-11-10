@@ -40,6 +40,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     this->ParaV = &ParaV_in;
     // identi_mat = get_identi_mat(this->para_Fij); // temporary
     this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
+    this->scale_zeta = 0.01; // PARAM.inp.scale_zeta_rdmft?
 
     this->lambda.resize(nk_total);
     this->diag_Fii.resize(nk_total);
@@ -55,9 +56,18 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
 
 
 template<typename TK, typename TR>
+void IterDiag_NOs<TK, TR>::before_inner_loop(int* scale_factor)
+{
+    if( scale_factor != nullptr && scale_factor > 0 ) this->scale_zeta = *scale_factor;
+    this->energy_drop = 0;
+    this->energy_rise = 0;
+}
+
+
+template<typename TK, typename TR>
 double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 {
-    this->energy0 = this->energy1;
+    this->etotal_old = this->etotal;
 
     this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
 
@@ -68,18 +78,21 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
     {
         // get Fii and new_wfc in NOs
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(), diag_Fii[ik].data(), nos_rep_wfc[ik].data());
-
         // get new_wfc in NAOs
         rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
     }
 
     rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
-    this->energy1 = rdmft_solver.cal_Energy();
+    this->etotal = rdmft_solver.cal_Energy();
 
-    this->nos_rep_wfc0 = this->nos_rep_wfc;
+    double diff_e = this->etotal - this->etotal_old;
+    if(diff_e < 0) { ++this->energy_drop; }
+    else { ++this->energy_rise; }
+
+    this->nos_rep_wfc0 = this->nos_rep_wfc; // nos_rep_wfc0 *= nos_rep_wfc ?
     this->new_wfc.zero_out();
 
-    return (this->energy1 - this->energy0);
+    return diff_e;
 }
 
 
@@ -142,7 +155,7 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_Fock()
 {
-    for(int ik=0; ik<nk_total; ++ik)
+    for(int ik=0; ik<this->nk_total; ++ik)
     {   
         // c++ perspective: only the upper triangle of F is correct (excluding the diagonal)
         antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->Fock_like_mat[ik].data(), 1.0);
@@ -153,13 +166,13 @@ void IterDiag_NOs<TK, TR>::get_Fock()
         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
         {
             const int ic_global = para_Fij->local2global_col(ic);
-
             for(int ir=0; ir<nrow; ++ir)
             {
                 int ir_global = para_Fij->local2global_row(ir);
 
                 if(ic_global > ir_global) 
                 {
+                    // the upper triangle
                     this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
                 }
                 else if (ic_global == ir_global)
@@ -167,26 +180,48 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                     // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
                     this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global];
                 }
-
             }
         }
-
         set_zero_vector(diag_Fii[ik]);
-
-        // scaling Fock?
-
     }
 
-    // scaling Fock?
+    this->scale_Fock();
 
     // rotate Fock?
 }
 
 
 template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::scaling_Fock()
+void IterDiag_NOs<TK, TR>::scale_Fock()
 {
+    this->adjust_scale();
 
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        int nrow = para_Fij->get_row_size();
+        for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+        {
+            const int ic_global = para_Fij->local2global_col(ic);
+            for(int ir=0; ir<nrow; ++ir)
+            {
+                int ir_global = para_Fij->local2global_row(ir);
+                
+                if(ic_global != ir_global) 
+                {
+                    double c_rc = this->scale_zeta/std::abs(this->Fock_like_mat[ik][ir+ic*nrow]);
+                    if( c_rc < 1.0 ) this->Fock_like_mat[ik][ir+ic*nrow] *= c_rc;
+                }
+            }
+        }
+    }
+}
+
+
+template <typename TK, typename TR>
+void IterDiag_NOs<TK, TR>::adjust_scale()
+{
+    if( this->energy_drop > static_cast<int>(1.5*this->energy_rise) ) this->scale_zeta *= 1.01;
+    else if( this->energy_drop < static_cast<int>(1.1*this->energy_rise) ) this->scale_zeta *= 0.95;
 }
 
 

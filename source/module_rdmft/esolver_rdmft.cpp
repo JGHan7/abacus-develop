@@ -32,6 +32,8 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
     this->maxniter_orb = 100;
 
     this->iter_diag_ethr = 1e-10;
+    this->lambda_thr = 1e-4;
+    this->occ_num_thr = 1e-3; // how much is proper?
 
     // initialize rdmft
     // if( rdmft_optimize_type == "iterDiag" )
@@ -88,11 +90,14 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
     for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
+        this->iter_diag_rdmft.before_inner_loop();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {
             double diff_etotal = this->iter_diag_rdmft.optimize_orb(this->rdmft_solver);
 
-            std::cout << "\n******\nEtotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl;
+            std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
+
+            std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
 
             if( std::abs(diff_etotal) < iter_diag_ethr ) break;
         }
