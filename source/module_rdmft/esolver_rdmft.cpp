@@ -94,14 +94,14 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
             std::cout << "\n******\nEtotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl;
 
-            if( diff_etotal < iter_diag_ethr ) break;
+            if( std::abs(diff_etotal) < iter_diag_ethr ) break;
         }
 
 
         // TODO: optimize occ_number
         // this->rdmft_solver.update_elec(occ_num_temp);
         break;
-        
+
     }
 
     std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;

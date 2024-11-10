@@ -79,7 +79,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
     this->nos_rep_wfc0 = this->nos_rep_wfc;
     this->new_wfc.zero_out();
 
-    return std::abs(this->energy1 - this->energy0);
+    return (this->energy1 - this->energy0);
 }
 
 
