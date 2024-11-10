@@ -115,7 +115,7 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::opti_occ_num_dft()
+void ESolver_RDMFT<TK, TR>::update_occ_num_dft()
 {
     
 }

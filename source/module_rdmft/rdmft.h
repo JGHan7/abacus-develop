@@ -164,6 +164,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     bool iter_diag = false;
     std::vector< std::vector<TK> > Hij_no_exx; // it can also be passed as an external pointer to cal_Hk_Hpsi()
     std::vector< std::vector<TK> > Hij_exx;
+    // std::vector< std::vector<TK> > Hk_RDMFT_pass; // delete in the future?
 
     hamilt::OperatorLCAO<TK, TR>* V_ekinetic_potential = nullptr;
     hamilt::OperatorLCAO<TK, TR>* V_nonlocal = nullptr;

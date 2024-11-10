@@ -35,9 +35,13 @@ void pdiag_scalapack<double>(const Parallel_2D* para_mat,
                                 const int global_row_mat,
                                 double* mat,
                                 double* egienvalue,
-                                double* egienvector)
+                                double* egienvector,
+                                bool get_egivector)
 {
-    const char jobz = 'V', uplo = 'U';
+    char jobz = 'V';
+    if(!get_egivector) jobz = 'N';
+
+    const char uplo = 'U';
     const int one_int = 1;
     int info = 0;
 

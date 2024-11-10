@@ -167,10 +167,12 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
     {
         Hij_no_exx.resize(nk_total);
         Hij_exx.resize(nk_total);
+        // Hk_RDMFT_pass.resize(nk_total); // delete in the future
         for(int ik=0; ik<nk_total; ++ik)
         {
             Hij_no_exx[ik].resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
             Hij_exx[ik].resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
+            // Hk_RDMFT_pass.resize(ParaV->ncol, ParaV->nrow); // delete in the future
         }
     }
 
@@ -301,6 +303,12 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
             set_zero_vector(Eij_hartree);
             if(GlobalC::exx_info.info_global.cal_exx) { set_zero_vector(Eij_exx_XC); }
             if( !only_exx_type ) { set_zero_vector(Eij_dft_XC); }
+
+            // // delete in the future
+            // for(int iloc=0; iloc<Hk_RDMFT_pass[ik].size(); ++iloc)
+            // {
+            //     Hk_RDMFT_pass[ik][iloc] = hsk_TV->get_hk()[iloc] + hsk_hartree->get_hk()[iloc] + hsk_exx_XC->get_hk()[iloc] + hsk_dft_XC->get_hk()[iloc];
+            // }
         }
 
 
