@@ -5,6 +5,7 @@
 
 // #include "module_rdmft/rdmft.h"
 #include "module_rdmft/esolver_rdmft.h"
+#include "module_rdmft/optimizer/optimizer_tools.h" // temporary
 
 namespace rdmft
 {
@@ -34,6 +35,8 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
     this->iter_diag_ethr = 1e-8;
     this->lambda_thr = 1e-4;
     this->occ_num_thr = 1e-3; // how much is proper?
+
+    this->dft_optimize = true;
 
     // initialize rdmft
     // if( rdmft_optimize_type == "iterDiag" )
@@ -88,6 +91,8 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
     /****** get start guess natural orbitals and occ_number ******/
 
+    if(dft_optimize) this->update_occ_num_dft(this->rdmft_solver);
+
     for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
         this->iter_diag_rdmft.before_inner_loop();
@@ -95,17 +100,18 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
         {
             double diff_etotal = this->iter_diag_rdmft.optimize_orb(this->rdmft_solver);
 
-            std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
+            if(dft_optimize) this->update_occ_num_dft(this->rdmft_solver);
 
+            std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
 
             if( std::abs(diff_etotal) < iter_diag_ethr ) break; // reference: relative error < 1e-7
         }
 
+        if(dft_optimize) break;
 
         // TODO: optimize occ_number
         // this->rdmft_solver.update_elec(occ_num_temp);
-        break;
 
     }
 
@@ -115,9 +121,36 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::update_occ_num_dft()
+void ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 {
-    
+    std::vector< std::vector<double> > ekb_rdmft(rdmft_solver_in.nk_total, std::vector<double>(PARAM.inp.nbands));
+
+    for(int ik=0; ik<ekb_rdmft.size(); ++ik)
+    {
+        std::vector<TK> Hij_rdmft = rdmft_solver_in.Hij_no_exx[ik];
+        if(GlobalC::exx_info.info_global.cal_exx)
+        {
+            for(int iloc=0; iloc<Hij_rdmft.size(); ++iloc) Hij_rdmft[iloc] += rdmft_solver_in.Hij_exx[ik][iloc];
+        }
+
+        std::vector<TK> temp_egivector(rdmft_solver_in.para_Eij.get_local_size());
+        rdmft::pdiag_scalapack( &(rdmft_solver_in.para_Eij), PARAM.inp.nbands, Hij_rdmft.data(), ekb_rdmft[ik].data(), temp_egivector.data(), false );
+
+        for(int ib=0; ib<ekb_rdmft[ik].size(); ++ib) rdmft_solver_in.pelec->ekb(ik, ib) = ekb_rdmft[ik][ib];
+    }
+
+    rdmft_solver_in.pelec->calEBand();
+    rdmft_solver_in.pelec->calculate_weights();
+    ModuleBase::matrix occ_number_ks = (rdmft_solver_in.pelec->wg);
+    for(int ik=0; ik < occ_number_ks.nr; ++ik)
+    {
+        for(int inb=0; inb < occ_number_ks.nc; ++inb)
+        {
+            occ_number_ks(ik, inb) /= rdmft_solver_in.kv.wk[ik];
+        }
+    }
+    rdmft_solver_in.update_elec(&occ_number_ks);
+
 }
 
 

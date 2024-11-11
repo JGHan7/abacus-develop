@@ -32,7 +32,8 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     void cal_stress(ModuleBase::matrix& stress) override;
 
     // temporary
-    void update_occ_num_dft();
+    void update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver);
+    bool dft_optimize = false;
     // std::vector< std::vector<TK> > Hamilt_rdmft;
 
 	  int maxniter;     // maximum iter steps for scf
