@@ -34,7 +34,6 @@ void antisymm_mat(const Parallel_2D* para_mat,
     const TK a = -alpha,  b = alpha;
     const int one_int = 1;
     pztranc_(&gloabl_row_mat, &gloabl_row_mat, &a, mat, &one_int, &one_int, para_mat->desc, &b, asym_mat, &one_int, &one_int, para_mat->desc);
-
 }
 
 
@@ -60,7 +59,7 @@ void pdiag_scalapack(const Parallel_2D* para_mat,
 {
     char jobz = 'V';
     if(!get_egivector) jobz = 'N';
-    
+
     const char uplo = 'U';
     const int one_int = 1;
     int info = 0;

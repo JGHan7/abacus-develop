@@ -198,6 +198,7 @@ void RDMFT<TK, TR>::update_occNumber(const ModuleBase::matrix& occ_number_in)
         {
             wg(ik, inb) *= this->kv.wk[ik];
             wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+            fun_occNum(ik, inb) = occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power); // temporary
         }
     }
 }

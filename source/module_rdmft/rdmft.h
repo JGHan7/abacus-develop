@@ -115,6 +115,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     psi::Psi<TK> wfc;
     ModuleBase::matrix wg;
     ModuleBase::matrix wk_fun_occNum;
+    ModuleBase::matrix fun_occNum; // temporary
 
     // store the gradients of Etotal with respect to the natural occupation numbers and wfc respectively
     ModuleBase::matrix occNum_wfcHamiltWfc;

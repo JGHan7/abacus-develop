@@ -81,6 +81,9 @@ class IterDiag_NOs
     // rotate the Fock to the natural orbital representation of step 1
     void rotate_Fock();
 
+    // temporary
+    void check_hermi(std::vector< std::vector<TK> >& mat);
+
     // // fill the diagonal elements of F
     // void fill_diag_elem(const Parallel_2D* para_mat, 
     //                       const std::vector< std::vector<TK> >& mat_filling, 

@@ -69,7 +69,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 {
     this->etotal_old = this->etotal;
 
-    this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
+    // this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
+    this->get_lambda(rdmft_solver.occ_number, rdmft_solver.fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
 
     this->get_Fock();
 
@@ -100,7 +101,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 template<typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
 {
-    this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
+    // this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
+    this->get_lambda(rdmft_solver.occ_number, rdmft_solver.fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
 
     // get start_Fock = symm_lambda
     std::vector< std::vector<TK> > symm_lambda = lambda;
@@ -188,6 +190,7 @@ void IterDiag_NOs<TK, TR>::get_Fock()
     // this->scale_Fock();
 
     // rotate Fock?
+    this->check_hermi(this->Fock_like_mat);
 }
 
 
@@ -234,6 +237,23 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
 {
 
 }
+
+
+template <typename TK, typename TR>
+void IterDiag_NOs<TK, TR>::check_hermi(std::vector< std::vector<TK> >& mat)
+{
+    for(int ik=0; ik<mat.size(); ++ik)
+    {
+        std::vector<TK> zero_mat(mat[ik].size(), 0.0);
+        rdmft::antisymm_mat(this->para_Fij, PARAM.inp.nbands, mat[ik].data(), zero_mat.data(), 1.0);
+        
+        for(int iloc=0; iloc<zero_mat.size(); ++iloc)
+        {
+            if( std::abs(zero_mat[iloc]) > 1e-12 ) std::cout << "\n\n******\n" << "Fock_like_mat is not Hermitian" << "\n******\n" << std::endl;
+        }
+    }
+}
+
 
 
 template <typename TK, typename TR>

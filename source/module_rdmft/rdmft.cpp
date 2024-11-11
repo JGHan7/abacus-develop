@@ -138,6 +138,7 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
     wfcHwfc_XC.create(nk_total, nbands_total);
     wfcHwfc_exx_XC.create(nk_total, nbands_total);
     wfcHwfc_dft_XC.create(nk_total, nbands_total);
+    fun_occNum.create(nk_total, nbands_total);  // temporary
 
     // 
     wfc.resize(nk_total, ParaV->ncol_bands, ParaV->nrow);   // test ParaV->nrow
