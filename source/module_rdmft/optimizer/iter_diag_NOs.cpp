@@ -214,9 +214,9 @@ void IterDiag_NOs<TK, TR>::scale_Fock()
                 
                 if(ic_global != ir_global) 
                 {
-                    // double c_rc = this->scale_zeta/std::abs(this->Fock_like_mat[ik][ir+ic*nrow]);
+                    double c_rc = this->scale_zeta/std::abs(this->Fock_like_mat[ik][ir+ic*nrow]); // choose one of the two
 
-                    double c_rc = this->scale_zeta_vector[ik]/std::abs(this->Fock_like_mat[ik][ir+ic*nrow]);
+                    // double c_rc = this->scale_zeta_vector[ik]/std::abs(this->Fock_like_mat[ik][ir+ic*nrow]); // choose one of the two
                     if( c_rc < 1.0 ) this->Fock_like_mat[ik][ir+ic*nrow] *= c_rc;
                 }
             }
