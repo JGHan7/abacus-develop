@@ -8,6 +8,7 @@
 #include "module_rdmft/optimizer/iter_diag_NOs.h"
 #include "module_rdmft/optimizer/optimizer_tools.h"
 #include "module_lr/utils/lr_util.h"
+#include "module_base/parallel_reduce.h"
 // #include "module_base/blas_connector.h"
 // #include "module_base/scalapack_connector.h"
 
@@ -41,6 +42,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     // identi_mat = get_identi_mat(this->para_Fij); // temporary
     this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
     this->scale_zeta = 0.01; // PARAM.inp.scale_zeta_rdmft?
+    this->scale_zeta_vector.resize(nk_total);
 
     this->lambda.resize(nk_total);
     this->diag_Fii.resize(nk_total);
@@ -184,12 +186,13 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                 }
             }
         }
-        set_zero_vector(diag_Fii[ik]);
+        // set_zero_vector(diag_Fii[ik]); // recover in the future? depending on whether adjust_scale() can use it
     }
 
-    // this->scale_Fock();
+    this->scale_Fock();
 
     // rotate Fock?
+
     this->check_hermi(this->Fock_like_mat);
 }
 
@@ -211,18 +214,50 @@ void IterDiag_NOs<TK, TR>::scale_Fock()
                 
                 if(ic_global != ir_global) 
                 {
-                    double c_rc = this->scale_zeta/std::abs(this->Fock_like_mat[ik][ir+ic*nrow]);
+                    // double c_rc = this->scale_zeta/std::abs(this->Fock_like_mat[ik][ir+ic*nrow]);
+
+                    double c_rc = this->scale_zeta_vector[ik]/std::abs(this->Fock_like_mat[ik][ir+ic*nrow]);
                     if( c_rc < 1.0 ) this->Fock_like_mat[ik][ir+ic*nrow] *= c_rc;
                 }
             }
         }
     }
+    set_zero_vector(this->scale_zeta_vector);
 }
 
 
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::adjust_scale()
 {
+    // std::vector<double> scale_vector(nk_total);s
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        int nrow = para_Fij->get_row_size();
+        for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+        {
+            const int ic_global = para_Fij->local2global_col(ic);
+            for(int ir=0; ir<nrow; ++ir)
+            {
+                int ir_global = para_Fij->local2global_row(ir);
+                
+                if(ic_global != ir_global) 
+                {
+                    this->scale_zeta_vector[ik] += std::abs( this->Fock_like_mat[ik][ir+ic*nrow] );
+                }
+            }
+        }
+        Parallel_Reduce::reduce_all(this->scale_zeta_vector[ik]);
+        this->scale_zeta_vector[ik] /= nbands_total*(nbands_total-1);
+        if( this->scale_zeta_vector[ik] > std::abs(this->diag_Fii[ik][0])/200.0 ) this->scale_zeta_vector[ik] = std::abs(this->diag_Fii[ik][0])/200.0;
+
+
+        std::cout << std::fixed << std::setprecision(6);
+        std::cout << "\n******\nik: " << ik << ",   avar_off_diag: " << scale_zeta_vector[ik] << ",    F00: " << this->diag_Fii[ik][0] << "\n******\n" 
+                    << std::endl << std::defaultfloat;
+
+        set_zero_vector(diag_Fii[ik]); // delete in the furure
+    }
+
     // refer to octopus
     if( this->energy_drop > static_cast<int>(1.5*this->energy_rise) ) this->scale_zeta *= 1.01;
     else if( this->energy_drop < static_cast<int>(1.1*this->energy_rise) ) this->scale_zeta *= 0.95;

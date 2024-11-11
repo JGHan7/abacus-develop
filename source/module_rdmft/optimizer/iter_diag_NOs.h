@@ -58,6 +58,7 @@ class IterDiag_NOs
 
     // used to scaling the off-diagonal elements of Fock
     double scale_zeta;
+    std::vector<double> scale_zeta_vector;
     int energy_drop = 0;
     int energy_rise = 0;
 
