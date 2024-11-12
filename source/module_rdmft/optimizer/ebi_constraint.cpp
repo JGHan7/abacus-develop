@@ -3,6 +3,7 @@
 // DATE : 2024-11-12
 //==========================================================
 
+#include <cmath>
 
 #include "module_rdmft/optimizer/ebi_constraint.h"
 // #include "module_rdmft/optimizer/optimizer_tools.h"
@@ -19,7 +20,7 @@ EBI::EBI()
 
 EBI::~EBI()
 {
-    
+
 }
 
 
