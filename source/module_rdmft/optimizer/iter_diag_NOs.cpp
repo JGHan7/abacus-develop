@@ -356,8 +356,6 @@ template class IterDiag_NOs<std::complex<double>, double>;
 template class IterDiag_NOs<std::complex<double>, std::complex<double>>;
 
 
-
-
 }
 
 
