@@ -96,22 +96,7 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
     for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
-        // //test
-        ModuleBase::TITLE("erf", "erf_inv");
-        ModuleBase::timer::tick("erf", "erf_inv");
-        double y1=0.0, y2=0.54562, y3=0.98, y4=0.0000000001, y5=0.45, y6=1.0, y7=0.999999999, y8=0.37634, y9=0.836786, y10=0.61569;
-        std::cout << std::fixed << std::setprecision(10) << "\ny1=  " << y1 << ",  minus: " << std::erf( erf_inv_own(y1) ) - y1 << std::endl;
-        std::cout << "\ny1=  " << y2 << ",  minus: " << std::erf( erf_inv_own(y2) ) - y2 << std::endl;
-        std::cout << "\ny1=  " << y3 << ",  minus: " << std::erf( erf_inv_own(y3) ) - y3 << std::endl;
-        std::cout << "\ny1=  " << y4 << ",  minus: " << std::erf( erf_inv_own(y4) ) - y4 << ",  erf_inv_own: " << y4 << std::endl;
-        std::cout << "\ny1=  " << y5 << ",  minus: " << std::erf( erf_inv_own(y5) ) - y5 << std::endl;
-        std::cout << "\ny1=  " << y6 << ",  minus: " << std::erf( erf_inv_own(y6) ) - y6 << std::endl;
-        std::cout << "\ny1=  " << y7 << ",  minus: " << std::erf( erf_inv_own(y7) ) - y7 << std::endl;
-        std::cout << "\ny1=  " << y8 << ",  minus: " << std::erf( erf_inv_own(y8) ) - y8 << std::endl;
-        std::cout << "\ny1=  " << y9 << ",  minus: " << std::erf( erf_inv_own(y9) ) - y9 << std::endl;
-        std::cout << "\ny1=  " << y10 << ",  minus: " << std::erf( erf_inv_own(y10) ) - y10 << std::endl << std::defaultfloat;
-        ModuleBase::timer::tick("erf", "erf_inv");
-
+        
         this->iter_diag_rdmft.before_inner_loop();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {

@@ -7,7 +7,7 @@
 
 
 #include "module_rdmft/rdmft.h"
-
+// #include "module_base/matrix.h"
 
 namespace rdmft
 {
@@ -40,6 +40,9 @@ class BFGS_ONs
 
   private:
 
+    ModuleBase::matrix x0, x1, diff_x;
+    ModuleBase::matrix dE_dx0, dE_dx1, diff_gradient;
+    double rho;
 
 
 

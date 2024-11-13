@@ -112,44 +112,6 @@ void GkPsi<double>(const Parallel_2D* para_mat,
 // check this approximation using std::erf( erf_inv_own(x) ) - x
 double erf_inv_own(double x) 
 {
-    // if (x < -1 || x > 1) {
-    //     throw std::domain_error("Input for erf_inv must be in the range [-1, 1]");
-    // }
-
-    // if (x == 0) return 0;
-    // if (x == 1) return std::numeric_limits<double>::infinity();
-    // if (x == -1) return -std::numeric_limits<double>::infinity();
-
-    // // Constants used in the approximation
-    // const double a[] = { 0.886226899, -1.645349621, 0.914624893, -0.140543331 };
-    // const double b[] = { -2.118377725, 1.442710462, -0.329097515, 0.012229801 };
-    // const double c[] = { -1.970840454, -1.62490649, 3.429567803, 1.641345311 };
-    // const double d[] = { 3.543889200, 1.637067800 };
-
-    // double result;
-    // double abs_x = std::abs(x);
-
-    // // Approximation for |x| <= 0.7
-    // if (abs_x <= 0.7) {
-    //     double z = x * x;
-    //     result = x * (((a[3] * z + a[2]) * z + a[1]) * z + a[0]) /
-    //                   ((((b[3] * z + b[2]) * z + b[1]) * z + b[0]) * z + 1.0);
-    // }
-    // // Approximation for |x| > 0.7
-    // else {
-    //     double z = std::sqrt(-std::log((1.0 - abs_x) / 2.0));
-    //     result = (((c[3] * z + c[2]) * z + c[1]) * z + c[0]) /
-    //                   ((d[1] * z + d[0]) * z + 1.0);
-    //     if (x < 0) result = -result;
-    // }
-
-    // return result;
-
-
-
-
-
-
     if (x < -1.0 || x > 1.0) {
         throw std::domain_error("Input out of range: erf_inv(x) requires -1 <= x <= 1.");
     }
@@ -158,12 +120,12 @@ double erf_inv_own(double x)
     if (x == 1.0) return std::numeric_limits<double>::infinity();
     if (x == -1.0) return -std::numeric_limits<double>::infinity();
 
-    // 高精度初始近似
+    // High-precision initial approximation
     double w, p;
     if (std::abs(x) <= 0.7) {
         w = 0.5 * (1 - x);
         p = std::sqrt(-2.0 * std::log(w));
-        // Abramowitz & Stegun (26.2.23) 初始近似
+        // Abramowitz & Stegun (26.2.23) initial Approximation
         p = (((-0.140543331 * p + 0.914624893) * p - 1.645349621) * p + 0.886226899) /
             ((((0.012229801 * p - 0.329097515) * p + 1.442710462) * p - 2.118377725) * p + 1.0);
     } else {
@@ -173,15 +135,14 @@ double erf_inv_own(double x)
         if (x < 0) p = -p;
     }
 
-    // Newton-Raphson 迭代改进
+    // Newton-Raphson iterative Improvement
     for (int i = 0; i < 5; ++i) {
-        double err = std::erf(p) - x; // 当前误差
-        double deriv = 2.0 / std::sqrt(M_PI) * std::exp(-p * p); // erf 的导数
-        p -= err / deriv; // 更新
+        double err = std::erf(p) - x; // current Error
+        double deriv = 2.0 / std::sqrt(M_PI) * std::exp(-p * p); // derivative of erf
+        p -= err / deriv; // update
     }
 
     return p;
-
 }
 
 
