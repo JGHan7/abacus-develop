@@ -122,6 +122,8 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
     nk_total *= nspin;
     only_exx_type = ( XC_func_rdmft == "hf" || XC_func_rdmft == "muller" || XC_func_rdmft == "power" );
 
+    if(nspin == 4) { std::cout << "\n\n rdmft does not support nspin=4 \n\n" << std::endl; }
+
     // // create desc[] and something about MPI to Eij(nbands*nbands)
 #ifdef __MPI
     para_Eij.set(nbands_total, nbands_total, ParaV->nb, ParaV->blacs_ctxt); // maybe in default, PARAM.inp.nb2d = 0, can't be used

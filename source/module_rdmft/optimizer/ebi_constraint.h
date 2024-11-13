@@ -6,6 +6,7 @@
 #define EBI_CONSTRAINT_H
 
 
+#include <vector>
 
 
 namespace rdmft
@@ -20,7 +21,7 @@ class EBI
     EBI();
     ~EBI();
 
-
+    init();
 
 
 
@@ -32,7 +33,10 @@ class EBI
   protected:
 
 
-
+  std::vector<double> get_mu()
+  {
+    return this->mu;
+  };
 
 
 
@@ -42,7 +46,7 @@ class EBI
 
   private:
 
-
+  std::vector<double> mu;
 
 
 
