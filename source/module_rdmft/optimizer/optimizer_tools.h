@@ -145,6 +145,17 @@ void GkPsi<double>(const Parallel_2D* para_mat,
 
 
 
+double erf_inv_own(double x);
+
+
+
+
+
+
+
+
+
+
 
 }
 

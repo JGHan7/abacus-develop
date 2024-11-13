@@ -6,6 +6,7 @@
 // #include "module_rdmft/rdmft.h"
 #include "module_rdmft/esolver_rdmft.h"
 #include "module_rdmft/optimizer/optimizer_tools.h" // temporary
+#include <cmath> // temporary
 
 namespace rdmft
 {
@@ -95,6 +96,13 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
     for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
+        // //test
+        // double y1=0.0, y2=0.5;
+        // double result1 = std::erf_inv(y1);
+        // double result2 = std::erf_inv(y2);
+        // std::cout << "erf_inv(" << y1 << ") = " << result1 << std::endl;
+        // std::cout << "erf_inv(" << y2 << ") = " << result2 << std::endl;
+
         this->iter_diag_rdmft.before_inner_loop();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {
