@@ -5,6 +5,7 @@
 
 // #include "module_rdmft/rdmft.h"
 #include "module_rdmft/esolver_rdmft.h"
+#include "module_rdmft/rdmft_tools.h"
 #include "module_rdmft/optimizer/optimizer_tools.h" // temporary
 #include <cmath> // temporary
 
@@ -96,19 +97,23 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
     for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
-
+        int small_diffE = 0;
         this->iter_diag_rdmft.before_inner_loop();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {
             double diff_etotal = this->iter_diag_rdmft.optimize_orb(this->rdmft_solver);
 
             if(dft_optimize) this->update_occ_num_dft(this->rdmft_solver);
+            if( std::abs(diff_etotal) < iter_diag_ethr ) ++small_diffE;
 
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
 
-            if( std::abs(diff_etotal) < iter_diag_ethr  && iter_orb > 5) break; // reference: relative error < 1e-7
+            if( small_diffE > 3 && iter_orb > 5) break; // reference: relative error < 1e-7
+            // if( iter_orb > 200 ) this->iter_diag_rdmft.scale_zeta *= 0.1; // test 
         }
+
+        rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number");
 
         if(dft_optimize) break;
         break;
