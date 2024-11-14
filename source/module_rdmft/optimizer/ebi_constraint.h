@@ -21,7 +21,7 @@ class EBI
     EBI();
     ~EBI();
 
-    init();
+    void init();
 
 
 

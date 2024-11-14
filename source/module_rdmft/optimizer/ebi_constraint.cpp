@@ -24,7 +24,7 @@ EBI::~EBI()
 }
 
 
-EBI::init()
+void EBI::init()
 {
     mu.resize(PARAM.inp.nspin);
 }

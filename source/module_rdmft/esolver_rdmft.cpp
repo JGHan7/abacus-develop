@@ -29,7 +29,7 @@ template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& ucell)
 {
     rdmft_solver.before_all_runners(inp, ucell);
-    this->maxniter = rdmft_solver.maxniter;
+    this->maxniter = inp.scf_nmax;
     this->maxniter_occ_num = this->maxniter;
     this->maxniter_orb = this->maxniter;
 
@@ -69,7 +69,7 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
     }
     else
     {
-        rdmft_solver.maxniter = 1;
+        rdmft_solver.modify_scf_nmax(1);
         rdmft_solver.runner(istep, ucell);
     }
     this->rdmft_solver.inital_wfc_occNum();
@@ -96,7 +96,7 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
 
     for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
-        
+
         this->iter_diag_rdmft.before_inner_loop();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {

@@ -227,6 +227,9 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // get the initial value, can only be called once after one or several KS steps
     void inital_wfc_occNum();
 
+    // temporary
+    void modify_scf_nmax(int scf_nmax) { this->maxniter = scf_nmax; };
+
 
 
   protected:
