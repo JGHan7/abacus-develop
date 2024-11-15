@@ -54,41 +54,41 @@ namespace rdmft
 {
 
 
-// //for print matrix
-// template <typename TK>
-// void printMatrix_pointer(int M, int N, const TK* matrixA, std::string nameA)
-// {
-//     std::cout << "\n" << nameA << ": \n";
-//     for(int i=0; i<M; ++i)
-//     {
-//         for(int j=0; j<N; ++j)
-//         {
-//             if( j%5 == 0 ) { std::cout << "\n";
-// }
-//             std::cout << *(matrixA+i*N+j) << " ";
-//         }
-//         std::cout << "\n";
-//     }
-//     std::cout << std::endl;
-// }
+//for print matrix
+template <typename TK>
+void printMatrix_pointer(int M, int N, const TK* matrixA, std::string nameA)
+{
+    std::cout << "\n" << nameA << ": \n";
+    for(int i=0; i<M; ++i)
+    {
+        for(int j=0; j<N; ++j)
+        {
+            if( j%5 == 0 ) { std::cout << "\n";
+}
+            std::cout << *(matrixA+i*N+j) << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << std::endl;
+}
 
 
-// template <typename TK>
-// void printMatrix_vector(int M, int N, const std::vector<TK>& matrixA, std::string nameA)
-// {
-//     std::cout << "\n" << nameA << ": \n";
-//     for(int i=0; i<M; ++i)
-//     {
-//         for(int j=0; j<N; ++j)
-//         {
-//             if( j%5 == 0 ) { std::cout << "\n";
-// }
-//             std::cout << matrixA[i*N+j] << " ";
-//         }
-//         std::cout << "\n\n";
-//     }
-//     std::cout << std::endl;
-// }
+template <typename TK>
+void printMatrix_vector(int M, int N, const std::vector<TK>& matrixA, std::string nameA)
+{
+    std::cout << "\n" << nameA << ": \n";
+    for(int i=0; i<M; ++i)
+    {
+        for(int j=0; j<N; ++j)
+        {
+            if( j%5 == 0 ) { std::cout << "\n";
+}
+            std::cout << matrixA[i*N+j] << " ";
+        }
+        std::cout << "\n\n";
+    }
+    std::cout << std::endl;
+}
 
 
 // now support XC_func_rdmft = "hf", "muller", "power", "pbe", "pbe0". "wp22" and "cwp22" is realizing.

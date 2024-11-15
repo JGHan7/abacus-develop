@@ -282,12 +282,12 @@ void ESolver_KS_LCAO<TK, TR>::before_all_runners(const Input_para& inp, UnitCell
         }
     }
 
-    // 14) initialize rdmft, added by jghan
-    if( PARAM.inp.rdmft == true )
-    {
-        rdmft_solver.init( this->GG, this->GK, this->pv, ucell, this->kv, *(this->pelec),
-                                this->orb_, two_center_bundle_, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
-    }
+    // // 14) initialize rdmft, added by jghan
+    // if( PARAM.inp.rdmft == true )
+    // {
+    //     rdmft_solver.init( this->GG, this->GK, this->pv, ucell, this->kv, *(this->pelec),
+    //                             this->orb_, two_center_bundle_, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
+    // }
 
     ModuleBase::timer::tick("ESolver_KS_LCAO", "before_all_runners");
     return;
