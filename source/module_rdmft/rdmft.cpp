@@ -301,10 +301,15 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
                 Hij_no_exx[ik][iloc] = Eij_TV[iloc] + Eij_hartree[iloc] + Eij_dft_XC[iloc];
                 Hij_exx[ik][iloc] = Eij_exx_XC[iloc];
             }
-            set_zero_vector(Eij_TV);
-            set_zero_vector(Eij_hartree);
-            if(GlobalC::exx_info.info_global.cal_exx) { set_zero_vector(Eij_exx_XC); }
-            if( !only_exx_type ) { set_zero_vector(Eij_dft_XC); }
+            // set_zero_vector(Eij_TV);
+            // set_zero_vector(Eij_hartree);
+            // if(GlobalC::exx_info.info_global.cal_exx) { set_zero_vector(Eij_exx_XC); }
+            // if( !only_exx_type ) { set_zero_vector(Eij_dft_XC); }
+
+            std::fill(Eij_TV.begin(), Eij_TV.end(), 0.0);
+            std::fill(Eij_hartree.begin(), Eij_hartree.end(), 0.0);
+            if(GlobalC::exx_info.info_global.cal_exx) { std::fill(Eij_exx_XC.begin(), Eij_exx_XC.end(), 0.0); }
+            if( !only_exx_type ) { std::fill(Eij_dft_XC.begin(), Eij_dft_XC.end(), 0.0); }
 
             // // delete in the future
             // for(int iloc=0; iloc<Hk_RDMFT_pass[ik].size(); ++iloc)
