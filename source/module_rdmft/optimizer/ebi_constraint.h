@@ -7,7 +7,7 @@
 
 
 #include <vector>
-
+#include "module_base/matrix.h"
 
 namespace rdmft
 {
@@ -22,6 +22,8 @@ class EBI
     ~EBI();
 
     void init(int nk_total);
+
+    std::vector<double> get_start_guess(ModuleBase::matrix* occ_number = nullptr);
 
 
 
@@ -47,8 +49,11 @@ class EBI
   private:
 
   int nk_nospin = 0;
+  int nbands = 0;
 
   std::vector<double> mu;
+
+  std::vector< std::vector<double> > x;
 
   std::vector< std::vector<double> > dmu_dx;
 
