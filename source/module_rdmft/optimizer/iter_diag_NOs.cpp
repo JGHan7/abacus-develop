@@ -3,6 +3,7 @@
 // DATE : 2024-11-01
 //==========================================================
 
+#include <algorithm>
 // #include "module_rdmft/rdmft.h"
 #include "module_rdmft/rdmft_tools.h"
 #include "module_rdmft/optimizer/iter_diag_NOs.h"
@@ -186,7 +187,7 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                 }
             }
         }
-        // set_zero_vector(diag_Fii[ik]); // recover in the future? depending on whether adjust_scale() can use it
+        // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0); // recover in the future? depending on whether adjust_scale() can use it
     }
 
     this->scale_Fock();
@@ -222,7 +223,7 @@ void IterDiag_NOs<TK, TR>::scale_Fock()
             }
         }
     }
-    set_zero_vector(this->scale_zeta_vector);
+    std::fill(this->scale_zeta_vector.begin(), this->scale_zeta_vector.end(), 0.0);
 }
 
 
@@ -255,7 +256,7 @@ void IterDiag_NOs<TK, TR>::adjust_scale()
         std::cout << "\n******\nik: " << ik << ",   avar_off_diag: " << scale_zeta_vector[ik] << ",    F00: " << this->diag_Fii[ik][0] << "\n******\n" 
                     << std::endl << std::defaultfloat;
 
-        set_zero_vector(diag_Fii[ik]); // delete in the furure
+        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0); // delete in the furure
     }
 
     // refer to octopus
