@@ -431,9 +431,6 @@ void Veff_rdmft<double, double>::contributeHR()
 
 
 
-
-
-
 }
 
 
