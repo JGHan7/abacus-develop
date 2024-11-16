@@ -21,7 +21,7 @@ class EBI
     EBI();
     ~EBI();
 
-    void init();
+    void init(int nk_total);
 
 
 
@@ -46,7 +46,13 @@ class EBI
 
   private:
 
+  int nk_nospin = 0;
+
   std::vector<double> mu;
+
+  std::vector< std::vector<double> > dmu_dx;
+
+  std::vector< std::vector<double> > doccNum_dx;
 
 
 

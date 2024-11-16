@@ -10,11 +10,13 @@
 #include "module_basis/module_ao/parallel_2d.h"
 #include "module_basis/module_ao/parallel_orbitals.h"
 #include "module_parameter/parameter.h"
+#include "module_base/constants.h"
 // #include "module_base/parallel_reduce.h"
 // #include "module_lr/utils/lr_util.h"
 // #include "module_hamilt_pw/hamilt_pwdft/global.h"
 
 #include <iostream>
+#include <cmath>
 
 namespace rdmft
 {
@@ -145,10 +147,23 @@ void GkPsi<double>(const Parallel_2D* para_mat,
 
 
 
+/********* the following function is used by the BFGS_opti_ONs method *********/
+
+
+
+
+
+
+/********* the following function is just used by the EBI_constraint method *********/
+
 double erf_inv_own(double x);
 
 
+//! the first derivative of the erf function
+double erf_der1(double x);
 
+//! the second derivative of the erf function
+double erf_der2(double x);
 
 
 

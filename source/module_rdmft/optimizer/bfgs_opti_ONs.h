@@ -9,17 +9,21 @@
 #include "module_rdmft/rdmft.h"
 // #include "module_base/matrix.h"
 
+#include <vector>
+
 namespace rdmft
 {
 
-
-template<typename TK, typename TR>
+//! currently only supports TK=double
+template<typename TK>
 class BFGS_ONs
 {
   public:
     
     BFGS_ONs();
     ~BFGS_ONs();
+
+    void init();
 
 
 
@@ -40,8 +44,8 @@ class BFGS_ONs
 
   private:
 
-    ModuleBase::matrix x0, x1, diff_x;
-    ModuleBase::matrix dE_dx0, dE_dx1, diff_gradient;
+    std::vector<TK> x0, x1, diff_x;
+    std::vector<TK> dE_dx0, dE_dx1, diff_gradient;
     double rho;
 
 

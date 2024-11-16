@@ -12,30 +12,35 @@ namespace rdmft
 {
 
 
-template<typename TK, typename TR>
-BFGS_ONs<TK, TR>::BFGS_ONs()
+template<typename TK>
+BFGS_ONs<TK>::BFGS_ONs()
 {
 
 }
 
 
-template<typename TK, typename TR>
-BFGS_ONs<TK, TR>::~BFGS_ONs()
+template<typename TK>
+BFGS_ONs<TK>::~BFGS_ONs()
 {
     
 }
 
 
+template<typename TK>
+void BFGS_ONs<TK>::init()
+{
+
+}
 
 
 
 
 
+// template class BFGS_ONs<double, double>;
+// template class BFGS_ONs<std::complex<double>, double>;
+// template class BFGS_ONs<std::complex<double>, std::complex<double>>;
 
-template class BFGS_ONs<double, double>;
-template class BFGS_ONs<std::complex<double>, double>;
-template class BFGS_ONs<std::complex<double>, std::complex<double>>;
-
+template class BFGS_ONs<double>;
 
 }
 

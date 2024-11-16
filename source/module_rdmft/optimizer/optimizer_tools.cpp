@@ -104,10 +104,14 @@ void GkPsi<double>(const Parallel_2D* para_mat,
 }
 
 
+/********* the following function is used by the BFGS_opti_ONs method *********/
 
 
 
 
+
+
+/********* the following function is just used by the EBI_constraint method *********/
 
 // check this approximation using std::erf( erf_inv_own(x) ) - x
 double erf_inv_own(double x) 
@@ -144,6 +148,22 @@ double erf_inv_own(double x)
 
     return p;
 }
+
+
+double erf_der1(double x)
+{
+    double y = ( 2 * std::exp( -std::pow(x, 2) ) )/std::sqrt(ModuleBase::PI);
+    return y;
+}
+
+
+double erf_der2(double x)
+{
+    double y = ( -4 * x * std::exp( -std::pow(x, 2) ) )/std::sqrt(ModuleBase::PI);
+    return y;
+}
+
+
 
 
 
