@@ -29,6 +29,7 @@ EBI::~EBI()
 
 void EBI::init(int nk_total)
 {
+    this->solve_mu_thr = 1e-10; 
     this->nk_nospin = nk_total/PARAM.inp.nspin;
     this->nbands = PARAM.inp.nbands;
     mu.resize(PARAM.inp.nspin);
@@ -126,6 +127,8 @@ std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
         if( PARAM.inp.nspin == 1 ) { (*occ_number_in) *= 0.5; }
 
         // give an initial guess for mu, 0.0 or other value
+        // also we can use the above approach, according to artificial rules, to get a set of x from a set of determined occ_num
+        // then do solving_mu()
         mu.resize(PARAM.inp.nspin, 0.0);
 
         for(int ik=0; ik<occ_number_in->nr; ++ik)
@@ -154,7 +157,57 @@ std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
 
 void EBI::solving_mu()
 {
+    for(int is=0; is<PARAM.inp.nspin; ++is)
+    {
+        /********* is there an error in the paper formula? mu should be updated at each step *********/
+        // double mu_temp = 0.0;
+        // std::vector<double> f_der(2, 1.0);
 
+        // while( f_der[0] > this->solve_mu_thr )
+        // {
+        //     f_der = this->cal_f_der(this->mu[is], is);
+        //     double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
+        //     double sign = 0.0;
+        //     if( f_der[0]>0 ) { sign = 1.0; }
+        //     else if ( f_der[0]<0 ) { sign = -1.0; }
+
+        //     if( f1_divided_f2 > 1.0 )
+        //     {
+        //         mu_temp -= sign;
+        //     }
+        //     else
+        //     {
+        //         std::vector<double> f_der_temp = this->cal_f_der(mu_temp, is);
+        //         mu_temp -= sign * std::abs( f_der_temp[0]/f_der_temp[1] );
+        //     }
+        // }
+        // this->mu[is] = mu_temp;
+        /********* is there an error in the paper formula? *********/
+
+        this->mu[is] = 0.0;
+        std::vector<double> f_der(2, 1.0);
+
+        while( f_der[0] > this->solve_mu_thr )
+        {
+            f_der = this->cal_f_der(this->mu[is], is);
+            double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
+
+            double sign = 0.0;
+            if( f_der[0]>0 ) { sign = 1.0; }
+            else if ( f_der[0]<0 ) { sign = -1.0; }
+
+            if( f1_divided_f2 > 1.0 )
+            {
+                this->mu[is] -= sign;
+            }
+            else
+            {
+                this->mu[is] -= sign * f1_divided_f2;
+            }
+        }
+    }
+    
+    this->cal_occ_num();
 }
 
 ModuleBase::matrix EBI::get_occ_number()
@@ -182,16 +235,58 @@ ModuleBase::matrix EBI::get_occ_number()
 }
 
 
+// std::vector< std::vector<double> > EBI::cal_occ_num()
+// {
+//     std::vector< std::vector<double> > sum(PARAM.inp.nspin, std::vector<double>(3, 0.0));
+//     for(int is=0; is<PARAM.inp.nspin; ++is)
+//     {
+//         for(int i=0; i<this->x[is].size(); ++i)
+//         {
+//             this->occ_number[is][i] = ( std::erf(this->x[is][i] + this->mu[is]) + 1.0 )/2.0;
+
+//             sum[is][0] += this->occ_number[is][i];
+//             sum[is][1] += erf_der1(this->x[is][i] + this->mu[is]);
+//             sum[is][2] += erf_der2(this->x[is][i] + this->mu[is]);
+//         }
+//     }
+//     return sum;
+// }
+
 void EBI::cal_occ_num()
 {
-    for(is=0; is<PARAM.inp.nspin; ++is)
+    for(int is=0; is<PARAM.inp.nspin; ++is)
     {
-
+        for(int i=0; i<this->x[is].size(); ++i)
+        {
+            this->occ_number[is][i] = ( std::erf(this->x[is][i] + this->mu[is]) + 1.0 )/2.0;
+        }
     }
 }
 
 
+std::vector<double> EBI::cal_f_der(double mu_in, int is)
+{
+    std::vector<double> f_der(2, 0.0);
+    std::vector<double> sum = this->cal_sum(mu_in, is);
 
+    f_der[0] = ( sum[0] - this->nelec_spin[is] ) * sum[1];
+    f_der[1] = 0.5*std::pow(sum[1], 2) + ( sum[0] - this->nelec_spin[is] ) * sum[2];
+
+    return f_der;
+}
+
+
+std::vector<double> EBI::cal_sum(double mu_in, int is)
+{
+    std::vector<double> sum(3, 0.0);
+    for(int i=0; i<this->x[is].size(); ++i)
+    {
+        sum[0] += ( std::erf(this->x[is][i] + mu_in) + 1.0 )/2.0;
+        sum[1] += erf_der1(this->x[is][i] + mu_in);
+        sum[2] += erf_der2(this->x[is][i] + mu_in);
+    }
+    return sum;
+}
 
 
 

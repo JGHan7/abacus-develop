@@ -27,7 +27,10 @@ class EBI
 
     ModuleBase::matrix get_occ_number();
 
+    //! when x is determined, get mu and occ_number
     void solving_mu();
+
+    double solve_mu_thr;
 
 
 
@@ -64,9 +67,13 @@ class EBI
 
   std::vector< std::vector<double> > doccNum_dx;
 
+  //! when x and mu are determined, get occ_number
   void cal_occ_num();
 
+  //! when spin = is, mu=mu_in,  return the sum of occ_num, erf_der1, and erf_der2 respectively
+  std::vector<double> cal_sum(double mu_in, int is = 0);
 
+  std::vector<double> cal_f_der(double mu_in, int is = 0);
 
 
 
