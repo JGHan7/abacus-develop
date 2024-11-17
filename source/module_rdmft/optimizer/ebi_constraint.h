@@ -64,7 +64,7 @@ class EBI
 
   std::vector< std::vector<double> > doccNum_dx;
 
-
+  void cal_occ_num();
 
 
 

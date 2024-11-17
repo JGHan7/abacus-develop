@@ -102,7 +102,7 @@ std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
             {
                 for(int ib=0; ib<nbands; ++ib)
                 {
-                    this->occ_number[is][ik*nbands+ib] = random_num[ik*nbands+ib];
+                    // this->occ_number[is][ik*nbands+ib] = random_num[ik*nbands+ib];
 
                     if( ik*nbands+ib < M )
                     {
@@ -116,9 +116,8 @@ std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
                     x_temp[is*(nk_nospin*nbands) + ik*nbands +ib ] = this->x[is][ik*nbands+ib];
                 }
             }
-
         }
-        // this->solving_mu(); // need it ?
+        this->solving_mu();
     }
     // use the externally passed occ_number_in as the initial value
     else
@@ -177,8 +176,21 @@ ModuleBase::matrix EBI::get_occ_number()
         }
     }
 
+    if(PARAM.inp.nspin == 1) occ_num_pass *= 2;
+
     return occ_num_pass;
 }
+
+
+void EBI::cal_occ_num()
+{
+    for(is=0; is<PARAM.inp.nspin; ++is)
+    {
+
+    }
+}
+
+
 
 
 
