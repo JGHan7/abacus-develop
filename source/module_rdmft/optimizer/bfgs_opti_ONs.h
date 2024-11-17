@@ -15,6 +15,8 @@ namespace rdmft
 {
 
 //! currently only supports TK=double
+//! currently only unconstrained optimization of the occupancy numbers is considered 
+//! which means that the EBI method must be used
 template<typename TK>
 class BFGS_ONs
 {
