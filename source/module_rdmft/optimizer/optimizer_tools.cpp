@@ -9,6 +9,8 @@
 #include <limits>
 #include <stdexcept>
 #include <iostream>
+#include <random>
+#include <algorithm>
 
 namespace rdmft
 {
@@ -164,7 +166,33 @@ double erf_der2(double x)
 }
 
 
+void random_descend(std::vector<double>& num, double* value, int* location)
+{
+    // random seed, requires hardware support
+    std::random_device rd;
+    // mersenne Twister engine
+    std::mt19937 gen(rd());     // std::mt19937 gen(42);
+    // a uniform distribution in the range (0.0, 1.0)
+    std::uniform_real_distribution<> dis( std::nextafter(0.0, 1.0), 1.0 );
 
+    for(int i=0; i<num.size(); ++i) { num[i] = dis(gen); }
+    // sort descending
+    std::sort(num.begin(), num.end(), std::greater<>());
+
+    if( value != nullptr && location != nullptr )
+    {
+        double sum_num = 0.0;
+        for(int j=0; j<num.size(); ++j)
+        {
+            sum_num += num[j];
+            if( sum_num > *value )
+            {
+                *location = j;
+                break;
+            }
+        }
+    }
+}
 
 
 

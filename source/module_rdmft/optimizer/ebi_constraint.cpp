@@ -4,9 +4,9 @@
 //==========================================================
 
 #include <cmath>
-#include <random>
-#include <limits>
-#include <algorithm>
+// #include <random>
+// #include <limits>
+// #include <algorithm>
 
 #include "module_rdmft/optimizer/ebi_constraint.h"
 #include "module_rdmft/optimizer/optimizer_tools.h"
@@ -66,30 +66,34 @@ std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
     // use random numbers to generate initial values
     if(occ_number_in == nullptr)
     {
-        // Initialize the random number generator and distribution
-        std::random_device rd;      // random seed, requires hardware support
-        std::mt19937 gen(rd());     // mersenne Twister engine, or std::mt19937 gen(42);
-        std::uniform_real_distribution<> dis( std::nextafter(0.0, 1.0), 1.0 ); // a uniform distribution in the range (0.0, 1.0)
+        // // Initialize the random number generator and distribution
+        // std::random_device rd;      // random seed, requires hardware support
+        // std::mt19937 gen(rd());     // mersenne Twister engine, or std::mt19937 gen(42);
+        // std::uniform_real_distribution<> dis( std::nextafter(0.0, 1.0), 1.0 ); // a uniform distribution in the range (0.0, 1.0)
 
         for(int is=0; is<PARAM.inp.nspin; ++is)
         {
-            std::vector<double> random_num(nk_nospin*nbands, 0.0);
-            for(int i=0; i<random_num.size(); ++i) { random_num[i] = dis(gen); }
-            // sort descending
-            std::sort(random_num.begin(), random_num.end(), std::greater<>());
+            // std::vector<double> random_num(nk_nospin*nbands, 0.0);
+            // for(int i=0; i<random_num.size(); ++i) { random_num[i] = dis(gen); }
+            // // sort descending
+            // std::sort(random_num.begin(), random_num.end(), std::greater<>());
 
-            // for each spin, M being the smallest number satisfying \sum_{p=1}^{M} occNum_{p} >= N
+            // // for each spin, M being the smallest number satisfying \sum_{p=1}^{M} occNum_{p} >= N
+            // int M = 0;
+            // double sum_occ_number = 0.0;
+            // for(int i=0; i<random_num.size(); ++i)
+            // {
+            //     sum_occ_number += random_num[i];
+            //     if( sum_occ_number > nelec_spin[is] )
+            //     {
+            //         M = i;
+            //         break;
+            //     }
+            // }
+
             int M = 0;
-            double sum_occ_number = 0.0;
-            for(int i=0; i<random_num.size(); ++i)
-            {
-                sum_occ_number += random_num[i];
-                if( sum_occ_number > nelec_spin[is] )
-                {
-                    M = i;
-                    break;
-                }
-            }
+            std::vector<double> random_num(nk_nospin*nbands, 0.0);
+            rdmft::random_descend(random_num, &nelec_spin[is], &M);
 
             // to avoid the low bands with large-k points getting too small values ​
             // ​and the high bands with small-k points getting too large values
