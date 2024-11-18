@@ -14,10 +14,10 @@
 namespace rdmft
 {
 
-//! currently only supports TK=double
+//! currently only supports TX=double
 //! currently only unconstrained optimization of the occupancy numbers is considered 
 //! which means that the EBI method must be used
-template<typename TK>
+template<typename TX>
 class BFGS_ONs
 {
   public:
@@ -46,8 +46,8 @@ class BFGS_ONs
 
   private:
 
-    std::vector<TK> x0, x1, diff_x;
-    std::vector<TK> dE_dx0, dE_dx1, diff_gradient;
+    std::vector<TX> x0, x1, diff_x;
+    std::vector<TX> dE_dx0, dE_dx1, diff_gradient;
     double rho;
 
 

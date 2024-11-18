@@ -106,6 +106,27 @@ void GkPsi<double>(const Parallel_2D* para_mat,
 }
 
 
+// to compute C = alpha * A.? * B.? + beta * C
+// all use the fortran perspective, not cpp
+void dgemm_lapack(const double* A,
+                    const double* B,
+                    double* C, 
+                    const int row_C, 
+                    const int col_C, 
+                    const int contract_index,
+                    const char op_A,
+                    const char op_B,
+                    const double alpha,
+                    const double beta)
+{
+    const int lda = (op_A == 'N') ? row_C : contract_index;
+    const int ldb = (op_B == 'N') ? contract_index : col_C;
+    const int one_int = 1;
+
+    dgemm_( &op_A, &op_B, &row_C, &col_C, &contract_index, &alpha, A, &lda, B, &ldb, &beta, C, &row_C );
+}
+
+
 /********* the following function is used by the BFGS_opti_ONs method *********/
 
 

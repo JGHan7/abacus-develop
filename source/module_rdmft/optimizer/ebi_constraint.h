@@ -71,7 +71,7 @@ class EBI
 
     // std::vector< std::vector<double> > dmu_dx;
 
-    // std::vector< std::vector<double> > doccNum_dx;
+    // std::vector< std::vector<double> > docc_num_dx;
 
     //! when x is determined, get mu and occ_number
     void solving_mu();
@@ -87,7 +87,7 @@ class EBI
 
     void cal_dmu_dx(std::vector<double>& dmu_dx, int is = 0);
 
-    void cal_doccNum_dx(const std::vector<double>& dmu_dx, std::vector<double>& doccNum_dx, int is = 0);
+    void cal_docc_num_dx(const std::vector<double>& dmu_dx, std::vector<double>& docc_num_dx, int is = 0);
 
 
 

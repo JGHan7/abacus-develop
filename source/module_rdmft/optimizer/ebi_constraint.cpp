@@ -38,14 +38,14 @@ void EBI::init(int nk_total)
     x.resize(PARAM.inp.nspin);
     occ_number.resize(PARAM.inp.nspin);
     // dmu_dx.resize(PARAM.inp.nspin);
-    // doccNum_dx.resize(PARAM.inp.nspin);
+    // docc_num_dx.resize(PARAM.inp.nspin);
 
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
         x[is].resize(nk_nospin*nbands);
         occ_number.resize(nk_nospin*nbands);
         // dmu_dx[is].resize(nk_nospin*nbands);
-        // doccNum_dx.resize(nk_nospin*nbands * nk_nospin*nbands);
+        // docc_num_dx.resize(nk_nospin*nbands * nk_nospin*nbands);
     }
 
     if( PARAM.inp.nspin == 1 )
@@ -169,17 +169,21 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
 
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
+        // convert format. consider spin up and spin down separately
         for(int j=0; j<nk_nospin*nbands; ++j) { dE_deta[is][j] *= dE_docc_num[is*(nk_nospin*nbands) + j]; }
 
         std::vector<double> dmu_dx(nk_nospin*nbands, 0.0);
-        std::vector<double> doccNum_dx(nk_nospin*nbands * nk_nospin*nbands, 0.0);
+        std::vector<double> docc_num_dx(nk_nospin*nbands * nk_nospin*nbands, 0.0);
 
         this->cal_dmu_dx(dmu_dx);
+        this->cal_docc_num_dx(dmu_dx, docc_num_dx, is);
+
+        rdmft::dgemm_lapack(  );
 
     }
 
     // std::vector< std::vector<double> > dmu_dx(PARAM.inp.nspin, std::vector<double>(nk_nospin*nbands, 0.0));
-    // std::vector< std::vector<double> > doccNum_dx(PARAM.inp.nspin, std::vector<double>(nk_nospin*nbands * nk_nospin*nbands, 0.0));
+    // std::vector< std::vector<double> > docc_num_dx(PARAM.inp.nspin, std::vector<double>(nk_nospin*nbands * nk_nospin*nbands, 0.0));
 
 
 }
@@ -338,9 +342,23 @@ void EBI::cal_dmu_dx(std::vector<double>& dmu_dx, int is)
 }
 
 
-void EBI::cal_doccNum_dx(const std::vector<double>& dmu_dx, std::vector<double>& doccNum_dx, int is)
+void EBI::cal_docc_num_dx(const std::vector<double>& dmu_dx, std::vector<double>& docc_num_dx, int is)
 {
-
+    const int N = nk_nospin*nbands;
+    for(int i=0; i<N; ++i)
+    {
+        for(int j=0; j<N; ++j)
+        {
+            if( i==j )
+            {
+                docc_num_dx[i*N+j] = 0.5 * erf_der1(this->x[is][i] + this->mu[is]) * (1 + dmu_dx[i]);
+            }
+            else
+            {
+                docc_num_dx[i*N+j] = 0.5 * erf_der1(this->x[is][i] + this->mu[is]) * dmu_dx[j];
+            }
+        }
+    }
 }
 
 

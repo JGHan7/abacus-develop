@@ -12,22 +12,22 @@ namespace rdmft
 {
 
 
-template<typename TK>
-BFGS_ONs<TK>::BFGS_ONs()
+template<typename TX>
+BFGS_ONs<TX>::BFGS_ONs()
 {
 
 }
 
 
-template<typename TK>
-BFGS_ONs<TK>::~BFGS_ONs()
+template<typename TX>
+BFGS_ONs<TX>::~BFGS_ONs()
 {
     
 }
 
 
-template<typename TK>
-void BFGS_ONs<TK>::init()
+template<typename TX>
+void BFGS_ONs<TX>::init()
 {
 
 }
