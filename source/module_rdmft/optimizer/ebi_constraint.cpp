@@ -37,15 +37,15 @@ void EBI::init(int nk_total)
     nelec_spin.resize(PARAM.inp.nspin);
     x.resize(PARAM.inp.nspin);
     occ_number.resize(PARAM.inp.nspin);
-    dmu_dx.resize(PARAM.inp.nspin);
-    doccNum_dx.resize(PARAM.inp.nspin);
+    // dmu_dx.resize(PARAM.inp.nspin);
+    // doccNum_dx.resize(PARAM.inp.nspin);
 
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
         x[is].resize(nk_nospin*nbands);
         occ_number.resize(nk_nospin*nbands);
-        dmu_dx[is].resize(nk_nospin*nbands);
-        doccNum_dx.resize(nk_nospin*nbands * nk_nospin*nbands);
+        // dmu_dx[is].resize(nk_nospin*nbands);
+        // doccNum_dx.resize(nk_nospin*nbands * nk_nospin*nbands);
     }
 
     if( PARAM.inp.nspin == 1 )
@@ -165,14 +165,23 @@ ModuleBase::matrix EBI::update_x_occ_num(const std::vector<double>& x_in)
 void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx)
 {
     const double factor =  PARAM.inp.nspin==1 ? 2.0 : 1.0;
-    
     std::vector< std::vector<double> > dE_deta(PARAM.inp.nspin, std::vector<double>(nk_nospin*nbands, factor));
+
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
         for(int j=0; j<nk_nospin*nbands; ++j) { dE_deta[is][j] *= dE_docc_num[is*(nk_nospin*nbands) + j]; }
+
+        std::vector<double> dmu_dx(nk_nospin*nbands, 0.0);
+        std::vector<double> doccNum_dx(nk_nospin*nbands * nk_nospin*nbands, 0.0);
+
+        this->cal_dmu_dx(dmu_dx);
+
     }
 
-    
+    // std::vector< std::vector<double> > dmu_dx(PARAM.inp.nspin, std::vector<double>(nk_nospin*nbands, 0.0));
+    // std::vector< std::vector<double> > doccNum_dx(PARAM.inp.nspin, std::vector<double>(nk_nospin*nbands * nk_nospin*nbands, 0.0));
+
+
 }
 
 
@@ -290,7 +299,15 @@ void EBI::cal_occ_num()
 std::vector<double> EBI::cal_f_der(double mu_in, int is)
 {
     std::vector<double> f_der(2, 0.0);
-    std::vector<double> sum = this->cal_sum(mu_in, is);
+
+    // std::vector<double> sum = this->cal_sum(mu_in, is);
+    std::vector<double> sum(3, 0.0);
+    for(int i=0; i<this->x[is].size(); ++i)
+    {
+        sum[0] += ( std::erf(this->x[is][i] + mu_in) + 1.0 )/2.0;
+        sum[1] += erf_der1(this->x[is][i] + mu_in);
+        sum[2] += erf_der2(this->x[is][i] + mu_in);
+    }
 
     f_der[0] = ( sum[0] - this->nelec_spin[is] ) * sum[1];
     f_der[1] = 0.5*std::pow(sum[1], 2) + ( sum[0] - this->nelec_spin[is] ) * sum[2];
@@ -299,17 +316,35 @@ std::vector<double> EBI::cal_f_der(double mu_in, int is)
 }
 
 
-std::vector<double> EBI::cal_sum(double mu_in, int is)
+// std::vector<double> EBI::cal_sum(double mu_in, int is)
+// {
+//     std::vector<double> sum(3, 0.0);
+//     for(int i=0; i<this->x[is].size(); ++i)
+//     {
+//         sum[0] += ( std::erf(this->x[is][i] + mu_in) + 1.0 )/2.0;
+//         sum[1] += erf_der1(this->x[is][i] + mu_in);
+//         sum[2] += erf_der2(this->x[is][i] + mu_in);
+//     }
+//     return sum;
+// }
+
+
+void EBI::cal_dmu_dx(std::vector<double>& dmu_dx, int is)
 {
-    std::vector<double> sum(3, 0.0);
-    for(int i=0; i<this->x[is].size(); ++i)
-    {
-        sum[0] += ( std::erf(this->x[is][i] + mu_in) + 1.0 )/2.0;
-        sum[1] += erf_der1(this->x[is][i] + mu_in);
-        sum[2] += erf_der2(this->x[is][i] + mu_in);
-    }
-    return sum;
+    double sum_der1 = 0.0;
+    for(int i=0; i<this->x[is].size(); ++i) { sum_der1 += erf_der1(this->x[is][i] + this->mu[is]); }
+
+    for(int j=0; j<dmu_dx.size(); ++j) { dmu_dx[j] = - erf_der1(this->x[is][j] + this->mu[is]) / sum_der1; }
 }
+
+
+void EBI::cal_doccNum_dx(const std::vector<double>& dmu_dx, std::vector<double>& doccNum_dx, int is)
+{
+
+}
+
+
+
 
 
 

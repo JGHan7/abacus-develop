@@ -69,9 +69,9 @@ class EBI
 
     std::vector< std::vector<double> > occ_number;
 
-    std::vector< std::vector<double> > dmu_dx;
+    // std::vector< std::vector<double> > dmu_dx;
 
-    std::vector< std::vector<double> > doccNum_dx;
+    // std::vector< std::vector<double> > doccNum_dx;
 
     //! when x is determined, get mu and occ_number
     void solving_mu();
@@ -79,10 +79,15 @@ class EBI
     //! when x and mu are determined, get occ_number
     void cal_occ_num();
 
-    //! when spin = is, mu=mu_in,  return the sum of occ_num, erf_der1, and erf_der2 respectively
-    std::vector<double> cal_sum(double mu_in, int is = 0);
+    // //! when spin = is, mu=mu_in, return the sum of occ_num, erf_der1, and erf_der2 respectively
+    // std::vector<double> cal_sum(double mu_in, int is = 0);
 
+    //! when spin = is, mu=mu_in, return F_der1, F_der2 respectively
     std::vector<double> cal_f_der(double mu_in, int is = 0);
+
+    void cal_dmu_dx(std::vector<double>& dmu_dx, int is = 0);
+
+    void cal_doccNum_dx(const std::vector<double>& dmu_dx, std::vector<double>& doccNum_dx, int is = 0);
 
 
 
