@@ -169,7 +169,7 @@ double erf_der2(double x);
 
 //! generate a set of random numbers with a uniform distribution in the range (0.0, 1.0), in descending order
 //! optional: loc is the smallest number satisfying \sum_{p=1}^{loc} num_{p} >= value
-void random_descend(std::vector<double>& num, double* value = nullptr, int* location = nullptr);
+void random_descend(std::vector<double>& num, const double* value = nullptr, int* location = nullptr);
 
 
 

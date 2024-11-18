@@ -8,6 +8,9 @@
 #include "module_rdmft/rdmft.h"
 #include "module_esolver/esolver_fp.h"
 #include "module_rdmft/optimizer/iter_diag_NOs.h"
+#include "module_rdmft/optimizer/ebi_constraint.h"
+#include "module_rdmft/optimizer/bfgs_opti_ONs.h"
+
 
 namespace rdmft
 {
@@ -36,6 +39,8 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     bool dft_optimize = false;
     // std::vector< std::vector<TK> > Hamilt_rdmft;
 
+    void opti_occ_num(bool first_time = false);
+
 	  int maxniter;     // maximum iter steps for scf
 
     int maxniter_occ_num;     // maximum iter steps for ONs
@@ -55,6 +60,10 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     rdmft::IterDiag_NOs<TK, TR> iter_diag_rdmft;
 
     rdmft::RDMFT<TK, TR> rdmft_solver;
+
+    rdmft::EBI ebi;
+
+    rdmft::BFGS_ONs<double> bfgs_rdmft;
 
     // std::vector< std::vector<TK> > lambda;
 

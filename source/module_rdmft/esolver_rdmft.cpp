@@ -52,6 +52,8 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
     }
 
     this->iter_diag_rdmft.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV));
+    this->ebi.init(rdmft_solver.nk_total);
+    this->bfgs_rdmft.init();
 
 }
 
@@ -126,6 +128,28 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
     std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;
     std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;
 }
+
+
+template <typename TK, typename TR>
+void ESolver_RDMFT<TK, TR>::opti_occ_num(bool first_time)
+{
+    if(first_time)
+    {
+        
+    }
+    else
+    {
+
+    }
+}
+
+
+
+
+
+
+
+
 
 
 template <typename TK, typename TR>

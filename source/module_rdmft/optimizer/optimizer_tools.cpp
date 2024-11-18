@@ -166,7 +166,7 @@ double erf_der2(double x)
 }
 
 
-void random_descend(std::vector<double>& num, double* value, int* location)
+void random_descend(std::vector<double>& num, const double* value, int* location)
 {
     // random seed, requires hardware support
     std::random_device rd;

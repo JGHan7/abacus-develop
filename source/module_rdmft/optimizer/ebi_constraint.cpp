@@ -4,6 +4,7 @@
 //==========================================================
 
 #include <cmath>
+#include <algorithm>
 // #include <random>
 // #include <limits>
 // #include <algorithm>
@@ -60,38 +61,24 @@ void EBI::init(int nk_total)
 }
 
 
-std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
+void EBI::get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx, ModuleBase::matrix* occ_number_in)
 {
-    std::vector<double> x_temp(nk_nospin * PARAM.inp.nspin * nbands , 0.0);
+    if( x_in.size() == dE_dx.size() && x_in.size() == nk_nospin * PARAM.inp.nspin * nbands )
+    {
+        std::fill(x_in.begin(), x_in.end(), 0.0);
+        std::fill(dE_dx.begin(), dE_dx.end(), 0.0);
+    }
+    else
+    {
+        x_in.resize(nk_nospin * PARAM.inp.nspin * nbands, 0.0);
+        dE_dx.resize(nk_nospin * PARAM.inp.nspin * nbands, 0.0);
+    }
 
     // use random numbers to generate initial values
     if(occ_number_in == nullptr)
     {
-        // // Initialize the random number generator and distribution
-        // std::random_device rd;      // random seed, requires hardware support
-        // std::mt19937 gen(rd());     // mersenne Twister engine, or std::mt19937 gen(42);
-        // std::uniform_real_distribution<> dis( std::nextafter(0.0, 1.0), 1.0 ); // a uniform distribution in the range (0.0, 1.0)
-
         for(int is=0; is<PARAM.inp.nspin; ++is)
         {
-            // std::vector<double> random_num(nk_nospin*nbands, 0.0);
-            // for(int i=0; i<random_num.size(); ++i) { random_num[i] = dis(gen); }
-            // // sort descending
-            // std::sort(random_num.begin(), random_num.end(), std::greater<>());
-
-            // // for each spin, M being the smallest number satisfying \sum_{p=1}^{M} occNum_{p} >= N
-            // int M = 0;
-            // double sum_occ_number = 0.0;
-            // for(int i=0; i<random_num.size(); ++i)
-            // {
-            //     sum_occ_number += random_num[i];
-            //     if( sum_occ_number > nelec_spin[is] )
-            //     {
-            //         M = i;
-            //         break;
-            //     }
-            // }
-
             int M = 0;
             std::vector<double> random_num(nk_nospin*nbands, 0.0);
             rdmft::random_descend(random_num, &nelec_spin[is], &M);
@@ -103,8 +90,6 @@ std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
             {
                 for(int ib=0; ib<nbands; ++ib)
                 {
-                    // this->occ_number[is][ik*nbands+ib] = random_num[ik*nbands+ib];
-
                     if( ik*nbands+ib < M )
                     {
                         if( random_num[ik*nbands+ib] > (std::erf(2.0) + 1.0)/2.0 )  { this->x[is][ik*nbands+ib] = 2.0; }
@@ -114,7 +99,7 @@ std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
                     {
                         this->x[is][ik*nbands+ib] = -2.0;
                     }
-                    x_temp[is*(nk_nospin*nbands) + ik*nbands +ib ] = this->x[is][ik*nbands+ib];
+                    x_in[is*(nk_nospin*nbands) + ik*nbands +ib ] = this->x[is][ik*nbands+ib];
                 }
             }
         }
@@ -137,21 +122,64 @@ std::vector<double> EBI::get_start_guess(ModuleBase::matrix* occ_number_in)
             {
                 if( ik < occ_number_in->nr/PARAM.inp.nspin )
                 {
-                    x_temp[ik*nbands + ib] = erf_inv_own( 2*(*occ_number_in)(ik, ib) - 1 ) - mu[0];
-                    x[0][ik*nbands + ib] = x_temp[ik*nbands + ib];
+                    x_in[ik*nbands + ib] = erf_inv_own( 2*(*occ_number_in)(ik, ib) - 1 ) - mu[0];
+                    x[0][ik*nbands + ib] = x_in[ik*nbands + ib];
                     occ_number[0][ik*nbands + ib] = (*occ_number_in)(ik, ib);
                 }
                 else
                 {
-                    x_temp[ik*nbands + ib] = erf_inv_own( 2*(*occ_number_in)(ik, ib) - 1 ) - mu[PARAM.inp.nspin-1];
-                    x[PARAM.inp.nspin-1][ik*nbands + ib] = x_temp [ik*nbands + ib];
+                    x_in[ik*nbands + ib] = erf_inv_own( 2*(*occ_number_in)(ik, ib) - 1 ) - mu[PARAM.inp.nspin-1];
+                    x[PARAM.inp.nspin-1][ik*nbands + ib] = x_in[ik*nbands + ib];
                     occ_number[PARAM.inp.nspin-1][ik*nbands + ib] = (*occ_number_in)(ik, ib);
                 }
             }
         }
     }
-    return x_temp;
+
 }
+
+
+void EBI::get_dE_dx(const std::vector<double>& x_in, std::vector<double>& dE_dx)
+{
+    // // update member variable x from external x_in
+    // for(int is=0; is<PARAM.inp.nspin; ++is)
+    // {
+    //     for(int ik=0; ik<nk_nospin; ++ik)
+    //     {
+    //         for(int ib=0; ib<nbands; ++ib)
+    //         {
+    //             this->x[is][ik*nbands+ib] = x_in[is*(nk_nospin*nbands) + ik*nbands +ib ];
+    //         }
+    //     }
+    // }
+
+    // this->solving_mu();
+
+
+
+}
+
+ModuleBase::matrix EBI::update_x_occ_num(const std::vector<double>& x_in)
+{
+    // update member variable x from external x_in
+    for(int is=0; is<PARAM.inp.nspin; ++is)
+    {
+        for(int ik=0; ik<nk_nospin; ++ik)
+        {
+            for(int ib=0; ib<nbands; ++ib)
+            {
+                this->x[is][ik*nbands+ib] = x_in[is*(nk_nospin*nbands) + ik*nbands +ib ];
+            }
+        }
+    }
+
+    // get the new mu and occ_number
+    this->solving_mu();
+
+    return this->get_occ_number();   
+}
+
+
 
 
 
@@ -206,7 +234,7 @@ void EBI::solving_mu()
             }
         }
     }
-    
+
     this->cal_occ_num();
 }
 
