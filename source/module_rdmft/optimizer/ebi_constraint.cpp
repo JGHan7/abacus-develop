@@ -77,6 +77,7 @@ void EBI::get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx
     // use random numbers to generate initial values
     if(occ_number_in == nullptr)
     {
+        this->random_inital = true;
         for(int is=0; is<PARAM.inp.nspin; ++is)
         {
             int M = 0;
@@ -139,25 +140,6 @@ void EBI::get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx
 }
 
 
-void EBI::get_dE_dx(const std::vector<double>& x_in, std::vector<double>& dE_dx)
-{
-    // // update member variable x from external x_in
-    // for(int is=0; is<PARAM.inp.nspin; ++is)
-    // {
-    //     for(int ik=0; ik<nk_nospin; ++ik)
-    //     {
-    //         for(int ib=0; ib<nbands; ++ib)
-    //         {
-    //             this->x[is][ik*nbands+ib] = x_in[is*(nk_nospin*nbands) + ik*nbands +ib ];
-    //         }
-    //     }
-    // }
-
-    // this->solving_mu();
-
-
-
-}
 
 ModuleBase::matrix EBI::update_x_occ_num(const std::vector<double>& x_in)
 {
@@ -179,6 +161,19 @@ ModuleBase::matrix EBI::update_x_occ_num(const std::vector<double>& x_in)
     return this->get_occ_number();   
 }
 
+
+void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx)
+{
+    const double factor =  PARAM.inp.nspin==1 ? 2.0 : 1.0;
+    
+    std::vector< std::vector<double> > dE_deta(PARAM.inp.nspin, std::vector<double>(nk_nospin*nbands, factor));
+    for(int is=0; is<PARAM.inp.nspin; ++is)
+    {
+        for(int j=0; j<nk_nospin*nbands; ++j) { dE_deta[is][j] *= dE_docc_num[is*(nk_nospin*nbands) + j]; }
+    }
+
+    
+}
 
 
 

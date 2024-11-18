@@ -27,11 +27,14 @@ class EBI
 
     void get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx, ModuleBase::matrix* occ_number = nullptr);
 
-    //! 
-    void get_dE_dx(const std::vector<double>& x_in, std::vector<double>& dE_dx);
-
-    //! update x and solve for mu and occ_number. And return occ_number
+    //! update x and solve for mu and occ_number
+    //! return occ_number to the outside
     ModuleBase::matrix update_x_occ_num(const std::vector<double>& x_in);
+
+    //! when x and mu are determined, convert dE_docc_num to dE_dx
+    void get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx);
+
+
 
 
 
