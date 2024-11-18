@@ -135,14 +135,18 @@ void ESolver_RDMFT<TK, TR>::opti_occ_num(bool first_time)
 {
     if(first_time)
     {
-        // this->ebi.get_inital_guess(occ_number);
-        this->ebi.get_inital_guess();
         if( this->ebi.random_inital == true )
         {
+            this->ebi.get_inital_guess();
             this->rdmft_solver.update_elec( &(this->ebi.get_occ_number()) );
             this->rdmft_solver.cal_E_gradient();
         }
-        
+        else
+        {
+            // this->ebi.get_inital_guess(occ_number);
+        }
+        // transfer this->rdmft_solver.occNum_wfcHamiltWfc -> std::vector
+        // this->ebi.get_dE_dx(std::vector, this->bfgs_rdmft.dE_dx1);
     }
     else
     {

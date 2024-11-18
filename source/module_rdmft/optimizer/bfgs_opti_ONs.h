@@ -27,7 +27,9 @@ class BFGS_ONs
 
     void init();
 
-
+    std::vector<TX> x0, x1, diff_x;
+    std::vector<TX> dE_dx0, dE_dx1, diff_gradient;
+    double rho;
 
 
 
@@ -46,9 +48,9 @@ class BFGS_ONs
 
   private:
 
-    std::vector<TX> x0, x1, diff_x;
-    std::vector<TX> dE_dx0, dE_dx1, diff_gradient;
-    double rho;
+    // std::vector<TX> x0, x1, diff_x;
+    // std::vector<TX> dE_dx0, dE_dx1, diff_gradient;
+    // double rho;
 
 
 

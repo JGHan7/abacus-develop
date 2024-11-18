@@ -25,7 +25,7 @@ class EBI
 
     bool random_inital = false;
 
-    void get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx, ModuleBase::matrix* occ_number = nullptr);
+    void get_inital_guess(ModuleBase::matrix* occ_number = nullptr);
 
     //! update x and solve for mu and occ_number
     //! return occ_number to the outside

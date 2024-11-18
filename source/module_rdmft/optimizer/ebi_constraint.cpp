@@ -61,19 +61,8 @@ void EBI::init(int nk_total)
 }
 
 
-void EBI::get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx, ModuleBase::matrix* occ_number_in)
+void EBI::get_inital_guess(ModuleBase::matrix* occ_number_in)
 {
-    if( x_in.size() == dE_dx.size() && x_in.size() == nk_nospin * PARAM.inp.nspin * nbands )
-    {
-        std::fill(x_in.begin(), x_in.end(), 0.0);
-        std::fill(dE_dx.begin(), dE_dx.end(), 0.0);
-    }
-    else
-    {
-        x_in.resize(nk_nospin * PARAM.inp.nspin * nbands, 0.0);
-        dE_dx.resize(nk_nospin * PARAM.inp.nspin * nbands, 0.0);
-    }
-
     // use random numbers to generate initial values
     if(occ_number_in == nullptr)
     {
@@ -100,7 +89,6 @@ void EBI::get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx
                     {
                         this->x[is][ik*nbands+ib] = -2.0;
                     }
-                    x_in[is*(nk_nospin*nbands) + ik*nbands +ib ] = this->x[is][ik*nbands+ib];
                 }
             }
         }
@@ -113,8 +101,7 @@ void EBI::get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx
         if( PARAM.inp.nspin == 1 ) { (*occ_number_in) *= 0.5; }
 
         // give an initial guess for mu, 0.0 or other value
-        // also we can use the above approach, according to artificial rules, to get a set of x from a set of determined occ_num
-        // then do solving_mu()
+        // also we can use the above approach, according to artificial rules, to get x from determined occ_num, then do solving_mu()
         mu.resize(PARAM.inp.nspin, 0.0);
 
         for(int ik=0; ik<occ_number_in->nr; ++ik)
@@ -123,14 +110,12 @@ void EBI::get_inital_guess(std::vector<double>& x_in, std::vector<double>& dE_dx
             {
                 if( ik < occ_number_in->nr/PARAM.inp.nspin )
                 {
-                    x_in[ik*nbands + ib] = erf_inv_own( 2*(*occ_number_in)(ik, ib) - 1 ) - mu[0];
-                    x[0][ik*nbands + ib] = x_in[ik*nbands + ib];
+                    x[0][ik*nbands + ib] = erf_inv_own( 2*(*occ_number_in)(ik, ib) - 1 ) - mu[0];
                     occ_number[0][ik*nbands + ib] = (*occ_number_in)(ik, ib);
                 }
                 else
                 {
-                    x_in[ik*nbands + ib] = erf_inv_own( 2*(*occ_number_in)(ik, ib) - 1 ) - mu[PARAM.inp.nspin-1];
-                    x[PARAM.inp.nspin-1][ik*nbands + ib] = x_in[ik*nbands + ib];
+                    x[PARAM.inp.nspin-1][ik*nbands + ib] = erf_inv_own( 2*(*occ_number_in)(ik, ib) - 1 ) - mu[PARAM.inp.nspin-1];
                     occ_number[PARAM.inp.nspin-1][ik*nbands + ib] = (*occ_number_in)(ik, ib);
                 }
             }
