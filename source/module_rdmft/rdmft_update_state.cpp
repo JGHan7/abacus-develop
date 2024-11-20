@@ -55,7 +55,7 @@ void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const psi::Psi<TK>* wfc_in, Charge* charge_in)
+void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const psi::Psi<TK>* wfc_in, const Charge* charge_in)
 {
     if( occ_number_in != nullptr )
     {

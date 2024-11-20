@@ -5,6 +5,7 @@
 #ifndef RDMFT_TOOLS_H
 #define RDMFT_TOOLS_H
 
+#include "module_psi/psi.h"
 #include "module_base/matrix.h"
 #include "module_cell/module_neighbor/sltk_grid_driver.h"
 #include "module_cell/unitcell.h"
@@ -15,32 +16,22 @@
 #include "module_base/scalapack_connector.h"
 #include "module_basis/module_ao/parallel_2d.h"
 #include "module_basis/module_ao/parallel_orbitals.h"
-#include "module_hamilt_pw/hamilt_pwdft/global.h"
 #include "module_base/parallel_reduce.h"
+#include "module_hamilt_pw/hamilt_pwdft/global.h"
 #include "module_elecstate/module_dm/cal_dm_psi.h"
 #include "module_elecstate/module_dm/density_matrix.h"
 
-#include "module_hamilt_general/operator.h"
 #include "module_hamilt_lcao/module_hcontainer/hcontainer.h"
-#include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/operator_lcao.h"
-#include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/op_exx_lcao.h"
-#include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/ekinetic_new.h"
-#include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/nonlocal_new.h"
-#include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/veff_lcao.h"
-
-#include "module_base/blas_connector.h"
-#include "module_base/scalapack_connector.h"
-
 #include "module_hamilt_lcao/hamilt_lcaodft/hs_matrix_k.hpp"
+#include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/operator_lcao.h"
 
-// used by Exx&LRI
+
 #ifdef __EXX
 #include "module_ri/RI_2D_Comm.h"
 #include "module_ri/Exx_LRI.h"
-#endif
-
 // there are some operator reload to print data in different formats
 #include "module_ri/test_code/test_function.h"
+#endif
 
 #include <iostream>
 #include <type_traits>
@@ -73,27 +64,27 @@ void printMatrix_pointer(int M, int N, const TK* matrixA, std::string nameA)
 }
 
 
-template <typename TK>
-void printMatrix_vector(int M, int N, const std::vector<TK>& matrixA, std::string nameA)
-{
-    std::cout << "\n" << nameA << ": \n";
-    for(int i=0; i<M; ++i)
-    {
-        for(int j=0; j<N; ++j)
-        {
-            if( j%5 == 0 ) { std::cout << "\n";
-}
-            std::cout << matrixA[i*N+j] << " ";
-        }
-        std::cout << "\n\n";
-    }
-    std::cout << std::endl;
-}
+// template <typename TK>
+// void printMatrix_vector(int M, int N, const std::vector<TK>& matrixA, std::string nameA)
+// {
+//     std::cout << "\n" << nameA << ": \n";
+//     for(int i=0; i<M; ++i)
+//     {
+//         for(int j=0; j<N; ++j)
+//         {
+//             if( j%5 == 0 ) { std::cout << "\n";
+// }
+//             std::cout << matrixA[i*N+j] << " ";
+//         }
+//         std::cout << "\n\n";
+//     }
+//     std::cout << std::endl;
+// }
 
 
 //! now support XC_func_rdmft = "hf", "muller", "power", "pbe", "pbe0". "wp22" and "cwp22" is realizing.
 // for the dft-xc-functional part of xc-functional, just use the default is right! Or don't use the function
-double occNum_func(double eta, int symbol = 0, const std::string XC_func_rdmft = "hf", const double alpha_power = 1.0);
+double occNum_func(const double eta, int symbol = 0, const std::string XC_func_rdmft = "hf", const double alpha_power = 1.0);
 
 
 template <typename TK>
@@ -243,9 +234,11 @@ void add_psi(const Parallel_Orbitals* ParaV,
 
 }
 
-
-//! occNum_wfcHwfc = occNum*wfcHwfc + occNum_wfcHwfc
-//! When symbol = 0, 1, 2, 3, 4, occNum = occNum, 0.5*occNum, g(occNum), 0.5*g(occNum), d_g(occNum)/d_occNum respectively. Default symbol=0.
+/**
+ * @brief occNum_wfcHwfc = occNum*wfcHwfc + occNum_wfcHwfc
+ * @param symbol: When symbol = 0, 1, 2, 3, 4, occNum = occNum, 0.5*occNum, g(occNum), 0.5*g(occNum), d_g(occNum)/d_occNum respectively.
+ *                Default symbol=0.
+*/
 void occNum_Mul_wfcHwfc(const ModuleBase::matrix& occ_number, 
                             const ModuleBase::matrix& wfcHwfc, 
                             ModuleBase::matrix& occNum_wfcHwfc,
@@ -254,8 +247,10 @@ void occNum_Mul_wfcHwfc(const ModuleBase::matrix& occ_number,
                             const double alpha = 1.0);
 
 
-//! Default symbol = 0 for the gradient of Etotal with respect to occupancy
-//! symbol = 1 for the relevant calculation of Etotal
+/**
+ * @brief Default symbol = 0 for the gradient of Etotal with respect to occupancy,
+ *        symbol = 1 for the relevant calculation of Etotal
+*/
 void add_occNum(const K_Vectors& kv, 
                     const ModuleBase::matrix& occ_number, 
                     const ModuleBase::matrix& wfcHwfc_TV_in, 

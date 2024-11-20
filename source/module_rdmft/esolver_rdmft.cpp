@@ -138,7 +138,8 @@ void ESolver_RDMFT<TK, TR>::opti_occ_num(bool first_time)
         if( this->ebi.random_inital == true )
         {
             this->ebi.get_inital_guess();
-            this->rdmft_solver.update_elec( &(this->ebi.get_occ_number()) );
+            ModuleBase::matrix occ_num = this->ebi.get_occ_number();
+            this->rdmft_solver.update_elec( &occ_num );
             this->rdmft_solver.cal_E_gradient();
         }
         else
@@ -166,6 +167,9 @@ void ESolver_RDMFT<TK, TR>::opti_occ_num(bool first_time)
 template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 {
+    elecstate::ElecState* pelec_ = rdmft_solver.get_pelec();
+    K_Vectors& kv_ = rdmft_solver.get_kv();
+ 
     std::vector< std::vector<double> > ekb_rdmft(rdmft_solver_in.nk_total, std::vector<double>(PARAM.inp.nbands));
 
     for(int ik=0; ik<ekb_rdmft.size(); ++ik)
@@ -179,17 +183,17 @@ void ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
         std::vector<TK> temp_egivector(rdmft_solver_in.para_Eij.get_local_size());
         rdmft::pdiag_scalapack( &(rdmft_solver_in.para_Eij), PARAM.inp.nbands, Hij_rdmft.data(), ekb_rdmft[ik].data(), temp_egivector.data(), false );
 
-        for(int ib=0; ib<ekb_rdmft[ik].size(); ++ib) rdmft_solver_in.pelec->ekb(ik, ib) = ekb_rdmft[ik][ib];
+        for(int ib=0; ib<ekb_rdmft[ik].size(); ++ib) pelec_->ekb(ik, ib) = ekb_rdmft[ik][ib];
     }
 
-    rdmft_solver_in.pelec->calEBand();
-    rdmft_solver_in.pelec->calculate_weights();
-    ModuleBase::matrix occ_number_ks = (rdmft_solver_in.pelec->wg);
+    pelec_->calEBand();
+    pelec_->calculate_weights();
+    ModuleBase::matrix occ_number_ks = (pelec_->wg);
     for(int ik=0; ik < occ_number_ks.nr; ++ik)
     {
         for(int inb=0; inb < occ_number_ks.nc; ++inb)
         {
-            occ_number_ks(ik, inb) /= rdmft_solver_in.kv.wk[ik];
+            occ_number_ks(ik, inb) /= kv_.wk[ik];
         }
     }
     rdmft_solver_in.update_elec(&occ_number_ks);

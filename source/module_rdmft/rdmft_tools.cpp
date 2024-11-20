@@ -2,16 +2,17 @@
 // Author: Jingang Han
 // DATE : 2024-03-11
 //==========================================================
-// #include "rdmft.h"
+
 #include "module_rdmft/rdmft_tools.h"
-
-// #include "module_base/blas_connector.h"
-// #include "module_base/scalapack_connector.h"
-#include "module_base/timer.h"
-#include "module_psi/psi.h"
 #include "module_hamilt_pw/hamilt_pwdft/global.h"
-
-#include "module_elecstate/module_dm/cal_dm_psi.h"
+// used by class Veff_rdmft
+#include "module_base/tool_title.h"
+#include "module_base/timer.h"
+#include "module_hamilt_general/module_xc/xc_functional.h"
+#include "module_elecstate/potentials/H_Hartree_pw.h"
+#include "module_elecstate/potentials/pot_local.h"
+#include "module_elecstate/potentials/pot_xc.h"
+#include "module_hamilt_pw/hamilt_pwdft/structure_factor.h"
 
 #include <iostream>
 #include <cmath>
@@ -19,32 +20,9 @@
 #include <fstream>
 #include <sstream>
 
-// used by class Veff_rdmft
-//#include "veff_lcao.h"
-//#include "module_base/timer.h"
-#include "module_base/tool_title.h"
-#include "module_hamilt_general/module_xc/xc_functional.h"
-#include "module_elecstate/potentials/H_Hartree_pw.h"
-#include "module_elecstate/potentials/pot_local.h"
-#include "module_elecstate/potentials/pot_xc.h"
-#include "module_hamilt_pw/hamilt_pwdft/structure_factor.h"
-
-// for test use dgemm_
-#include "module_base/matrix.h"
-#include "module_base/blas_connector.h"
-
-#include "module_hamilt_lcao/module_hcontainer/hcontainer.h"  //test
-
-
-
-
 
 namespace rdmft
 {
-
-
-
-
 
 
 template <>
@@ -184,7 +162,7 @@ double getEnergy(const ModuleBase::matrix& occNum_wfcHwfc)
 // for HF, Muller and power functional, g(eta) = eta, eta^0.5, eta^alpha respectively.
 // when symbol = 0, 1, 2, 3, 4, 5, return eta, 0.5*eta, g(eta), 0.5*g(eta), d_g(eta)/d_eta, 1.0 respectively.
 // Default symbol=0, XC_func_rdmft="HF", alpha=0.656
-double occNum_func(double eta, int symbol, const std::string XC_func_rdmft, double alpha)
+double occNum_func(const double eta, const int symbol, const std::string XC_func_rdmft, double alpha)
 {
     // if( XC_func_rdmft == "hf" || XC_func_rdmft == "default" || XC_func_rdmft == "pbe0" ) alpha = 1.0;
     // else if( XC_func_rdmft == "muller" ) alpha = 0.5;
