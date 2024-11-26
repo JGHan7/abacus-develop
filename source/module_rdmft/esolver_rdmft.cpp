@@ -222,14 +222,14 @@ double ESolver_RDMFT<TK, TR>::cal_energy()
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::cal_force(ModuleBase::matrix& force)
+void ESolver_RDMFT<TK, TR>::cal_force(UnitCell& ucell, ModuleBase::matrix& force)
 {
     ;
 }
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::cal_stress(ModuleBase::matrix& stress)
+void ESolver_RDMFT<TK, TR>::cal_stress(UnitCell& ucell, ModuleBase::matrix& force)
 {
     ;
 }
