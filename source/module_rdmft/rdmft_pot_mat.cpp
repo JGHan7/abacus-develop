@@ -23,7 +23,7 @@ namespace rdmft
 
 
 // template <typename TK, typename TR>
-// void RDMFT<TK, TR>::get_DM_XC(std::vector< std::vector<TK> >& DM_XC)
+// void RDMFT<TK, TR>::cal_DM_XC(std::vector< std::vector<TK> >& DM_XC)
 // {
 //     // get wk_funEta_wfc = wk*g(eta)*conj(wfc)
 //     psi::Psi<TK> wk_funEta_wfc(wfc);
@@ -259,7 +259,7 @@ namespace rdmft
 //         HR_exx_XC->set_zero();
 
 //         std::vector< std::vector<TK> > DM_XC(nk_total, std::vector<TK>(ParaV->nloc));
-//         get_DM_XC(DM_XC);
+//         cal_DM_XC(DM_XC);
 //         // get DM_XC of all k points
 //         if( exx_spacegroup_symmetry )
 //         {

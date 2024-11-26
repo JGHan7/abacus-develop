@@ -10,6 +10,7 @@
 namespace rdmft
 {
 
+//! @brief physical notation: natural orbitals = NOs
 
 template<typename TK, typename TR>
 class IterDiag_NOs

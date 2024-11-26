@@ -14,6 +14,8 @@
 namespace rdmft
 {
 
+//! @brief physical notation: natural occupation numbers = ONs
+
 //! currently only supports TX=double
 //! currently only unconstrained optimization of the occupancy numbers is considered 
 //! which means that the EBI method must be used
@@ -25,10 +27,15 @@ class BFGS_ONs
     BFGS_ONs();
     ~BFGS_ONs();
 
-    void init();
+    void init(int nk_total_in, int nbands_in);
+
+    double optimize(std::vector<TX>& x_new);
+
+    void get_start_guess(std::vector<TX>& x0_in);
 
     std::vector<TX> x0, x1, diff_x;
     std::vector<TX> dE_dx0, dE_dx1, diff_gradient;
+    std::vector<TX> Hk;
     double rho;
 
 
@@ -40,7 +47,8 @@ class BFGS_ONs
   protected:
 
 
-
+  int nk_total = 0;
+  int nbands = 0;
 
 
 

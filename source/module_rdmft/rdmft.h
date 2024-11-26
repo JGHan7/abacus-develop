@@ -124,8 +124,8 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
   protected:
 
-    //! get the special density matrix DM_XC(nk*nbasis_local*nbasis_local)
-    void get_DM_XC(std::vector< std::vector<TK> >& DM_XC);
+    //! calculate the special density matrix DM_XC(nk*nbasis_local*nbasis_local)
+    void cal_DM_XC(std::vector< std::vector<TK> >& DM_XC);
 
     void cal_V_TV();
 
