@@ -27,9 +27,9 @@ ESolver_RDMFT<TK, TR>::~ESolver_RDMFT()
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& ucell)
+void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para& inp)
 {
-    rdmft_solver.before_all_runners(inp, ucell);
+    rdmft_solver.before_all_runners(ucell, inp);
     this->maxniter = inp.scf_nmax;
     this->maxniter_occ_num = this->maxniter;
     this->maxniter_orb = this->maxniter;
@@ -59,7 +59,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(const Input_para& inp, UnitCell& 
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
+void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 {
     // rdmft_solver.before_scf(istep);
     rdmft_solver.update_ion(istep, ucell);
@@ -68,12 +68,12 @@ void ESolver_RDMFT<TK, TR>::runner(const int istep, UnitCell& ucell)
     if(GlobalC::exx_info.info_global.cal_exx)
     {
         // the command to stop the runner is in the exx_iter_finish() function of Exx_LRI_interface.hpp
-        rdmft_solver.runner(istep, ucell);
+        rdmft_solver.runner(ucell, istep);
     }
     else
     {
         rdmft_solver.modify_scf_nmax(1);
-        rdmft_solver.runner(istep, ucell);
+        rdmft_solver.runner(ucell, istep);
     }
     this->rdmft_solver.inital_wfc_occNum();
 
@@ -140,7 +140,7 @@ void ESolver_RDMFT<TK, TR>::opti_occ_num(bool first_time)
             this->ebi.get_inital_guess();
             ModuleBase::matrix occ_num = this->ebi.get_occ_number();
             this->rdmft_solver.update_elec( &occ_num );
-            this->rdmft_solver.cal_E_gradient();
+            this->rdmft_solver.cal_E_grad_wfc_occ_num();
         }
         else
         {

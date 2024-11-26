@@ -99,10 +99,6 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // Or we can use rdmft_solver.wfc/occ_number directly when optimizing, so that the update_elec() function does not require parameters.
     void update_elec(const ModuleBase::matrix* occ_number_in = nullptr, const psi::Psi<TK>* wfc_in = nullptr, const Charge* charge_in = nullptr);
 
-    double cal_E_gradient();
-
-    double cal_Energy(const int cal_type = 1);
-
     // //! update occ_number for optimization algorithms that depend on Hamilton
     // void update_wg(const ModuleBase::matrix& wg_in);
 
@@ -132,6 +128,10 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     //! construct V_XC based on different XC_functional( i.e. RDMFT class member XC_func_rdmft)
     void cal_V_XC();
+
+    double cal_E_grad_wfc_occ_num();
+
+    void cal_Energy(const int cal_type = 1);
 
     //! get the total Hamilton in k-space
     void cal_Hk_Hpsi();

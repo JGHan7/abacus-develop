@@ -24,15 +24,15 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     ESolver_RDMFT();
     ~ESolver_RDMFT();
 
-    virtual void before_all_runners(const Input_para& inp, UnitCell& ucell) override;
+    virtual void before_all_runners(UnitCell& ucell, const Input_para& inp) override;
 
-    virtual void runner(const int istep, UnitCell& ucell) override;
+    virtual void runner(UnitCell& ucell, const int istep) override;
 
     double cal_energy() override;
 
-    void cal_force(ModuleBase::matrix& force) override;
+    void cal_force(UnitCell& ucell, ModuleBase::matrix& force) override;
 
-    void cal_stress(ModuleBase::matrix& stress) override;
+    void cal_stress(UnitCell& ucell, ModuleBase::matrix& stress) override;
 
     // temporary
     void update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver);

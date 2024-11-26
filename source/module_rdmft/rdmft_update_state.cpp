@@ -28,7 +28,7 @@ void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
     // sf = &sf_in; // &(this->sf.strucFac);
 
     // this->before_scf(istep);
-    ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_scf(istep);
+    ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_scf(ucell_in, istep);
 
     ucell = &ucell_in;
     rho_basis = this->pw_rho;

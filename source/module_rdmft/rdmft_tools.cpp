@@ -19,6 +19,7 @@
 #include <complex>
 #include <fstream>
 #include <sstream>
+#include <cassert>
 
 
 namespace rdmft
@@ -51,8 +52,8 @@ void HkPsi<double>(const Parallel_Orbitals* ParaV, const double& HK, const doubl
 
 
 template <>
-void psiDotPsi<double>(const Parallel_Orbitals* ParaV, const Parallel_2D& para_Eij_in,
-                        const double& wfc, const double& H_wfc, std::vector<double>& Dmn, double* wfcHwfc)
+void cal_bra_op_ket<double>(const Parallel_Orbitals* ParaV, const Parallel_2D& para_Eij_in,
+                                const double& wfc, const double& H_wfc, std::vector<double>& Dmn)
 {
     const int one_int = 1;
     const double one_double = 1.0;
@@ -70,19 +71,6 @@ void psiDotPsi<double>(const Parallel_Orbitals* ParaV, const Parallel_2D& para_E
     pdgemm_( &T_char, &N_char, &nbands, &nbands, &nbasis, &one_double, &wfc, &one_int, &one_int, ParaV->desc_wfc,
             &H_wfc, &one_int, &one_int, ParaV->desc_wfc, &zero_double, &Dmn[0], &one_int, &one_int, para_Eij_in.desc );
 #endif
-
-    for(int i=0; i<nrow_bands; ++i)
-    {
-        int i_global = para_Eij_in.local2global_row(i);
-        for(int j=0; j<ncol_bands; ++j)
-        {
-            int j_global = para_Eij_in.local2global_col(j);
-            if(i_global==j_global)
-            {
-                wfcHwfc[j_global] = std::real( Dmn[i*ncol_bands+j] );
-            }
-        }
-    }
 }
 
 
@@ -168,10 +156,11 @@ double occNum_func(const double eta, const int symbol, const std::string XC_func
     // else if( XC_func_rdmft == "muller" ) alpha = 0.5;
     // else if( XC_func_rdmft == "power" || XC_func_rdmft == "wp22" || XC_func_rdmft == "cwp22" ) ;
     // else alpha = 1.0;
-    if( XC_func_rdmft == "power" || XC_func_rdmft == "wp22" || XC_func_rdmft == "cwp22" ) { ;
-    } else if( XC_func_rdmft == "muller" ) { alpha = 0.5;
-    } else { alpha = 1.0;
-}
+    if( XC_func_rdmft == "power" || XC_func_rdmft == "wp22" || XC_func_rdmft == "cwp22" ) { ; }
+    else if( XC_func_rdmft == "muller" ) { alpha = 0.5; }
+    else { alpha = 1.0; }
+
+    assert(symbol <= 5);
 
     if( symbol==0 ) { return eta;
     } else if ( symbol==1 ) { return 0.5*eta;
@@ -179,11 +168,8 @@ double occNum_func(const double eta, const int symbol, const std::string XC_func
     } else if ( symbol==3 ) { return 0.5*std::pow(eta, alpha);
     } else if ( symbol==4 ) { return alpha*std::pow(eta, alpha-1.0);
     } else if ( symbol==5 ) { return 1.0;
-    } else 
-    {
-        std::cout << "\n!!!!!!\nThere may be some errors when calling wg_fun()\n!!!!!!\n";
-        return eta ;
     }
+    
 }
 
 

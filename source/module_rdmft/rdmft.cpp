@@ -235,8 +235,10 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
         HkPsi( ParaV, hsk_hartree->get_hk()[0], wfc(ik, 0, 0), H_wfc_hartree(ik, 0, 0));
 
         // get wfc * H(k)_wfc
-        psiDotPsi( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_TV(ik, 0, 0), Eij_TV, &(wfcHwfc_TV(ik, 0)) );
-        psiDotPsi( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_hartree(ik, 0, 0), Eij_hartree, &(wfcHwfc_hartree(ik, 0)) );
+        cal_bra_op_ket( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_TV(ik, 0, 0), Eij_TV );
+        cal_bra_op_ket( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_hartree(ik, 0, 0), Eij_hartree );
+        _diagonal_in_serial( para_Eij, Eij_TV, &(wfcHwfc_TV(ik, 0)) );
+        _diagonal_in_serial( para_Eij, Eij_hartree, &(wfcHwfc_hartree(ik, 0)) );
 
 #ifdef __EXX
         if(GlobalC::exx_info.info_global.cal_exx)
@@ -245,7 +247,8 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
 
             V_exx_XC->contributeHk(ik);
             HkPsi( ParaV, hsk_exx_XC->get_hk()[0], wfc(ik, 0, 0), H_wfc_exx_XC(ik, 0, 0));
-            psiDotPsi( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_exx_XC(ik, 0, 0), Eij_exx_XC, &(wfcHwfc_exx_XC(ik, 0)) );
+            cal_bra_op_ket( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_exx_XC(ik, 0, 0), Eij_exx_XC );
+            _diagonal_in_serial( para_Eij, Eij_exx_XC, &(wfcHwfc_exx_XC(ik, 0)) );
             
             for(int iloc=0; iloc<HK_XC.size(); ++iloc) HK_XC[iloc] += hsk_exx_XC->get_hk()[iloc];
         }
@@ -256,7 +259,8 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
 
             V_dft_XC->contributeHk(ik);
             HkPsi( ParaV, hsk_dft_XC->get_hk()[0], wfc(ik, 0, 0), H_wfc_dft_XC(ik, 0, 0));
-            psiDotPsi( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_dft_XC(ik, 0, 0), Eij_dft_XC, &(wfcHwfc_dft_XC(ik, 0)) );
+            cal_bra_op_ket( ParaV, para_Eij, wfc(ik, 0, 0), H_wfc_dft_XC(ik, 0, 0), Eij_dft_XC );
+            _diagonal_in_serial( para_Eij, Eij_dft_XC, &(wfcHwfc_dft_XC(ik, 0)) );
             
             for(int iloc=0; iloc<HK_XC.size(); ++iloc) HK_XC[iloc] += hsk_dft_XC->get_hk()[iloc];
         }
@@ -306,7 +310,7 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
 
 
 template <typename TK, typename TR>
-double RDMFT<TK, TR>::cal_E_gradient()
+double RDMFT<TK, TR>::cal_E_grad_wfc_occ_num()
 {
     /****** get occNum_wfcHamiltWfc, occNum_HamiltWfc and Etotal ******/
 
@@ -460,7 +464,7 @@ double RDMFT<TK, TR>::run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E
     // this->cal_V_hartree();
     // this->cal_V_XC();
     this->cal_Hk_Hpsi();
-    this->cal_E_gradient();
+    this->cal_E_grad_wfc_occ_num();
     this->cal_Energy(this->cal_E_type);
     // this->cal_Energy(2);
 
