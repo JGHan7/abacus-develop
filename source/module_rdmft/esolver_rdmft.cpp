@@ -53,7 +53,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
 
     this->iter_diag_rdmft.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV));
     this->ebi.init(rdmft_solver.nk_total);
-    this->bfgs_rdmft.init();
+    this->bfgs_rdmft.init(rdmft_solver.nk_total, PARAM.inp.nbands);
 
 }
 
