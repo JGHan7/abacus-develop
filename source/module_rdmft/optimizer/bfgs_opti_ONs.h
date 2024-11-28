@@ -36,25 +36,29 @@ class BFGS_ONs
 
     // std::vector<TX> x0, x1, diff_x;
     // std::vector<TX> dE_dx0, dE_dx1, diff_grad;
-    std::vector<TX> var_x, diff_x;
-    std::vector<TX> dE_dx, diff_grad;
-    std::vector<TX> Hk;
-    std::vector<TX> search_direction;
-    double rho;
-
-
-
-
 
 
 
   protected:
 
 
-  int nk_total = 0;
-  int nbands = 0;
+    int nk_total = 0;
+    int nbands = 0;
 
+    //! the optimized variable x, and diff_x = x_k+1 - x_k
+    std::vector<TX> var_x, diff_x;
 
+    //! first-order gradient, and diff_grad = (dE_dx)_k+1 - (dE_dx)_k
+    std::vector<TX> dE_dx, diff_grad;
+
+    //! approximate Hessian matrix
+    std::vector<TX> Hk;
+
+    //! in the quasi-Newton method, the search direction = - Hk * dE_dx
+    std::vector<TX> search_direction;
+
+    //! rho_k = 1.0/(diff_grad^T * diff_x)
+    double rho;
 
 
 

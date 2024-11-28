@@ -13,8 +13,7 @@
 namespace rdmft
 {
 
-//! currently only supports TX=double
-template<typename TX, typename T_rdmft>
+template<typename TK, typename TR>
 class LineSearch
 {
 
@@ -23,10 +22,7 @@ class LineSearch
     LineSearch();
     ~LineSearch();
 
-    init(T_rdmft* rdmft_solver_in);
-
-
-
+    void init(RDMFT<TK, TR>* rdmft_solver_in);
 
 
 
@@ -44,7 +40,7 @@ class LineSearch
   private:
 
 
-    T_rdmft* rdmft_solver = nullptr;
+    RDMFT<TK, TR>* rdmft_solver = nullptr;
 
     rdmft::EBI ebi;
 

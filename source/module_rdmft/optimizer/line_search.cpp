@@ -10,28 +10,28 @@
 namespace rdmft
 {
 
-template<typename TX, typename T_rdmft>
-LineSearch::LineSearch()
+template<typename TK, typename TR>
+LineSearch<TK, TR>::LineSearch()
 {
     ;
 }
 
 
-template<typename TX, typename T_rdmft>
-LineSearch::~LineSearch()
+template<typename TK, typename TR>
+LineSearch<TK, TR>::~LineSearch()
 {
     ;
 }
 
 
-template<typename TX, typename T_rdmft>
-void LineSearch::init(T_rdmft* rdmft_in)
+template<typename TK, typename TR>
+void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_solver_in)
 {
     this->rdmft_solver = rdmft_in;
     this->ebi.init(rdmft_solver->nk_total);
     this->bfgs_rdmft.init(rdmft_solver->nk_total, PARAM.inp.nbands);
 
-
+    
 }
 
 
@@ -50,10 +50,13 @@ void LineSearch::init(T_rdmft* rdmft_in)
 
 
 
+template class LineSearch<double, double>;
+template class LineSearch<std::complex<double>, double>;
+template class LineSearch<std::complex<double>, std::complex<double>>;
 
-template class LineSearch<double, RDMFT<double, double>>;
-template class LineSearch<double, RDMFT<std::complex<double>, double>>;
-template class LineSearch<double, RDMFT<std::complex<double>, std::complex<double>>>;
+// template class LineSearch<double, RDMFT<double, double>>;
+// template class LineSearch<double, RDMFT<std::complex<double>, double>>;
+// template class LineSearch<double, RDMFT<std::complex<double>, std::complex<double>>>;
 // template class LineSearch<std::complex<double>, RDMFT<double, double>>;
 // template class LineSearch<std::complex<double>, RDMFT<std::complex<double>, double>>;
 // template class LineSearch<std::complex<double>, RDMFT<std::complex<double>, std::complex<double>>>;
