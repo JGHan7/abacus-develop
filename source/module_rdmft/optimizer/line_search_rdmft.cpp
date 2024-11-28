@@ -4,7 +4,7 @@
 //==========================================================
 
 
-#include "module_rdmft/optimizer/line_search.h"
+#include "module_rdmft/optimizer/line_search_rdmft.h"
 
 
 namespace rdmft
@@ -25,7 +25,7 @@ LineSearch<TK, TR>::~LineSearch()
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_solver_in)
+void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
 {
     this->rdmft_solver = rdmft_in;
     this->ebi.init(rdmft_solver->nk_total);

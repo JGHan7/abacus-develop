@@ -2,8 +2,8 @@
 // Author: Jingang Han
 // DATE : 2024-11-28
 //==========================================================
-#ifndef LINE_SEARCH_H
-#define LINE_SEARCH_H
+#ifndef LINE_SEARCH_RDMFT_H
+#define LINE_SEARCH_RDMFT_H
 
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/ebi_constraint.h"
@@ -22,7 +22,7 @@ class LineSearch
     LineSearch();
     ~LineSearch();
 
-    void init(RDMFT<TK, TR>* rdmft_solver_in);
+    void init(RDMFT<TK, TR>* rdmft_in);
 
 
 

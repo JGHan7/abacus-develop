@@ -36,8 +36,9 @@ void BFGS_ONs<TX>::init(int nk_total_in, int nbands_in)
     // x1.resize(nk_total*nbands);
     var_x.resize(nk_total*nbands);
     diff_x.resize(nk_total*nbands);
-    dE_dx0.resize(nk_total*nbands);
-    dE_dx1.resize(nk_total*nbands);
+    // dE_dx0.resize(nk_total*nbands);
+    // dE_dx1.resize(nk_total*nbands);
+    dE_dx.resize(nk_total*nbands);
     diff_grad.resize(nk_total*nbands);
     Hk.resize( nk_total*nbands * nk_total*nbands );
     search_direction.resize(nk_total*nbands);
