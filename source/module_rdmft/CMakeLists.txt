@@ -10,6 +10,7 @@ if(ENABLE_LCAO)
         esolver_rdmft.cpp
         optimizer/iter_diag_NOs.cpp
         optimizer/optimizer_tools.cpp
+        optimizer/line_search.cpp
         optimizer/bfgs_opti_ONs.cpp
         optimizer/ebi_constraint.cpp
     )

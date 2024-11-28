@@ -52,8 +52,8 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     }
 
     this->iter_diag_rdmft.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV));
-    this->ebi.init(rdmft_solver.nk_total);
-    this->bfgs_rdmft.init(rdmft_solver.nk_total, PARAM.inp.nbands);
+    // this->ebi.init(rdmft_solver.nk_total);
+    // this->bfgs_rdmft.init(rdmft_solver.nk_total, PARAM.inp.nbands);
 
 }
 
@@ -133,27 +133,27 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::opti_occ_num(bool first_time)
 {
-    if(first_time)
-    {
-        if( this->ebi.random_inital == true )
-        {
-            this->ebi.get_inital_guess();
-            ModuleBase::matrix occ_num = this->ebi.get_occ_number();
-            this->rdmft_solver.update_elec( &occ_num );
-            // this->rdmft_solver.cal_E_grad_wfc_occ_num();
-        }
-        else
-        {
-            this->ebi.get_inital_guess( &this->rdmft_solver.occ_number );
-        }
-        this->rdmft_solver.cal_E_grad_wfc_occ_num();
-        // transfer this->rdmft_solver.occNum_wfcHamiltWfc -> std::vector
-        // this->ebi.get_dE_dx(std::vector, this->bfgs_rdmft.dE_dx1);
-    }
-    else
-    {
+    // if(first_time)
+    // {
+    //     if( this->ebi.random_inital == true )
+    //     {
+    //         this->ebi.get_inital_guess();
+    //         ModuleBase::matrix occ_num = this->ebi.get_occ_number();
+    //         this->rdmft_solver.update_elec( &occ_num );
+    //         // this->rdmft_solver.cal_E_grad_wfc_occ_num();
+    //     }
+    //     else
+    //     {
+    //         this->ebi.get_inital_guess( &this->rdmft_solver.occ_number );
+    //     }
+    //     this->rdmft_solver.cal_E_grad_wfc_occ_num();
+    //     // transfer this->rdmft_solver.occNum_wfcHamiltWfc -> std::vector
+    //     // this->ebi.get_dE_dx(std::vector, this->bfgs_rdmft.dE_dx1);
+    // }
+    // else
+    // {
 
-    }
+    // }
 }
 
 

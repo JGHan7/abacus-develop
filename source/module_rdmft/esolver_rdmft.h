@@ -61,9 +61,9 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
     rdmft::RDMFT<TK, TR> rdmft_solver;
 
-    rdmft::EBI ebi;
+    // rdmft::EBI ebi;
 
-    rdmft::BFGS_ONs<double> bfgs_rdmft;
+    // rdmft::BFGS_ONs<double> bfgs_rdmft;
 
     // std::vector< std::vector<TK> > lambda;
 
