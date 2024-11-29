@@ -126,6 +126,8 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     //! do all calculation after update occNum&wfc, get Etotal and the gradient of energy with respect to the occNum&wfc
     double run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E_gradient_wfc);
 
+    std::vector<double> get_dE_docc_num();
+
 
   protected:
 

@@ -30,8 +30,9 @@ class BFGS_ONs
     void init(int nk_total_in, int nbands_in);
 
     //! pk is the search direction
-    void get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, bool start_guess = false);
+    void get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool start_guess = false);
 
+    // // ! initialize H0 and obtain p0
     // void get_start_guess(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk);
 
     // std::vector<TX> x0, x1, diff_x;
@@ -54,7 +55,7 @@ class BFGS_ONs
     //! approximate Hessian matrix
     std::vector<TX> Hk;
 
-    //! in the quasi-Newton method, the search direction = - Hk * dE_dx
+    //! in the quasi-Newton method, the search direction p_k = - Hk * dE_dx
     std::vector<TX> search_direction;
 
     //! rho_k = 1.0/(diff_grad^T * diff_x)

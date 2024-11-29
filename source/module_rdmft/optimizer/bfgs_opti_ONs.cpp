@@ -49,7 +49,7 @@ void BFGS_ONs<TX>::init(int nk_total_in, int nbands_in)
 
 
 template<typename TX>
-void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk,  bool start_guess)
+void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool start_guess)
 {
     // set some vars zero?
 
@@ -96,24 +96,34 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
     // property: H = H^T, also depends on the initial guess H0!
     rdmft::dgemm_lapack( this->Hk.data(), dE_dx_new.data(), this->search_direction.data(), nk_total*nbands, 1, nk_total*nbands, 'N', 'N', -1.0 );
 
-    // update x, dE_dx
+    // update x, dE_dx, pass search_direction
     for(int j=0; j<x_new.size(); ++j)
     {
         this->var_x[j] = x_new[j];
         this->dE_dx[j] = dE_dx_new[j];
+        pk[j] = this->search_direction[j];
     }
 
 }
 
 
 // template<typename TX>
-// void BFGS_ONs<TX>::get_start_guess(const std::vector<TX>& dE_dx_in, std::vector<TX>& x0_in)
+// void BFGS_ONs<TX>::get_start_guess(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk)
 // {
-//     for(int j=0; j<x0_in.size(); ++j) { this->var_x[j] = x0_in[j]; }
-
 //     // identity matrix or other method to initialize H0
 //     for(int i=0; i<nk_total*nbands; ++i) { Hk[i*(nk_total*nbands) + i] = 1.0; }
 
+//     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
+//     // property: H = H^T, also depends on the initial guess H0!
+//     rdmft::dgemm_lapack( this->Hk.data(), dE_dx_new.data(), this->search_direction.data(), nk_total*nbands, 1, nk_total*nbands, 'N', 'N', -1.0 );
+
+//     // update x, dE_dx, pass search_direction
+//     for(int j=0; j<x_new.size(); ++j)
+//     {
+//         this->var_x[j] = x_new[j];
+//         this->dE_dx[j] = dE_dx_new[j];
+//         pk[j] = this->search_direction[j];
+//     }
 
 // }
 

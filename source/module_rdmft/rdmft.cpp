@@ -479,10 +479,19 @@ double RDMFT<TK, TR>::run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E
     return Etotal;
 }
 
+
+template <typename TK, typename TR>
+std::vector<double> RDMFT<TK, TR>::get_dE_docc_num()
+{
+    std::vector<double> dE_docc_num(nk_total * nbands_total, 0.0);
+    for(int ir=0; ir<nk_total; ++ir)
+    {
+        for(int ic=0; ic<nbands_total.nc; ++ic) { dE_docc_num[i*nk_total+ic] = this->occNum_wfcHamiltWfc(ir, ic); }
+    }
+}
+
 template class RDMFT<double, double>;
 template class RDMFT<std::complex<double>, double>;
 template class RDMFT<std::complex<double>, std::complex<double>>;
 
 }
-
-

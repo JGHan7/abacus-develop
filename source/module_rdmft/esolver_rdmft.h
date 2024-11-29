@@ -8,6 +8,7 @@
 #include "module_rdmft/rdmft.h"
 #include "module_esolver/esolver_fp.h"
 #include "module_rdmft/optimizer/iter_diag_NOs.h"
+#include "module_rdmft/optimizer/line_search_rdmft.h"
 #include "module_rdmft/optimizer/ebi_constraint.h"
 #include "module_rdmft/optimizer/bfgs_opti_ONs.h"
 
@@ -39,7 +40,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     bool dft_optimize = false;
     // std::vector< std::vector<TK> > Hamilt_rdmft;
 
-    void opti_occ_num(bool first_time = false);
+    void opti_occ_num(bool first_time = false, bool dft_type = false);
 
 	  int maxniter;     // maximum iter steps for scf
 
@@ -57,9 +58,14 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
   private:
 
-    rdmft::IterDiag_NOs<TK, TR> iter_diag_rdmft;
-
+    //! objective function E(orbs, occ_nums): provides Etotal_rdmft and first-order gradient
     rdmft::RDMFT<TK, TR> rdmft_solver;
+
+    //! optimizing natural orbitals by iterative diagonalization
+    rdmft::IterDiag_NOs<TK, TR> iter_diag_orb;
+
+    //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
+    rdmft::LineSearch<TK, TR> ls_opti_occ_num;
 
     // rdmft::EBI ebi;
 
