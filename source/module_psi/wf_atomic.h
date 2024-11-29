@@ -6,8 +6,9 @@
 #include "module_base/global_variable.h"
 #include "module_base/realarray.h"
 #include "module_basis/module_pw/pw_basis_k.h"
+#include "module_hamilt_pw/hamilt_pwdft/structure_factor.h"
+
 #include "module_psi/psi.h"
-#include "structure_factor.h"
 
 class WF_atomic
 {
@@ -31,16 +32,22 @@ class WF_atomic
 
     ModuleBase::ComplexMatrix *wanf2 = nullptr; // wannier functions in the PW basis
 
-    void init_at_1(Structure_Factor *sf_in); // from init_at_1.f90
+    /**
+     * @brief init a table with the radial Fourier transform of the atomic WF_atomictions
+     * @param sf_in [out] the structure factor
+     * @param tab_at [out] atomic table
+     */
+    void init_at_1(Structure_Factor *sf_in, ModuleBase::realArray* tab_at);
 
-    void print_PAOs(void)const;
+    void print_PAOs()const;
 
     public: //template change to public, will be refactor later. added by zhengdy 20230302
     int *irindex = nullptr;
 
-    void atomic_wfc(const int ik,
-                    const int np,
-                    const int lmax_wfc,
+    void atomic_wfc(const int& ik,
+                    const int& np,
+                    const int& lmax_wfc,
+                    const int& lmaxkb,
                     const ModulePW::PW_Basis_K* wfc_basis,
                     ModuleBase::ComplexMatrix& wfcatom,
                     const ModuleBase::realArray& table_q,

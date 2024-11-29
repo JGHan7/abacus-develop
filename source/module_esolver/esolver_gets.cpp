@@ -8,6 +8,7 @@
 #include "module_hamilt_lcao/hamilt_lcaodft/operator_lcao/operator_lcao.h"
 #include "module_io/print_info.h"
 #include "module_io/write_HS_R.h"
+#include "module_io/cal_r_overlap_R.h"
 
 namespace ModuleESolver
 {
@@ -38,7 +39,7 @@ void ESolver_GetS::before_all_runners(UnitCell& ucell, const Input_para& inp)
     }
 
     // 1.3) Setup k-points according to symmetry.
-    this->kv.set(ucell.symm, inp.kpoint_file, inp.nspin, ucell.G, ucell.latvec, GlobalV::ofs_running);
+    this->kv.set(ucell,ucell.symm, inp.kpoint_file, inp.nspin, ucell.G, ucell.latvec,GlobalV::ofs_running);
     ModuleBase::GlobalFunc::DONE(GlobalV::ofs_running, "INIT K-POINTS");
 
     ModuleIO::setup_parameters(ucell, this->kv);
@@ -51,8 +52,8 @@ void ESolver_GetS::before_all_runners(UnitCell& ucell, const Input_para& inp)
         this->pelec = new elecstate::ElecStateLCAO<std::complex<double>>(&(this->chr), // use which parameter?
                                                                          &(this->kv),
                                                                          this->kv.get_nks(),
-                                                                         &(this->GG), // mohan add 2024-04-01
-                                                                         &(this->GK), // mohan add 2024-04-01
+                                                                         nullptr, // mohan add 2024-04-01
+                                                                         nullptr, // mohan add 2024-04-01
                                                                          this->pw_rho,
                                                                          this->pw_big);
     }
@@ -99,20 +100,41 @@ void ESolver_GetS::runner(UnitCell& ucell, const int istep)
                          search_radius,
                          PARAM.inp.test_atom_input);
 
-    this->RA.for_2d(this->pv, PARAM.globalv.gamma_only_local, orb_.cutoffs());
+    Record_adj RA;
+    RA.for_2d(this->pv, PARAM.globalv.gamma_only_local, orb_.cutoffs());
 
     if (this->p_hamilt == nullptr)
     {
-        this->p_hamilt = new hamilt::HamiltLCAO<std::complex<double>, double>(&this->pv,
-                                                                              this->kv,
-                                                                              *(two_center_bundle_.overlap_orb),
-                                                                              orb_.cutoffs());
-        dynamic_cast<hamilt::OperatorLCAO<std::complex<double>, double>*>(this->p_hamilt->ops)->contributeHR();
+        if (PARAM.inp.nspin == 4)
+        {
+            this->p_hamilt
+                = new hamilt::HamiltLCAO<std::complex<double>, std::complex<double>>(&this->pv,
+                                                                                     this->kv,
+                                                                                     *(two_center_bundle_.overlap_orb),
+                                                                                     orb_.cutoffs());
+            dynamic_cast<hamilt::OperatorLCAO<std::complex<double>, std::complex<double>>*>(this->p_hamilt->ops)
+                ->contributeHR();
+        }
+        else
+        {
+            this->p_hamilt = new hamilt::HamiltLCAO<std::complex<double>, double>(&this->pv,
+                                                                                  this->kv,
+                                                                                  *(two_center_bundle_.overlap_orb),
+                                                                                  orb_.cutoffs());
+            dynamic_cast<hamilt::OperatorLCAO<std::complex<double>, double>*>(this->p_hamilt->ops)->contributeHR();
+        }
     }
 
     const std::string fn = PARAM.globalv.global_out_dir + "SR.csr";
     std::cout << " The file is saved in " << fn << std::endl;
     ModuleIO::output_SR(pv, GlobalC::GridD, this->p_hamilt, fn);
+
+    if (PARAM.inp.out_mat_r)
+    {
+        cal_r_overlap_R r_matrix;
+        r_matrix.init(pv, orb_);
+        r_matrix.out_rR(istep);
+    }
 
     ModuleBase::timer::tick("ESolver_GetS", "runner");
 }

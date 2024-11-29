@@ -5,7 +5,6 @@
 #include "module_cell/klist.h"
 #include "module_elecstate/module_charge/charge_mixing.h"
 #include "module_hamilt_general/hamilt.h"
-#include "module_hamilt_pw/hamilt_pwdft/wavefunc.h"
 #include "module_hsolver/hsolver.h"
 #include "module_io/cal_test.h"
 #include "module_psi/psi.h"
@@ -15,8 +14,10 @@
 #else
 #include <chrono>
 #endif
+
 #include <cstring>
 #include <fstream>
+
 namespace ModuleESolver
 {
 
@@ -64,6 +65,9 @@ class ESolver_KS : public ESolver_FP
 
     //! Charge mixing method, only used in KDSFT, not in OFDFT
     Charge_Mixing* p_chgmix = nullptr;
+
+    //! nonlocal pseudo potential
+    pseudopot_cell_vnl ppcell;
 
     //! Electronic wavefunctions
     psi::Psi<T>* psi = nullptr;

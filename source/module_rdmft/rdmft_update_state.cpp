@@ -32,7 +32,7 @@ void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
 
     ucell = &ucell_in;
     rho_basis = this->pw_rho;
-    vloc = &GlobalC::ppcell.vloc;
+    vloc = &this->ppcell.vloc;
 
     HR_TV->set_zero();
     this->cal_V_TV();
