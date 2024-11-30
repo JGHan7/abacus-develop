@@ -35,12 +35,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
     void cal_stress(UnitCell& ucell, ModuleBase::matrix& stress) override;
 
-    // temporary
-    void update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver);
-    bool dft_optimize = false;
-    // std::vector< std::vector<TK> > Hamilt_rdmft;
-
-    void opti_occ_num(bool first_time = false, bool dft_type = false);
+    void opti_occ_num(bool dft_type = false, bool first_time = false);
 
 	  int maxniter;     // maximum iter steps for scf
 
@@ -53,6 +48,8 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     double lambda_thr;        // threshold for checking lambda Hermitianity, in iterDiag of NOs
 
     double occ_num_thr;       // occupation numbers threshold, in ONs optimization
+
+    bool dft_optimize = false;    // if use dft type to optimize occ_number
 
     // Parallel_2D* para_H_ni_nj = nullptr;
 
@@ -74,6 +71,11 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     // std::vector< std::vector<TK> > lambda;
 
     // std::vector< std::vector<TK> > Fock_like_mat;
+
+    void get_start_guess();
+
+    // use dft type to update occ_number
+    void update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver);
 
 
 

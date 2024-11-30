@@ -22,7 +22,7 @@ class IterDiag_NOs
 
     void init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in);
 
-    void before_inner_loop(int* scale_factor = nullptr);
+    void before_opti(int* scale_factor = nullptr);
 
     // optimizing natural orbitals
     double optimize_orb(RDMFT<TK, TR>& rdmft_solver);

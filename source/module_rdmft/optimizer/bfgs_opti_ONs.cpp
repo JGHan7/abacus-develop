@@ -61,8 +61,6 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
     }
     else
     {
-        // line search, x_k+1 = x_k + alpha_k * p_k
-
         for(int j=0; j<x_new.size(); ++j)
         {
             // diff_x, sk = x_k+1 - x_k
@@ -71,18 +69,18 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
             this->diff_grad[j] = dE_dx_new[j] - this->dE_dx[j];
         }
 
-        // cal rho
+        // cal rho = 1/( diffGrad^T * diffX )
         rdmft::dgemm_lapack(this->diff_grad.data(), this->diff_x.data(), &this->rho, 1, 1, nk_total*nbands, 'T', 'N');
         this->rho = 1.0/this->rho;
 
-        // cal rho_diffX_diffGrad, I-rho_diffX_diffGrad
+        // cal rho * diffX * diffGrad^T, I - rho * diffX * diffGrad^T
         rdmft::dgemm_lapack( this->diff_x.data(), this->diff_grad.data(), this->rho_diffX_diffGrad.data(), nk_total*nbands, nk_total*nbands, 1, 'N', 'T', -(this->rho) );
         for(int i=0; i<nk_total*nbands; ++i) { this->rho_diffX_diffGrad[i*nk_total*nbands + i] += 1.0; }
 
-        // cal rho_diffX_diffX_T
+        // cal rho * diffX * diffX^T
         rdmft::dgemm_lapack( this->diff_x.data(), this->diff_x.data(), this->rho_diffX_diffX_T.data(), nk_total*nbands, nk_total*nbands, 1, 'N', 'T', this->rho );
 
-        // cal H_k+1 = (I-rho_diffX_diffGrad) * H_k * (I-rho_diffX_diffGrad)^T + rho_diffX_diffX_T
+        // cal H_k+1 = (I - rho * diffX * diffGrad^T) * H_k * (I - rho * diffX * diffGrad^T)^T + rho * diffX * diffX^T
         std::vector<TX> H_tmp = this->Hk;
         rdmft::dgemm_lapack( this->rho_diffX_diffGrad.data(), this->Hk.data(), H_tmp.data(), nk_total*nbands, nk_total*nbands, nk_total*nbands );
         rdmft::dgemm_lapack( H_tmp.data(), this->rho_diffX_diffGrad.data(), this->Hk.data(), nk_total*nbands, nk_total*nbands, nk_total*nbands, 'N', 'T' );

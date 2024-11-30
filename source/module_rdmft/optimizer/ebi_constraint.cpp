@@ -30,6 +30,8 @@ EBI::~EBI()
 
 void EBI::init(int nk_total)
 {
+    // this->random_inital = PARAM.inp.;
+    
     this->solve_mu_thr = 1e-10; 
     this->nk_nospin = nk_total/PARAM.inp.nspin;
     this->nbands = PARAM.inp.nbands;

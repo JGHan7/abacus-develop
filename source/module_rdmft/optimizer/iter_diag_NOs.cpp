@@ -59,7 +59,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::before_inner_loop(int* scale_factor)
+void IterDiag_NOs<TK, TR>::before_opti(int* scale_factor)
 {
     if( scale_factor != nullptr && scale_factor > 0 ) this->scale_zeta = *scale_factor;
     this->energy_drop = 0;

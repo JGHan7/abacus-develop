@@ -80,51 +80,42 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
     // test
     GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
-    // this->rdmft_solver.cal_Hk_Hpsi(); // has done in update_elec()
     this->rdmft_solver.cal_Energy();
 
-    /****** get start guess natural orbitals and occ_number ******/
-
-    // TODO: optimize occ_number
-    // this->rdmft_solver.update_elec(occ_num_temp); // could be in optimize occ_number as opti_occNum(rdmft_solver)
-    
-    // to get start guess natural orbitals
-    this->iter_diag_orb.get_start_guess(rdmft_solver);
-
-    // TODO: optimize occ_number // to get start guess_occNum
-    // this->rdmft_solver.update_elec(occ_num_temp);
-
-    /****** get start guess natural orbitals and occ_number ******/
-
-    if(dft_optimize) this->update_occ_num_dft(this->rdmft_solver);
+    this->get_start_guess();
 
     for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
         int small_diffE = 0;
-        this->iter_diag_orb.before_inner_loop();
+        this->iter_diag_orb.before_opti();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {
+            // optimize natural orbitals
             double diff_etotal = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
-
-            if(dft_optimize) this->update_occ_num_dft(this->rdmft_solver);
-            if( std::abs(diff_etotal) < iter_diag_ethr ) ++small_diffE;
 
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
 
+            if( std::abs(diff_etotal) < iter_diag_ethr ) ++small_diffE;
             if( small_diffE > 3 && iter_orb > 5) break; // reference: relative error < 1e-7
             // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
         }
 
-        rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number");
+        // optimize natural occupation numbers
+        this->opti_occ_num();
 
+        // add something, to determine whether the optimization of the occ_number has converged
         if(dft_optimize) break;
         break;
+
+        rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number");
 
         // TODO: optimize occ_number
         // this->rdmft_solver.update_elec(occ_num_temp);
 
     }
+
+    rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number");
 
     std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;
     std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;
@@ -132,7 +123,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::opti_occ_num(bool first_time, bool dft_type)
+void ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type = false, bool first_time = false)
 {
     if(dft_type)
     {
@@ -166,7 +157,18 @@ void ESolver_RDMFT<TK, TR>::opti_occ_num(bool first_time, bool dft_type)
 }
 
 
+template <typename TK, typename TR>
+void ESolver_RDMFT<TK, TR>::get_start_guess()
+{
+    // get start guess occ_number and optimize once
+    this->opti_occ_num(this->dft_optimize, true);
+    
+    // get start guess natural orbitals
+    this->iter_diag_orb.get_start_guess(rdmft_solver);
 
+    // optimize occ_number
+    this->opti_occ_num(this->dft_optimize);
+}
 
 
 

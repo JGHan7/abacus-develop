@@ -47,23 +47,26 @@ class LineSearch
 
   private:
 
-    //! objective function E(x): provides Etotal_rdmft and first-order gradient
+    //! objective function E(occ_num)=E(x): provides Etotal_rdmft and first-order gradient
     RDMFT<TK, TR>* rdmft_solver = nullptr;
 
     //! handle constraints: convert natural occupation numbers and var_x
     rdmft::EBI ebi;
 
     //! optimizer: use the BFGS method to get the search direction, p_k
-    rdmft::BFGS_ONs<double> bfgs_rdmft;
+    rdmft::BFGS_ONs<double> bfgs_opti_x;
 
-    //! x_k+1 = x_k + alpha * p_k, E(x), phi(alpha) = E(x_k + alpha * p_k)
-    //! dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T
+    //! x_k, (dE_dx)_k, search direction p_k
+    std::vector<double> var_x;
+    std::vector<double> dE_dx;
+    std::vector<double> search_direction;
+
+    //! step_size, alpha: x_k+1 = x_k + alpha * p_k
+    double step_size = 0;
+
+    //! phi(alpha) = E(x_k + alpha * p_k), dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T
     //! dphi_0 = (dphi/dalpha at alpha=0) = E'(x_k) * p_k^T
     double dphi_0;
-
-    std::vector<double> 
-
-
 
 
 
