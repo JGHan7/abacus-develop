@@ -86,7 +86,7 @@ void LineSearch<TK, TR>::do_line_search(const bool start_guess)
     }
 
     // convert x_k+1 to occ_num, rdmft_solver update occ_num, Hk, etc.
-    this->phi_0 = this->cal_phi(this->var_x);
+    this->phi_0 = this->cal_phi(this->var_x);   // has be calculated in swolfe() or zoom() ?
 
 }
 

@@ -51,7 +51,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     // this->bfgs_rdmft.init(rdmft_solver.nk_total, PARAM.inp.nbands);
 
     // convergence parameters
-    this->dft_optimize = true;
+    this->dft_optimize = true;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     this->iter_diag_ethr = 1e-8;
     this->lambda_thr = 1e-4;
     this->occ_num_thr = 1e-3; // how much is proper?
@@ -100,6 +100,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             // optimize natural orbitals
             double diff_etotal = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
 
+            // delete or save?
+            if(this->dft_optimize) { this->update_occ_num_dft(this->rdmft_solver); }
+
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
 
@@ -113,7 +116,6 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
         // add something, to determine whether the optimization of the occ_number has converged
         if(dft_optimize) break;
-        break;
 
         rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number");
 
