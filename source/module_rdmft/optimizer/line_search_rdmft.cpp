@@ -36,7 +36,7 @@ void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
     this->search_direction.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
 
     this->ls_c1 = 0.0001;
-    this->ls_c2 = 0.9;
+    this->ls_c2 = 0.999;
     this->ls_condition = "swolfe";
     this->max_step_size = 1000;
 }
@@ -71,7 +71,7 @@ void LineSearch<TK, TR>::do_line_search(const bool start_guess)
 
     this->cal_pk_dphi0(start_guess);
 
-    // have pk, use strong wolfe to find step_size, alpha !!!
+    // have pk, use strong wolfe to find step_size, update x_k+1 = x_k + step_size * p_k
     if(this->ls_condition == "swolfe") // PARAM.inp.ls_condition == "swolfe"
     {
         this->strong_wolfe();
@@ -85,14 +85,8 @@ void LineSearch<TK, TR>::do_line_search(const bool start_guess)
         this->strong_wolfe();
     }
 
-    // get alpha, update x_k+1 = x_k + alpha * pk
-    // var_x += alpha*pk
-
-
-
     // convert x_k+1 to occ_num, rdmft_solver update occ_num, Hk, etc.
     this->phi_0 = this->cal_phi(this->var_x);
-
 
 }
 
@@ -124,7 +118,7 @@ void LineSearch<TK, TR>::strong_wolfe()
         double trial_phi = this->cal_phi(trial_x);
         if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi > phi_old)
         {
-            this->zoom();
+            this->zoom(step_size_old, phi_old, this->step_size);
             break;
         }
 
@@ -137,26 +131,71 @@ void LineSearch<TK, TR>::strong_wolfe()
 
         if( trial_dphi >= 0 )
         {
-            this->zoom();
+            this->zoom(this->step_size, trial_phi, step_size_old);
             break;
         }
 
-        phi_old = trial_phi;
         step_size_old = this->step_size;
+        phi_old = trial_phi;
 
-        // needs improvement, currently using dichotomy
+        // needs improvement, using quadratic or cubic, currently using dichotomy
         this->step_size = ( this->step_size + this->max_step_size ) / 2.0;
-
-        // double temp_step_size = - dphi_0 * this->step_size * this->step_size / (  )
-
     }
+
+    // update x_k+1 = x_k + step_size * p_k
+    for(int i=0; i<this->var_x.size(); ++i) { this->var_x[i] += this->step_size * this->search_direction[i]; }
 
 }
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::zoom(double& trial_step_size, double& trial_phi)
+void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_size_high)
 {
+    double alpha_lo = step_size_low;
+    double alpha_hi = step_size_high;
+    double f_low = phi_low;
+
+    // trial_x = x_k(or this->var_x) + trial_step_size * p_k
+    std::vector<double> trial_x(this->var_x.size() ,0.0);
+    std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
+
+    int times = 0;
+    while(1)
+    {
+        // needs improvement, using quadratic or cubic, currently using dichotomy
+        this->step_size = (alpha_lo + alpha_hi)/2.0;
+
+        for(int i=0; i<trial_x.size(); ++i)
+        {
+            trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
+        }
+
+        double trial_phi = this->cal_phi(trial_x);
+        if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi >= f_low )
+        {
+            alpha_hi = this->step_size;
+        }
+        else
+        {
+            double trial_dphi = this->cal_dphi(trial_dE_dx);
+            if( std::abs(trial_dphi) <= -this->ls_c2 * this->dphi_0 )
+            {
+                break;
+            }
+
+            if( trial_dphi * (alpha_hi - alpha_lo) >= 0 )
+            {
+                alpha_hi = alpha_lo;
+            }
+
+            alpha_lo = this->step_size;
+            f_low = trial_phi;
+        }
+
+        if( times >= 10 ) { break; }
+    }
+
+
 
 }
 
