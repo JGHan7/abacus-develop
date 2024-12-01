@@ -43,38 +43,33 @@ void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
 
 
 template<typename TK, typename TR>
+void LineSearch<TK, TR>::get_start_guess()
+{
+    std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
+    if(this->ebi.random_inital)
+    {
+        ebi.get_inital_guess(this->var_x);
+        // update rdmft elec_state
+        ModuleBase::matrix occ_number = this->ebi.get_occ_number();
+        this->rdmft_solver->update_elec( &occ_number );
+    }
+    else
+    {
+        ebi.get_inital_guess(this->var_x, &rdmft_solver->occ_number);
+    }
+    this->phi_0 = this->rdmft_solver->cal_Energy();
+}
+
+
+template<typename TK, typename TR>
 void LineSearch<TK, TR>::do_line_search(const bool start_guess)
 {
-    if(start_guess)
-    {
-        std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
-        if(this->ebi.random_inital)
-        {
-            ebi.get_inital_guess(this->var_x);
-            // update rdmft elec_state
-            ModuleBase::matrix occ_number = this->ebi.get_occ_number();
-            this->rdmft_solver->update_elec( &occ_number );
-        }
-        else
-        {
-            ebi.get_inital_guess(this->var_x, &rdmft_solver->occ_number);
-        }
-        this->phi_0 = this->rdmft_solver->cal_Energy();
-    }
+    if(start_guess) { this->get_start_guess(); }
 
-    // // rdmft cal dE_docc_num
-    // this->rdmft_solver->cal_E_grad_wfc_occ_num();
+    // rdmft cal dE_docc_num, EBI convert dE_docc_num to dE_dx
+    this->cal_dE_dx(this->dE_dx);
 
-    // // EBI: convert dE_docc_num to dE_dx (x in EBI is the latest, that is, it is consistent with dE_dx)
-    // std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
-    // this->ebi.get_dE_dx(dE_docc_num, this->dE_dx);
-
-    this->dphi_0 = this->cal_dphi(this->dE_dx);
-
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    // get pk: EBI provide var_x and dE_dx to BFGS
-    this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, start_guess);
+    this->cal_pk_dphi0(start_guess);
 
     // have pk, use strong wolfe to find step_size, alpha !!!
     if(this->ls_condition == "swolfe") // PARAM.inp.ls_condition == "swolfe"
@@ -95,13 +90,7 @@ void LineSearch<TK, TR>::do_line_search(const bool start_guess)
 
 
 
-    // // convert x_k+1 to occ_num
-    // this->ebi.update_x_occ_num(this->var_x);
-
-    // // rdmft_solver update occ_num, Hk, etc.
-    // ModuleBase::matrix occ_number = this->ebi.get_occ_number();
-    // this->rdmft_solver->update_elec( &occ_number );
-
+    // convert x_k+1 to occ_num, rdmft_solver update occ_num, Hk, etc.
     this->phi_0 = this->cal_phi(this->var_x);
 
 
@@ -170,7 +159,19 @@ double LineSearch<TK, TR>::cal_phi(const std::vector<double>& x_new)
 
 
 template<typename TK, typename TR>
-double LineSearch<TK, TR>::cal_dphi(std::vector<double> dE_dx_new, const std::vector<double>* x_new_ptr)
+double LineSearch<TK, TR>::cal_dphi(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr)
+{
+    this->cal_dE_dx(dE_dx_new, x_new_ptr);
+
+    double dphi = 0.0;
+    rdmft::dgemm_lapack( dE_dx_new.data(), this->search_direction.data(), &dphi, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
+
+    return dphi;
+}
+
+
+template<typename TK, typename TR>
+void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr)
 {
     if( x_new_ptr != nullptr ) { this->cal_phi( *x_new_ptr ); }
 
@@ -180,19 +181,17 @@ double LineSearch<TK, TR>::cal_dphi(std::vector<double> dE_dx_new, const std::ve
     // EBI: convert dE_docc_num to dE_dx (x in EBI is the latest, that is, it is consistent with dE_dx)
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
     this->ebi.get_dE_dx(dE_docc_num, dE_dx_new);
-
-    double dphi = 0.0;
-    rdmft::dgemm_lapack( this->dE_dx.data(), this->search_direction.data(), dphi, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
-
-    return dphi;
 }
 
 
-// not implemented, the purpose is to encapsulate
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::cal_search_direction()
+void LineSearch<TK, TR>::cal_pk_dphi0(const bool start_guess)
 {
+    // get pk: EBI provide var_x and dE_dx to BFGS
+    this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, start_guess);
 
+    // get dphi_0
+    rdmft::dgemm_lapack( dE_dx_new.data(), this->search_direction.data(), &this->dphi_0, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
 }
 
 

@@ -47,14 +47,20 @@ class LineSearch
     //! used in Strong Wolfe condition
     void zoom();
 
-    //! calculate phi(alpha) = E(x_k + alpha * p_k), x_new = x_k + alpha*p_k
+    //! calculate phi(alpha) = E(x_k + alpha * p_k) and return it. x_new = x_k + alpha*p_k
     virtual double cal_phi(const std::vector<double>& x_new);
 
-    //! calculate dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T, x_new = x_k + alpha*p_k
-    virtual double cal_dphi(std::vector<double> dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);
+    //! calculate dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T and return it. x_new = x_k + alpha*p_k
+    virtual double cal_dphi(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);
 
-    //! calculate the direction of the line search
-    virtual void cal_search_direction();
+    //! calculate dE/dx
+    virtual void cal_dE_dx(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);
+
+    //! calculate the direction of the line search: pk, and dphi_0
+    virtual void cal_pk_dphi0(const bool start_guess = false);
+
+    //! generate start guess
+    virtual void get_start_guess();
 
 
     //! x_k, (dE_dx)_k, search direction p_k
