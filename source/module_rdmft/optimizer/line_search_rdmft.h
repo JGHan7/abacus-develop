@@ -27,6 +27,13 @@ class LineSearch
     //! use an approximate line search method to find a suitable step size
     void do_line_search(const bool start_guess = false);
 
+    //! parameters in strong wolfe or wolfe conditions
+    double ls_c1 = 0.0;
+    double ls_c2 = 0.0;
+
+    std::string ls_condition;
+
+    double max_step_size = 0.0;
 
 
   protected:
@@ -40,10 +47,32 @@ class LineSearch
     //! used in Strong Wolfe condition
     void zoom();
 
+    //! calculate phi(alpha) = E(x_k + alpha * p_k), x_new = x_k + alpha*p_k
+    virtual double cal_phi(const std::vector<double>& x_new);
+
+    //! calculate dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T, x_new = x_k + alpha*p_k
+    virtual double cal_dphi(std::vector<double> dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);
+
+    //! calculate the direction of the line search
+    virtual void cal_search_direction();
 
 
+    //! x_k, (dE_dx)_k, search direction p_k
+    std::vector<double> var_x;
+    std::vector<double> dE_dx;
+    std::vector<double> search_direction;
 
+    //! step_size, alpha: x_k+1 = x_k + alpha * p_k
+    double step_size = 1.0;
 
+    //! phi(alpha) = E(x_k + alpha * p_k), phi_0 = E(x_k)
+    double phi_0 = 0.0;
+
+    //! dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T, dphi_0 = E'(x_k) * p_k^T
+    double dphi_0 = 0.0;
+
+    // //! dphi_trial = (dphi/dalpha at alpha_trial) = E'(x_k + alpha_trial*p_k) * p_k^T
+    // double dphi_trial = 0.0;
 
   private:
 
@@ -56,17 +85,7 @@ class LineSearch
     //! optimizer: use the BFGS method to get the search direction, p_k
     rdmft::BFGS_ONs<double> bfgs_opti_x;
 
-    //! x_k, (dE_dx)_k, search direction p_k
-    std::vector<double> var_x;
-    std::vector<double> dE_dx;
-    std::vector<double> search_direction;
 
-    //! step_size, alpha: x_k+1 = x_k + alpha * p_k
-    double step_size = 0;
-
-    //! phi(alpha) = E(x_k + alpha * p_k), dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T
-    //! dphi_0 = (dphi/dalpha at alpha=0) = E'(x_k) * p_k^T
-    double dphi_0;
 
 
 
