@@ -45,7 +45,7 @@ class LineSearch
     void wolfe();
 
     //! used in Strong Wolfe condition
-    void zoom();
+    void zoom(double& trial_step_size, double& trial_phi);
 
     //! calculate phi(alpha) = E(x_k + alpha * p_k) and return it. x_new = x_k + alpha*p_k
     virtual double cal_phi(const std::vector<double>& x_new);
@@ -76,9 +76,6 @@ class LineSearch
 
     //! dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T, dphi_0 = E'(x_k) * p_k^T
     double dphi_0 = 0.0;
-
-    // //! dphi_trial = (dphi/dalpha at alpha_trial) = E'(x_k + alpha_trial*p_k) * p_k^T
-    // double dphi_trial = 0.0;
 
   private:
 

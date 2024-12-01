@@ -100,17 +100,20 @@ void LineSearch<TK, TR>::do_line_search(const bool start_guess)
 template<typename TK, typename TR>
 void LineSearch<TK, TR>::strong_wolfe()
 {
-    // get phi_0, dphi_0
-    // this->phi_0 = this->rdmft_solver->cal_Energy();
-    rdmft::dgemm_lapack( this->dE_dx.data(), this->search_direction.data(), &this->dphi_0, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
-
     // initial step_size before each iteration
     this->step_size = (1.0 < this->max_step_size) ? 1.0 : this->max_step_size/2.0;
 
+    // 0: represents the relevant quantity under x_k, that is, var_x
+    // phi_0, dphi_0 have obtained
+
     // old: represents the relevant quantity under the last trial_step_size/trial_x
     double step_size_old =0.0;
+    double phi_old = this->phi_0;
 
+    // trial_x = x_k(or this->var_x) + trial_step_size * p_k
     std::vector<double> trial_x(this->var_x.size() ,0.0);
+    std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
+
     while(1)
     {
         for(int i=0; i<trial_x.size(); ++i)
@@ -118,8 +121,33 @@ void LineSearch<TK, TR>::strong_wolfe()
             trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
         }
 
-        // //! dphi_trial = (dphi/dalpha at alpha_trial) = E'(x_k + alpha_trial*p_k) * p_k^T
-        // double dphi_trial = 0.0;
+        double trial_phi = this->cal_phi(trial_x);
+        if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi > phi_old)
+        {
+            this->zoom();
+            break;
+        }
+
+        double trial_dphi = this->cal_dphi(trial_dE_dx);
+        if( std::abs(trial_dphi) <= -this->ls_c2 * this->dphi_0 )
+        {
+            for(int i=0; i<trial_x.size(); ++i) { this->var_x[i] = trial_x[i]; }
+            break;
+        }
+
+        if( trial_dphi >= 0 )
+        {
+            this->zoom();
+            break;
+        }
+
+        phi_old = trial_phi;
+        step_size_old = this->step_size;
+
+        // needs improvement, currently using dichotomy
+        this->step_size = ( this->step_size + this->max_step_size ) / 2.0;
+
+        // double temp_step_size = - dphi_0 * this->step_size * this->step_size / (  )
 
     }
 
@@ -127,7 +155,7 @@ void LineSearch<TK, TR>::strong_wolfe()
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::zoom()
+void LineSearch<TK, TR>::zoom(double& trial_step_size, double& trial_phi)
 {
 
 }
