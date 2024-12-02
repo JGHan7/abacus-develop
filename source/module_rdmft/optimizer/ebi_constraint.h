@@ -47,7 +47,7 @@ class EBI
     ModuleBase::matrix get_occ_number();
 
     //! pass the mu in EBI method
-    std::vector<double> get_mu() { return this->mu; };
+    std::vector<double> get_mu() { return this->mu; }
 
 
 

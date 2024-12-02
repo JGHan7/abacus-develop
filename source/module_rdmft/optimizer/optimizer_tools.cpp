@@ -106,6 +106,28 @@ void GkPsi<double>(const Parallel_2D* para_mat,
 }
 
 
+template <>
+void pTgemm_scalapack<double>(const Parallel_2D* para_A,
+                                const Parallel_2D* para_B,
+                                const Parallel_2D* para_C,
+                                const double* A,
+                                const double* B,
+                                double* C,
+                                const int global_row_C,
+                                const int global_col_C,
+                                const int global_contract_index,
+                                const char op_A,
+                                const char op_B,
+                                double alpha,
+                                double beta)
+{
+    const int one_int = 1;
+
+    pdgemm_( &op_A, &op_B, &global_row_C, &global_col_C, &global_contract_index, &alpha, A, &one_int, &one_int, para_A->desc,
+            &B, &one_int, &one_int, para_B->desc, &beta, C, &one_int, &one_int, para_C->desc );
+}
+
+
 // to compute C = alpha * A.? * B.? + beta * C
 // all use the fortran perspective, not cpp
 void dgemm_lapack(const double* A,

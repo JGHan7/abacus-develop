@@ -166,6 +166,47 @@ void GkPsi<double>(const Parallel_2D* para_mat,
                     double& G_wfc);
 
 
+//! to compute C = alpha * A.? * B.? + beta * C, op_ = 'N' or 'T' or 'C', in the case of MPI
+//! all use the fortran perspective, not cpp
+template <typename TK>
+void pTgemm_scalapack(const Parallel_2D* para_A,
+                        const Parallel_2D* para_B,
+                        const Parallel_2D* para_C,
+                        const TK* A,
+                        const TK* B,
+                        TK* C,
+                        const int global_row_C,
+                        const int global_col_C,
+                        const int global_contract_index,
+                        const char op_A = 'N',
+                        const char op_B = 'N',
+                        TK alpha = 1.0,
+                        TK beta = 0.0)
+{
+    const int one_int = 1;
+
+    pzgemm_( &op_A, &op_B, &global_row_C, &global_col_C, &global_contract_index, &alpha, A, &one_int, &one_int, para_A->desc,
+            &B, &one_int, &one_int, para_B->desc, &beta, C, &one_int, &one_int, para_C->desc );
+}
+
+
+template <>
+void pTgemm_scalapack<double>(const Parallel_2D* para_A,
+                                const Parallel_2D* para_B,
+                                const Parallel_2D* para_C,
+                                const double* A,
+                                const double* B,
+                                double* C,
+                                const int global_row_C,
+                                const int global_col_C,
+                                const int global_contract_index,
+                                const char op_A,
+                                const char op_B,
+                                double alpha,
+                                double beta);
+
+
+
 //! to compute C = alpha * A.? * B.? + beta * C, op_ = 'N' or 'T'
 //! all use the fortran perspective, not cpp
 void dgemm_lapack(const double* A,
