@@ -50,13 +50,9 @@ class LineSearch
     //! calculate phi(alpha) = E(x_k + alpha * p_k) and return it. x_new = x_k + alpha*p_k
     virtual double cal_phi(const std::vector<double>& x_new);
 
-    //! calculate dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T and return it. x_new = x_k + alpha*p_k
-    //! if x is the same as the x in the last call to cal_phi(), nullptr is used.
-    virtual double cal_dphi(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);
-
-    //! calculate dE/dx
-    //! if x is the same as the x in the last call to cal_phi(), nullptr is used.
-    virtual void cal_dE_dx(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);
+    //! calculate dE/dx, dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T and return dphi.
+    //! x_new = x_k + alpha*p_k, if x is the same as the x in the last call to cal_phi(), nullptr is used.
+    virtual double cal_dphi(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);  // is dE_dx_new useful here? Consider deleting the outgoing
 
     //! calculate the direction of the line search: pk, and dphi_0
     virtual void cal_pk_dphi0(const bool start_guess = false);
@@ -64,6 +60,9 @@ class LineSearch
     //! generate start guess
     virtual void get_start_guess();
 
+    //! calculate dE/dx
+    //! x_new = x_k + alpha*p_k, if x is the same as the x in the last call to cal_phi(), nullptr is used.
+    virtual void cal_dE_dx(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);
 
     //! x_k, (dE_dx)_k, search direction p_k
     std::vector<double> var_x;

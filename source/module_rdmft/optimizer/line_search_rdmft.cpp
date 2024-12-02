@@ -243,7 +243,7 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::ve
     if( x_new_ptr != nullptr ) { this->cal_phi( *x_new_ptr ); }
 
     // rdmft cal dE_docc_num
-    this->rdmft_solver->cal_E_grad_wfc_occ_num();
+    this->rdmft_solver->cal_E_grad_occ_num();
 
     // EBI: convert dE_docc_num to dE_dx (x in EBI is the latest, that is, it is consistent with dE_dx)
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();

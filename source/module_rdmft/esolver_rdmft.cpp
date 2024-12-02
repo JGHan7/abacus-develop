@@ -149,13 +149,13 @@ void ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type, bool first_time)
     //         this->ebi.get_inital_guess();
     //         ModuleBase::matrix occ_num = this->ebi.get_occ_number();
     //         this->rdmft_solver.update_elec( &occ_num );
-    //         // this->rdmft_solver.cal_E_grad_wfc_occ_num();
+    //         // this->rdmft_solver.cal_E_grad_occ_num();
     //     }
     //     else
     //     {
     //         this->ebi.get_inital_guess( &this->rdmft_solver.occ_number );
     //     }
-    //     this->rdmft_solver.cal_E_grad_wfc_occ_num();
+    //     this->rdmft_solver.cal_E_grad_occ_num();
     //     // transfer this->rdmft_solver.occNum_wfcHamiltWfc -> std::vector
     //     // this->ebi.get_dE_dx(std::vector, this->bfgs_rdmft.dE_dx1);
     // }

@@ -107,7 +107,17 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     //! obtain the gradient of total energy with respect to occupation number and wfc
     double cal_E_grad_wfc_occ_num();
 
+<<<<<<< HEAD
     double cal_Energy(const int cal_type = 1);
+=======
+    //! obtain the gradient of total energy with respect to wfc
+    void cal_E_grad_wfc();
+
+    //! obtain the gradient of total energy with respect to occupation number
+    void cal_E_grad_occ_num();
+
+    void cal_Energy(const int cal_type = 1);
+>>>>>>> rdmft
 
     // //! update occ_number for optimization algorithms that depend on Hamilton
     // void update_wg(const ModuleBase::matrix& wg_in);
