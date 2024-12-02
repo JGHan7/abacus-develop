@@ -255,28 +255,43 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
 }
 
 
-template <typename TK, typename TR>
-double RDMFT<TK, TR>::cal_E_grad_wfc_occ_num()
-{
-    /****** get occNum_wfcHamiltWfc, occNum_HamiltWfc and Etotal ******/
+// template <typename TK, typename TR>
+// double RDMFT<TK, TR>::cal_E_grad_wfc_occ_num()
+// {
+//     /****** get occNum_wfcHamiltWfc, occNum_HamiltWfc and Etotal ******/
 
+//     // !this would transfer the value of H_wfc_TV, H_wfc_hartree, H_wfc_XC --> occNum_H_wfc
+//     // get the gradient of energy with respect to the wfc, i.e., Wk_occNum_HamiltWfc
+//     add_psi(ParaV, kv, occ_number, H_wfc_TV, H_wfc_hartree, H_wfc_dft_XC, H_wfc_exx_XC, occNum_HamiltWfc, XC_func_rdmft, alpha_power);
+
+//     // get the gradient of energy with respect to the natural occupation numbers, i.e., Wk_occNum_wfcHamiltWfc
+//     add_occNum(*kv, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
+
+//     // get the total energy
+//     // add_wfcHwfc(kv->wk, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_XC, Etotal_n_k, XC_func_rdmft, alpha_power);
+//     // add_wfcHwfc(wg, wk_fun_occNum, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_XC, Etotal_n_k, XC_func_rdmft, alpha_power);
+//     // E_RDMFT[3] = getEnergy(Etotal_n_k);
+//     // Parallel_Reduce::reduce_all(E_RDMFT[3]);
+
+//     return E_RDMFT[3];
+//     /****** get occNum_wfcHamiltWfc, occNum_HamiltWfc and Etotal ******/
+// }
+
+
+template <typename TK, typename TR>
+void RDMFT<TK, TR>::cal_E_grad_wfc()
+{
     // !this would transfer the value of H_wfc_TV, H_wfc_hartree, H_wfc_XC --> occNum_H_wfc
     // get the gradient of energy with respect to the wfc, i.e., Wk_occNum_HamiltWfc
     add_psi(ParaV, kv, occ_number, H_wfc_TV, H_wfc_hartree, H_wfc_dft_XC, H_wfc_exx_XC, occNum_HamiltWfc, XC_func_rdmft, alpha_power);
+}
 
+
+template <typename TK, typename TR>
+void RDMFT<TK, TR>::cal_E_grad_occ_num()
+{
     // get the gradient of energy with respect to the natural occupation numbers, i.e., Wk_occNum_wfcHamiltWfc
     add_occNum(*kv, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
-
-    // get the total energy
-    // add_wfcHwfc(kv->wk, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_XC, Etotal_n_k, XC_func_rdmft, alpha_power);
-    // add_wfcHwfc(wg, wk_fun_occNum, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_XC, Etotal_n_k, XC_func_rdmft, alpha_power);
-    // E_RDMFT[3] = getEnergy(Etotal_n_k);
-    // Parallel_Reduce::reduce_all(E_RDMFT[3]);
-
-    return E_RDMFT[3];
-
-    /****** get occNum_wfcHamiltWfc, occNum_HamiltWfc and Etotal ******/
-
 }
 
 
@@ -408,7 +423,9 @@ double RDMFT<TK, TR>::run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E
     // this->cal_V_hartree();
     // this->cal_V_XC();
     this->cal_Hk_Hpsi();
-    this->cal_E_grad_wfc_occ_num();
+    // this->cal_E_grad_wfc_occ_num();
+    this->cal_E_grad_wfc();
+    this->cal_E_grad_occ_num();
     this->cal_Energy(this->cal_E_type);
     // this->cal_Energy(2);
 

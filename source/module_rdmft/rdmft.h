@@ -95,6 +95,12 @@ class RDMFT
     //! obtain the gradient of total energy with respect to occupation number and wfc
     double cal_E_grad_wfc_occ_num();
 
+    //! obtain the gradient of total energy with respect to wfc
+    void cal_E_grad_wfc();
+
+    //! obtain the gradient of total energy with respect to occupation number
+    void cal_E_grad_occ_num();
+
     void cal_Energy(const int cal_type = 1);
 
     //! update occ_number for optimization algorithms that depend on Hamilton
