@@ -47,6 +47,26 @@ void antisymm_mat<double>(const Parallel_2D* para_mat,
                             double alpha);
 
 
+template<typename TK>
+void get_identi_mat(const Parallel_2D* para_mat, std::vector<TK>& iden_mat)
+{
+    if( iden_mat.size() != para_mat->get_local_size() ) { iden_mat.resize(para_mat->get_local_size(), TK(0.0)); }
+
+    const int nrow = para_mat->get_row_size();
+    const int ncol = para_mat->get_col_size();
+
+    for(int i=0; i<nrow; ++i)
+    {
+        const int i_global = para_mat->local2global_row(i);
+        for(int j=0; j<ncol; ++j)
+        {
+            int j_global = para_mat->local2global_col(j);
+            if( i_global == j_global ) { iden_mat[ i+j*nrow ] = 1.0; }
+        }
+    }
+}
+
+
 
 // !!! Note: the upper triangular part of mat will be destroyed
 // the scale of egienvalue is global, mat and egienvector are local (2d-block)

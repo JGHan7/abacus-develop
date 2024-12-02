@@ -45,19 +45,25 @@ void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
 template<typename TK, typename TR>
 void LineSearch<TK, TR>::get_start_guess()
 {
+    std::cout << "\n******\n" << "start_guess: ebi, 0.0" << "\n******\n" << std::endl;
     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
+    std::cout << "\n******\n" << "start_guess: ebi, 0.01" << "\n******\n" << std::endl;
     if(this->ebi.random_inital)
     {
         ebi.get_inital_guess(this->var_x);
+        std::cout << "\n******\n" << "start_guess: ebi, 0.1" << "\n******\n" << std::endl;
         // update rdmft elec_state
         ModuleBase::matrix occ_number = this->ebi.get_occ_number();
+        std::cout << "\n******\n" << "start_guess: ebi, 0.15" << "\n******\n" << std::endl;
         this->rdmft_solver->update_elec( &occ_number );
     }
     else
     {
         ebi.get_inital_guess(this->var_x, &rdmft_solver->occ_number);
+        std::cout << "\n******\n" << "start_guess: ebi, 0.1" << "\n******\n" << std::endl;
     }
     this->phi_0 = this->rdmft_solver->cal_Energy();
+    std::cout << "\n******\n" << "start_guess: ebi, 0.2" << "\n******\n" << std::endl;
 }
 
 
@@ -66,10 +72,13 @@ void LineSearch<TK, TR>::do_line_search(const bool start_guess)
 {
     if(start_guess) { this->get_start_guess(); }
 
+    std::cout << "\n******\n" << "start_guess: ls, 0.0" << "\n******\n" << std::endl;
     // rdmft cal dE_docc_num, EBI convert dE_docc_num to dE_dx
     this->cal_dE_dx(this->dE_dx);
+    std::cout << "\n******\n" << "start_guess: ls, 0.1" << "\n******\n" << std::endl;
 
     this->cal_pk_dphi0(start_guess);
+    std::cout << "\n******\n" << "start_guess: ls, 1.0" << "\n******\n" << std::endl;
 
     // have pk, use strong wolfe to find step_size, update x_k+1 = x_k + step_size * p_k
     if(this->ls_condition == "swolfe") // PARAM.inp.ls_condition == "swolfe"
@@ -245,9 +254,12 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::ve
     // rdmft cal dE_docc_num
     this->rdmft_solver->cal_E_grad_occ_num();
 
+    std::cout << "\n******\n" << "ls: cal_dE_dx(), 0.1" << "\n******\n" << std::endl;
     // EBI: convert dE_docc_num to dE_dx (x in EBI is the latest, that is, it is consistent with dE_dx)
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
+    std::cout << "\n******\n" << "ls: cal_dE_dx(), 0.2" << "\n******\n" << std::endl;
     this->ebi.get_dE_dx(dE_docc_num, dE_dx_new);
+    std::cout << "\n******\n" << "ls: cal_dE_dx(), 0.3" << "\n******\n" << std::endl;
 }
 
 

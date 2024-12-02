@@ -45,12 +45,17 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     this->scale_zeta = 0.01; // PARAM.inp.scale_zeta_rdmft?
     this->scale_zeta_vector.resize(nk_total);
 
+    // malloc
     this->lambda.resize(nk_total);
     this->diag_Fii.resize(nk_total);
+    this->rotation_mat.resize(nk_total);
     for(int ik=0; ik<nk_total; ++ik)
     {
-        diag_Fii[ik].resize(nbands_total);
-        lambda[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size() );
+        diag_Fii[ik].resize(nbands_total, 0.0);
+        lambda[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+
+        // or write in before_opti(), if you update the fixed NOs representation after each ONs optimization
+        rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
     }
     this->Fock_like_mat = this->lambda;
     this->nos_rep_wfc = this->lambda;
