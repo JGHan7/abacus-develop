@@ -132,7 +132,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type = false, bool first_time = false)
+void ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type, bool first_time)
 {
     if(dft_type)
     {

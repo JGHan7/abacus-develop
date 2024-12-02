@@ -238,7 +238,7 @@ double LineSearch<TK, TR>::cal_dphi(std::vector<double>& dE_dx_new, const std::v
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr)
+void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr)
 {
     if( x_new_ptr != nullptr ) { this->cal_phi( *x_new_ptr ); }
 
@@ -258,7 +258,7 @@ void LineSearch<TK, TR>::cal_pk_dphi0(const bool start_guess)
     this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, start_guess);
 
     // get dphi_0
-    rdmft::dgemm_lapack( dE_dx_new.data(), this->search_direction.data(), &this->dphi_0, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
+    rdmft::dgemm_lapack( this->dE_dx.data(), this->search_direction.data(), &this->dphi_0, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
 }
 
 

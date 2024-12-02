@@ -84,9 +84,11 @@ class LineSearch
     //! objective function E(occ_num)=E(x): provides Etotal_rdmft and first-order gradient
     RDMFT<TK, TR>* rdmft_solver = nullptr;
 
+  public: // temp public
     //! handle constraints: convert natural occupation numbers and var_x
     rdmft::EBI ebi;
 
+  private:
     //! optimizer: use the BFGS method to get the search direction, p_k
     rdmft::BFGS_ONs<double> bfgs_opti_x;
 

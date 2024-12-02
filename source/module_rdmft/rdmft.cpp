@@ -486,7 +486,7 @@ std::vector<double> RDMFT<TK, TR>::get_dE_docc_num()
     std::vector<double> dE_docc_num(nk_total * nbands_total, 0.0);
     for(int ir=0; ir<nk_total; ++ir)
     {
-        for(int ic=0; ic<nbands_total.nc; ++ic) { dE_docc_num[i*nk_total+ic] = this->occNum_wfcHamiltWfc(ir, ic); }
+        for(int ic=0; ic<nbands_total; ++ic) { dE_docc_num[ir*nbands_total+ic] = this->occNum_wfcHamiltWfc(ir, ic); }
     }
 }
 
