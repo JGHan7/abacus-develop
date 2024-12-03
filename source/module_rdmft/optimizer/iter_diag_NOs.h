@@ -54,13 +54,16 @@ class IterDiag_NOs
 
     // wfc under the representation of natural orbitals
     std::vector< std::vector<TK> > nos_rep_wfc;
-    // std::vector< std::vector<TK> > nos_rep_wfc0;
 
-    // rotate the Fock-like matrix to the first step natural orbitals representation
-    std::vector< std::vector<TK> > rotation_mat;
+    // NAOs_rep_wfc1 = nos_rep_wfc1 * NAOs_rep_wfc0
+    psi::Psi<TK> naos_rep_wfc1;
+    bool if_get_wfc1 = false;
 
     // new wfc in NAOs
     psi::Psi<TK> new_wfc;
+  
+    // rotate the Fock-like matrix to the first step natural orbitals representation
+    std::vector< std::vector<TK> > rotation_mat;
 
     // used to scaling the off-diagonal elements of Fock
     // double scale_zeta;
@@ -87,6 +90,7 @@ class IterDiag_NOs
 
     // rotate the Fock to the natural orbital representation of step 1
     void rotate_Fock();
+    bool if_rotate_Fock = true;
 
     // temporary
     void check_hermi(std::vector< std::vector<TK> >& mat);
