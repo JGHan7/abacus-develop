@@ -85,8 +85,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
     // diag(Fock)
     for(int ik=0; ik<nk_total; ++ik)
     {
-        std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
-        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
+        // std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
+        // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
 
         // get Fii and new_wfc in NOs
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
@@ -257,10 +257,18 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
         //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
 
         std::vector<TK> mat_temp(this->Fock_like_mat[ik].size(), 0.0);
-        rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
+
+        // known F = F^dagger. F_1-NOs = R_t-1 * F_t-NOs * (R_t-1)^dagger
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
+        //                             mat_temp.data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), mat_temp.data(),
+        //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+
+        // F_1-NOs = R_t-1 * F_t-NOs * (R_t-1)^dagger
+        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->Fock_like_mat[ik].data(),
                                     mat_temp.data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
-        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), mat_temp.data(),
-                                    this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+        rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
+                                    this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
     }
 }
 

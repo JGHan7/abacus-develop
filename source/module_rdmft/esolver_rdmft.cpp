@@ -107,8 +107,15 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
 
-            if( std::abs(diff_etotal) < iter_diag_ethr ) ++small_diffE;
-            if( small_diffE > 3 && iter_orb > 5) break; // reference: relative error < 1e-7
+            if( std::abs(diff_etotal) < iter_diag_ethr )
+            {
+                ++small_diffE;
+            }
+            else
+            {
+                small_diffE = 0;
+            }
+            if( small_diffE >= 3 && iter_orb > 5) break; // reference: relative error < 1e-7
             // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
         }
 
