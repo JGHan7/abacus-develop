@@ -27,7 +27,10 @@ void antisymm_mat<double>(const Parallel_2D* para_mat,
 
     const double a = -alpha,  b = alpha;
     const int one_int = 1;
+
+#ifdef __MPI
     pdtran_(&gloabl_row_mat, &gloabl_row_mat, &a, mat, &one_int, &one_int, para_mat->desc, &b, asym_mat, &one_int, &one_int, para_mat->desc);
+#endif
 
 }
 
@@ -42,7 +45,7 @@ void pdiag_scalapack<double>(const Parallel_2D* para_mat,
                                 double* mat,
                                 double* egienvalue,
                                 double* egienvector,
-                                bool get_egivector)
+                                const bool get_egivector)
 {
     char jobz = 'V';
     if(!get_egivector) jobz = 'N';
@@ -108,8 +111,6 @@ void GkPsi<double>(const Parallel_2D* para_mat,
 
 template <>
 void pTgemm_scalapack<double>(const Parallel_2D* para_A,
-                                const Parallel_2D* para_B,
-                                const Parallel_2D* para_C,
                                 const double* A,
                                 const double* B,
                                 double* C,
@@ -118,13 +119,19 @@ void pTgemm_scalapack<double>(const Parallel_2D* para_A,
                                 const int global_contract_index,
                                 const char op_A,
                                 const char op_B,
+                                const Parallel_2D* para_B,
+                                const Parallel_2D* para_C,
                                 double alpha,
                                 double beta)
 {
     const int one_int = 1;
+    if( para_B == nullptr ) { para_B = para_A; }
+    if( para_C == nullptr ) { para_C = para_A; }
 
+#ifdef __MPI
     pdgemm_( &op_A, &op_B, &global_row_C, &global_col_C, &global_contract_index, &alpha, A, &one_int, &one_int, para_A->desc,
-            &B, &one_int, &one_int, para_B->desc, &beta, C, &one_int, &one_int, para_C->desc );
+            B, &one_int, &one_int, para_B->desc, &beta, C, &one_int, &one_int, para_C->desc );
+#endif
 }
 
 

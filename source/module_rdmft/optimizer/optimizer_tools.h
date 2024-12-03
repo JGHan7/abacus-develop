@@ -35,7 +35,10 @@ void antisymm_mat(const Parallel_2D* para_mat,
 
     const TK a = -alpha,  b = alpha;
     const int one_int = 1;
+
+#ifdef __MPI
     pztranc_(&gloabl_row_mat, &gloabl_row_mat, &a, mat, &one_int, &one_int, para_mat->desc, &b, asym_mat, &one_int, &one_int, para_mat->desc);
+#endif
 }
 
 
@@ -50,7 +53,7 @@ void antisymm_mat<double>(const Parallel_2D* para_mat,
 template<typename TK>
 void get_identi_mat(const Parallel_2D* para_mat, std::vector<TK>& iden_mat)
 {
-    if( iden_mat.size() != para_mat->get_local_size() ) { iden_mat.resize(para_mat->get_local_size(), TK(0.0)); }
+    if( iden_mat.size() != para_mat->get_local_size() ) { iden_mat.resize(para_mat->get_local_size(), static_cast<TK>(0.0)); }
 
     const int nrow = para_mat->get_row_size();
     const int ncol = para_mat->get_col_size();
@@ -77,7 +80,7 @@ void pdiag_scalapack(const Parallel_2D* para_mat,
                         TK* mat,
                         double* egienvalue,
                         TK* egienvector,
-                        bool get_egivector = true)
+                        const bool get_egivector = true)
 {
     char jobz = 'V';
     if(!get_egivector) jobz = 'N';
@@ -127,7 +130,7 @@ void pdiag_scalapack<double>(const Parallel_2D* para_mat,
                                 double* mat,
                                 double* egienvalue,
                                 double* egienvector,
-                                bool get_egivector);
+                                const bool get_egivector);
 
 
 // contraction index: nbands
@@ -167,11 +170,10 @@ void GkPsi<double>(const Parallel_2D* para_mat,
 
 
 //! to compute C = alpha * A.? * B.? + beta * C, op_ = 'N' or 'T' or 'C', in the case of MPI
+//! When para_B and para_C use nullptr, A, B, and C are square matrices of the same dimension.
 //! all use the fortran perspective, not cpp
 template <typename TK>
 void pTgemm_scalapack(const Parallel_2D* para_A,
-                        const Parallel_2D* para_B,
-                        const Parallel_2D* para_C,
                         const TK* A,
                         const TK* B,
                         TK* C,
@@ -180,20 +182,24 @@ void pTgemm_scalapack(const Parallel_2D* para_A,
                         const int global_contract_index,
                         const char op_A = 'N',
                         const char op_B = 'N',
+                        const Parallel_2D* para_B = nullptr,
+                        const Parallel_2D* para_C = nullptr,
                         TK alpha = 1.0,
                         TK beta = 0.0)
 {
     const int one_int = 1;
+    if( para_B == nullptr ) { para_B = para_A; }
+    if( para_C == nullptr ) { para_C = para_A; }
 
+#ifdef __MPI
     pzgemm_( &op_A, &op_B, &global_row_C, &global_col_C, &global_contract_index, &alpha, A, &one_int, &one_int, para_A->desc,
-            &B, &one_int, &one_int, para_B->desc, &beta, C, &one_int, &one_int, para_C->desc );
+            B, &one_int, &one_int, para_B->desc, &beta, C, &one_int, &one_int, para_C->desc );
+#endif
 }
 
 
 template <>
 void pTgemm_scalapack<double>(const Parallel_2D* para_A,
-                                const Parallel_2D* para_B,
-                                const Parallel_2D* para_C,
                                 const double* A,
                                 const double* B,
                                 double* C,
@@ -202,6 +208,8 @@ void pTgemm_scalapack<double>(const Parallel_2D* para_A,
                                 const int global_contract_index,
                                 const char op_A,
                                 const char op_B,
+                                const Parallel_2D* para_B,
+                                const Parallel_2D* para_C,
                                 double alpha,
                                 double beta);
 

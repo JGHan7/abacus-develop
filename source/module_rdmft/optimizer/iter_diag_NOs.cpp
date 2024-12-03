@@ -59,7 +59,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     }
     this->Fock_like_mat = this->lambda;
     this->nos_rep_wfc = this->lambda;
-    this->nos_rep_wfc0 = this->lambda;
+    // this->nos_rep_wfc0 = this->lambda;
 }
 
 
@@ -85,10 +85,22 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
     // diag(Fock)
     for(int ik=0; ik<nk_total; ++ik)
     {
+        std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
+        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
+
         // get Fii and new_wfc in NOs
-        rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(), diag_Fii[ik].data(), nos_rep_wfc[ik].data());
+        rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
+                                    this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
         // get new_wfc in NAOs
-        rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+
+        // get rotation_mat, rotation_mat_t-step = G_t * G_t-1 * ... * G_1
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->nos_rep_wfc[ik].data(),
+        //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
+        std::vector<TK> mat_temp = this->rotation_mat[ik];
+        rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
+                                    this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
+
     }
 
     rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
@@ -98,7 +110,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
     if(diff_e < 0) { ++this->energy_drop; }
     else { ++this->energy_rise; }
 
-    this->nos_rep_wfc0 = this->nos_rep_wfc; // nos_rep_wfc0 *= nos_rep_wfc ?
+    // this->nos_rep_wfc0 = this->nos_rep_wfc; // nos_rep_wfc0 *= nos_rep_wfc ?
     this->new_wfc.zero_out();
 
     return diff_e;
@@ -120,7 +132,8 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
     for(int ik=0; ik<nk_total; ++ik)
     {
         // get start_Fii and start_wfc in NOs
-        rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, symm_lambda[ik].data(), diag_Fii[ik].data(), nos_rep_wfc[ik].data());
+        rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, symm_lambda[ik].data(),
+                                    this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
 
         // get start_wfc in NAOs
         rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
@@ -128,7 +141,7 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
 
     rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
 
-    this->nos_rep_wfc0 = this->nos_rep_wfc;
+    // this->nos_rep_wfc0 = this->nos_rep_wfc;
     this->new_wfc.zero_out();
 }
 
@@ -192,14 +205,13 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                 }
             }
         }
-        // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0); // recover in the future? depending on whether adjust_scale() can use it
     }
 
     this->scale_Fock();
 
-    // rotate Fock?
+    this->rotate_Fock();
 
-    this->check_hermi(this->Fock_like_mat);
+    this->check_hermi(this->Fock_like_mat); // delete in the future
 }
 
 
@@ -233,6 +245,15 @@ void IterDiag_NOs<TK, TR>::scale_Fock()
 
 
 template <typename TK, typename TR>
+void IterDiag_NOs<TK, TR>::rotate_Fock()
+{
+    // rotate the Fock-like matrix to the first step NOs representation
+    // F_1-NOs = R_t-1 * F_t-NOs * (R_t-1)^dagger
+    
+}
+
+
+template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::adjust_scale()
 {
     // std::vector<double> scale_vector(nk_total);s
@@ -260,8 +281,6 @@ void IterDiag_NOs<TK, TR>::adjust_scale()
         std::cout << std::fixed << std::setprecision(6);
         std::cout << "\n******\nik: " << ik << ",   avar_off_diag: " << scale_zeta_vector[ik] << ",    F00: " << this->diag_Fii[ik][0] << "\n******\n" 
                     << std::endl << std::defaultfloat;
-
-        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0); // delete in the furure
     }
 
     // refer to octopus
@@ -270,13 +289,6 @@ void IterDiag_NOs<TK, TR>::adjust_scale()
 
     // if( this->energy_drop > static_cast<int>(1.5*this->energy_rise) ) this->scale_zeta *= 1.05;
     // else if( this->energy_drop < static_cast<int>(1.1*this->energy_rise) ) this->scale_zeta *= 0.95;
-}
-
-
-template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::rotate_Fock()
-{
-
 }
 
 

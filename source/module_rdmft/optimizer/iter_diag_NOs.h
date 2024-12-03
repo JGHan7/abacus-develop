@@ -54,7 +54,7 @@ class IterDiag_NOs
 
     // wfc under the representation of natural orbitals
     std::vector< std::vector<TK> > nos_rep_wfc;
-    std::vector< std::vector<TK> > nos_rep_wfc0;
+    // std::vector< std::vector<TK> > nos_rep_wfc0;
 
     // rotate the Fock-like matrix to the first step natural orbitals representation
     std::vector< std::vector<TK> > rotation_mat;
