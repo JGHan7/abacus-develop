@@ -248,8 +248,20 @@ template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::rotate_Fock()
 {
     // rotate the Fock-like matrix to the first step NOs representation
-    // F_1-NOs = R_t-1 * F_t-NOs * (R_t-1)^dagger
-    
+    // known F = F^dagger. F_1-NOs = R_t-1 * F_t-NOs * (R_t-1)^dagger
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
+        //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->Fock_like_mat[ik].data(),
+        //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+
+        std::vector<TK> mat_temp(this->Fock_like_mat[ik].size(), 0.0);
+        rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
+                                    mat_temp.data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), mat_temp.data(),
+                                    this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+    }
 }
 
 
