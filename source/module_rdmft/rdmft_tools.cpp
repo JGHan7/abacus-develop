@@ -36,7 +36,7 @@ void HkPsi<double>(const Parallel_Orbitals* ParaV,
     const double one_double = 1.0;
     const double zero_double = 0.0;
     const char N_char = 'N';
-    const char C_char = 'C';
+    const char C_char = 'N';
 
 #ifdef __MPI
     const int nbasis = ParaV->desc[2];

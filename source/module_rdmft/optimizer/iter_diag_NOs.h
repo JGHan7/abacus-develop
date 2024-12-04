@@ -73,10 +73,15 @@ class IterDiag_NOs
 
     double etotal = 0.0, etotal_old = 0.0;
 
+    // void get_lambda(const ModuleBase::matrix& wg,
+    //                   const ModuleBase::matrix& wk_fun_occNum,
+    //                   const std::vector< std::vector<TK> >& H_no_exx, 
+    //                   const std::vector< std::vector<TK> >& H_exx);
+    // temp
     void get_lambda(const ModuleBase::matrix& wg,
                       const ModuleBase::matrix& wk_fun_occNum,
-                      const std::vector< std::vector<TK> >& H_no_exx, 
-                      const std::vector< std::vector<TK> >& H_exx);
+                      std::vector< std::vector<TK> >& H_no_exx, 
+                      std::vector< std::vector<TK> >& H_exx);
 
     void get_Fock();
 

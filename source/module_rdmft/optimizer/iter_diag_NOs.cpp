@@ -60,6 +60,9 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     }
     this->Fock_like_mat = this->lambda;
     this->nos_rep_wfc = this->lambda;
+
+    // temp
+    this->if_rotate_Fock = false;
 }
 
 
@@ -95,6 +98,13 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
     //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
     // }
+
+    // test T
+    Parallel_2D para_wfc;
+    #ifdef __MPI
+        para_wfc.set(this->ParaV->desc[2], nbands_total, this->ParaV->nb, this->ParaV->blacs_ctxt); // maybe in default, PARAM.inp.nb2d = 0, can't be used
+    #endif
+
     for(int ik=0; ik<nk_total; ++ik)
     {
         std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
@@ -108,6 +118,10 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
         {
             std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+
+            // // test T
+            // rdmft::pTgemm_scalapack( &para_wfc, &(rdmft_solver.wfc(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)),
+            //                             this->ParaV->desc[2], nbands_total, nbands_total, 'N', 'N', this->para_Fij, &para_wfc );
         }
         else
         {
@@ -186,11 +200,29 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg, 
                                         const ModuleBase::matrix& wk_fun_occNum, 
-                                        const std::vector< std::vector<TK> >& H_no_exx, 
-                                        const std::vector< std::vector<TK> >& H_exx)
+                                        std::vector< std::vector<TK> >& H_no_exx, 
+                                        std::vector< std::vector<TK> >& H_exx)
 {
     // for(int i=0; i<lambda.size(); ++i) { lambda[i] = lambda_in[i]; }
-    
+
+    // // test transpose in potential matrix
+    // std::vector<TK> iden_mat(this->para_Fij->get_local_size(), 0.0);
+    // std::vector<TK> temp_mat(this->para_Fij->get_local_size(), 0.0);
+    // rdmft::get_identi_mat(this->para_Fij, iden_mat);
+    // for(int ik=0; ik<nk_total; ++ik)
+    // {
+    //     // std::vector<TK> temp_mat = this->lambda[ik];
+    //     // rdmft::pTgemm_scalapack(this->para_Fij, temp_mat.data(), iden_mat.data(),
+    //     //                             this->lambda[ik].data(), nbands_total, nbands_total, nbands_total, 'T', 'N');
+
+    //     temp_mat = H_no_exx[ik];
+    //     rdmft::pTgemm_scalapack(this->para_Fij, temp_mat.data(), iden_mat.data(),
+    //                                 H_no_exx[ik].data(), nbands_total, nbands_total, nbands_total, 'T', 'N');
+    //     temp_mat = H_exx[ik];
+    //     rdmft::pTgemm_scalapack(this->para_Fij, temp_mat.data(), iden_mat.data(),
+    //                                 H_exx[ik].data(), nbands_total, nbands_total, nbands_total, 'T', 'N');
+    // }
+
     // times occNum
     for(int ik=0; ik<Fock_like_mat.size(); ++ik)
     {
@@ -208,6 +240,26 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
             }
         }
     } 
+
+    // // test transpose in potential matrix
+    // // // times occNum
+    // for(int ik=0; ik<Fock_like_mat.size(); ++ik)
+    // {
+    //     int ncol = para_Fij->get_col_size();
+    //     int nrow = para_Fij->get_row_size();
+    //     for(int ir=0; ir<para_Fij->get_row_size(); ++ir)
+    //     {
+    //         // use wg or occ_number???
+    //         const double wg_local = wg(ik, para_Fij->local2global_row(ir));
+    //         const double wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_row(ir));
+
+    //         for(int ic=0; ic<ncol; ++ic)
+    //         {
+    //             this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local 
+    //                                             + H_exx[ik][ir + ic*nrow]*wk_fun_local;
+    //         }
+    //     }
+    // }
 }
 
 
@@ -229,11 +281,20 @@ void IterDiag_NOs<TK, TR>::get_Fock()
             {
                 int ir_global = para_Fij->local2global_row(ir);
 
+
                 if(ic_global > ir_global) 
                 {
                     // the upper triangle
                     this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
                 }
+
+                // // test
+                // if(ic_global < ir_global) 
+                // {
+                //     // the upper triangle
+                //     this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
+                // }
+
                 else if (ic_global == ir_global)
                 {
                     // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
@@ -245,7 +306,7 @@ void IterDiag_NOs<TK, TR>::get_Fock()
 
     this->scale_Fock();
 
-    // if(if_rotate_Fock)
+    if(if_rotate_Fock)
     {
         this->rotate_Fock();
     }
@@ -309,17 +370,24 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
         // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
         //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
         
-        // without any T, may be right ?!
-        rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
-                                    mat_temp.data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
-        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), mat_temp.data(),
-                                    this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
+        // work ??????!!!
+        // // without any T, may be right ?!
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
+        //                             mat_temp.data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), mat_temp.data(),
+        //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
 
         // // without any T
         // rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
         //                             mat_temp.data(), nbands_total, nbands_total, nbands_total, 'T', 'N' );
         // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), mat_temp.data(),
         //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
+
+        // test T
+        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->Fock_like_mat[ik].data(),
+                                    mat_temp.data(), nbands_total, nbands_total, nbands_total, 'T', 'N' );
+        rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
+                                    this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
     }
 }
 
