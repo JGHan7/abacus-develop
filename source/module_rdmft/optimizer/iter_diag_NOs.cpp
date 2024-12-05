@@ -107,8 +107,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 
     for(int ik=0; ik<nk_total; ++ik)
     {
-        std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
-        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
+        // std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
+        // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
 
         // get Fii and new_wfc in NOs
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
@@ -344,9 +344,11 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                 }
             }
         }
+        // here or other place? 
+        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
     }
 
-    this->scale_Fock();
+    // this->scale_Fock();
 
     if(if_rotate_Fock)
     {
