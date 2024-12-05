@@ -54,7 +54,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     this->dft_optimize = true;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     this->iter_diag_ethr = 1e-8;
     this->lambda_thr = 1e-4;
-    this->occ_num_thr = 1e-3; // how much is proper?
+    this->occ_num_thr = 1e-5; // how much is proper?
 
     this->iter_diag_orb.scale_zeta = 0.01;
     this->ls_opti_occ_num.ebi.solve_mu_thr = 1e-10;
@@ -115,7 +115,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             {
                 small_diffE = 0;
             }
-            if( small_diffE >= 3 && iter_orb > 5) break; // reference: relative error < 1e-7
+            if( small_diffE >= 2 && iter_orb > 5) break; // reference: relative error < 1e-7
             // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
         }
 

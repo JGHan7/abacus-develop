@@ -64,7 +64,14 @@ void get_identi_mat(const Parallel_2D* para_mat, std::vector<TK>& iden_mat)
         for(int j=0; j<ncol; ++j)
         {
             int j_global = para_mat->local2global_col(j);
-            if( i_global == j_global ) { iden_mat[ i+j*nrow ] = static_cast<TK>(1.0); }
+            if( i_global == j_global )
+            {
+                iden_mat[ i+j*nrow ] = static_cast<TK>(1.0);
+            }
+            else
+            {
+                iden_mat[ i+j*nrow ] = static_cast<TK>(0.0);
+            }
         }
     }
 }
