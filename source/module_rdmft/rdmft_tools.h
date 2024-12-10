@@ -47,20 +47,37 @@ namespace rdmft
 
 //for print matrix
 template <typename TK>
-void printMatrix_pointer(int M, int N, const TK* matrixA, std::string nameA)
+void printMatrix_pointer(int M, int N, const TK* matrixA, std::string nameA, int num_each_line = 5)
 {
     std::cout << "\n" << nameA << ": \n";
     for(int i=0; i<M; ++i)
     {
         for(int j=0; j<N; ++j)
         {
-            if( j%5 == 0 ) { std::cout << "\n";
-}
+            if( j%num_each_line == 0 ) { std::cout << "\n"; }
             std::cout << *(matrixA+i*N+j) << " ";
         }
         std::cout << "\n";
     }
     std::cout << std::endl;
+}
+
+
+//for print matrix
+template <typename TK>
+void global_printMatrix_pointer(int M, int N, const TK* matrixA, std::string nameA, int num_each_line = 5)
+{
+    GlobalV::ofs_running << "\n" << nameA << ": \n";
+    for(int i=0; i<M; ++i)
+    {
+        for(int j=0; j<N; ++j)
+        {
+            if( j%num_each_line == 0 ) { GlobalV::ofs_running << "\n"; }
+            GlobalV::ofs_running << *(matrixA+i*N+j) << " ";
+        }
+        GlobalV::ofs_running << "\n";
+    }
+    GlobalV::ofs_running << std::endl;
 }
 
 

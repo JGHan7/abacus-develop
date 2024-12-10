@@ -441,6 +441,7 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
 //     std::cout << "\netxc:  " << etxc << "\nvtxc:  " << vtxc << "\n";
 //     std::cout << "\nE_deband_KS:  " << E_deband_KS << "\nE_deband_harris_KS:  " << E_deband_harris_KS << "\n\n" << std::endl;
 
+    // if( PARAM.inp.esolver_type == "rdmft" )
     if( PARAM.inp.rdmft == true )
     {
         GlobalV::ofs_running << "\n\nfrom class RDMFT: \nXC_fun: " << XC_func_rdmft << std::endl;
@@ -505,6 +506,7 @@ std::vector<double> RDMFT<TK, TR>::get_dE_docc_num()
     {
         for(int ic=0; ic<nbands_total; ++ic) { dE_docc_num[ir*nbands_total+ic] = this->occNum_wfcHamiltWfc(ir, ic); }
     }
+    return dE_docc_num;
 }
 
 template class RDMFT<double, double>;

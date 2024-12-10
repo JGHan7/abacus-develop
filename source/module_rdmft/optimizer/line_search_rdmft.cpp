@@ -34,6 +34,7 @@ void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
     this->var_x.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
     this->dE_dx.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
     this->search_direction.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
+    this->occ_number.create(rdmft_solver->nk_total, PARAM.inp.nbands);
 
     this->ls_c1 = 0.0001;
     this->ls_c2 = 0.999;
@@ -62,13 +63,14 @@ void LineSearch<TK, TR>::get_start_guess()
         ebi.get_inital_guess(this->var_x, &rdmft_solver->occ_number);
         std::cout << "\n******\n" << "start_guess: ebi, 0.1" << "\n******\n" << std::endl;
     }
+    this->occ_number = this->ebi.get_occ_number();
     this->phi_0 = this->rdmft_solver->cal_Energy();
     std::cout << "\n******\n" << "start_guess: ebi, 0.2" << "\n******\n" << std::endl;
 }
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::do_line_search(const bool start_guess)
+double LineSearch<TK, TR>::do_line_search(const bool start_guess)
 {
     if(start_guess) { this->get_start_guess(); }
 
@@ -97,6 +99,12 @@ void LineSearch<TK, TR>::do_line_search(const bool start_guess)
     // convert x_k+1 to occ_num, rdmft_solver update occ_num, Hk, etc.
     this->phi_0 = this->cal_phi(this->var_x);   // has be calculated in swolfe() or zoom() ?
 
+    ModuleBase::matrix diff_occ_num = ( this->occ_number );
+    this->occ_number = this->ebi.get_occ_number();
+    diff_occ_num -= this->occ_number;
+    
+    // std::abs( diff_occ_num )
+    // return max( diff_occ_num )
 }
 
 

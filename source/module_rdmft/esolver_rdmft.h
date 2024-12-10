@@ -35,7 +35,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
     void cal_stress(UnitCell& ucell, ModuleBase::matrix& stress) override;
 
-    void opti_occ_num(bool dft_type = false, bool first_time = false);
+    double opti_occ_num(bool dft_type = false, bool first_time = false);
 
 	  int maxniter;     // maximum iter steps for scf
 
@@ -75,7 +75,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     void get_start_guess();
 
     // use dft type to update occ_number
-    void update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver);
+    double update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver);
 
 
 

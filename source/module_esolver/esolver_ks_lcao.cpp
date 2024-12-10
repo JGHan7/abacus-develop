@@ -66,6 +66,7 @@
 // test RDMFT
 #include "module_rdmft/rdmft.h"
 #include <iostream>
+#include "module_rdmft/rdmft_tools.h" // temp
 
 namespace ModuleESolver
 {
@@ -1056,8 +1057,8 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(UnitCell& ucell, const int istep)
     ModuleBase::timer::tick("ESolver_KS_LCAO", "out_deepks_labels");
 #endif
 
-    // //! 10) Perform RDMFT calculations
-    // /******** test RDMFT *********/
+    //! 10) Perform RDMFT calculations
+    /******** test RDMFT *********/
     // if ( PARAM.inp.rdmft == true ) // rdmft, added by jghan, 2024-10-17
     // {
     //     ModuleBase::matrix occ_number_ks(this->pelec->wg);
@@ -1068,6 +1069,11 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(UnitCell& ucell, const int istep)
     //             occ_number_ks(ik, inb) /= this->kv.wk[ik];
     //         }
     //     }
+
+    //     GlobalV::ofs_running << "\n******\nocc_number_ks: " << std::endl << std::fixed << std::setprecision(5);
+    //     rdmft::global_printMatrix_pointer(occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number", 10);
+    //     GlobalV::ofs_running << "\n******\n" << std::endl << std::defaultfloat;
+
     //     this->rdmft_solver.update_elec(occ_number_ks, *(this->psi));
 
     //     //! initialize the gradients of Etotal with respect to occupation numbers and wfc, 
@@ -1078,7 +1084,21 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(UnitCell& ucell, const int istep)
 
     //     double Etotal_RDMFT = this->rdmft_solver.run(dE_dOccNum, dE_dWfc);
     // }
-    // /******** test RDMFT *********/
+
+    ModuleBase::matrix occ_number_ks(this->pelec->wg);
+    for(int ik=0; ik < occ_number_ks.nr; ++ik) 
+    { 
+        for(int inb=0; inb < occ_number_ks.nc; ++inb)
+        {
+            occ_number_ks(ik, inb) /= this->kv.wk[ik];
+        }
+    }
+
+    GlobalV::ofs_running << "\n******\nocc_number_ks: " << std::endl << std::fixed << std::setprecision(5);
+    rdmft::global_printMatrix_pointer(occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number", 10);
+    GlobalV::ofs_running << "\n******\n" << std::endl << std::defaultfloat;
+
+    /******** test RDMFT *********/
 
 
 #ifdef __EXX

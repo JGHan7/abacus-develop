@@ -51,7 +51,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     // this->bfgs_rdmft.init(rdmft_solver.nk_total, PARAM.inp.nbands);
 
     // convergence parameters
-    this->dft_optimize = true;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // this->dft_optimize = true;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     this->iter_diag_ethr = 1e-8;
     this->lambda_thr = 1e-4;
     this->occ_num_thr = 1e-5; // how much is proper?
@@ -98,11 +98,17 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         this->iter_diag_orb.before_opti();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {
+            // delete or save?
+            if(this->dft_optimize)
+            {
+                this->update_occ_num_dft(this->rdmft_solver);
+                GlobalV::ofs_running << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(5);
+                rdmft::global_printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
+                GlobalV::ofs_running << std::endl << std::defaultfloat;
+            }
+
             // optimize natural orbitals
             double diff_etotal = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
-
-            // delete or save?
-            if(this->dft_optimize) { this->update_occ_num_dft(this->rdmft_solver); }
 
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
@@ -126,7 +132,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         if(dft_optimize) break;
 
         std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(5);
-        rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number");
+        rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
         std::cout << std::endl << std::defaultfloat;
 
         // TODO: optimize occ_number
@@ -134,7 +140,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
     }
 
-    rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number");
+    rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
 
     std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;
     std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;
@@ -142,15 +148,16 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type, bool first_time)
+double ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type, bool first_time)
 {
+    double diff_occ_num_max = 0.0;
     if(dft_type)
     {
-        this->update_occ_num_dft(this->rdmft_solver);
+        diff_occ_num_max = this->update_occ_num_dft(this->rdmft_solver);
     }
     else
     {
-        this->ls_opti_occ_num.do_line_search(first_time);
+        diff_occ_num_max = this->ls_opti_occ_num.do_line_search(first_time);
     }
     // if(first_time)
     // {
@@ -196,7 +203,7 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
+double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 {
     elecstate::ElecState* pelec_ = rdmft_solver.get_pelec();
     K_Vectors& kv_ = rdmft_solver.get_kv();
@@ -228,6 +235,8 @@ void ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
         }
     }
     rdmft_solver_in.update_elec(&occ_number_ks);
+
+    return 1.0;
 
 }
 

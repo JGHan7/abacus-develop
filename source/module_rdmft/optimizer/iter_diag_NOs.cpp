@@ -116,7 +116,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
         // get new_wfc in NAOs
         if( !this->if_get_wfc1 )
         {
-            std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
+            // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
             // // test T
@@ -125,7 +125,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
         }
         else
         {
-            std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
+            // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
             // std::vector<TK> mat_temp = this->rotation_mat[ik];
@@ -166,7 +166,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
         // for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
 
         this->if_get_wfc1 = true;
-        std::cout << "\n******\n" << "iterDiag: 0.3, once" << "\n******\n" << std::endl;
+        // std::cout << "\n******\n" << "iterDiag: 0.3, once" << "\n******\n" << std::endl;
     }
     this->new_wfc.zero_out();
 

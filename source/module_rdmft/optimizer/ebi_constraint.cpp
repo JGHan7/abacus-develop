@@ -178,6 +178,7 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
         std::cout << "\n******\n" << "ebi: get_dE_dx(), 0.3" << "\n******\n" << std::endl;
 
         // rdmft::dgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
+
         rdmft::dgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
         std::cout << "\n******\n" << "ebi: get_dE_dx(), 0.4" << "\n******\n" << std::endl;
     }

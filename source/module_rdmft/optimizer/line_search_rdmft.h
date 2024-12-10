@@ -25,7 +25,7 @@ class LineSearch
     void init(RDMFT<TK, TR>* rdmft_in);
 
     //! use an approximate line search method to find a suitable step size
-    void do_line_search(const bool start_guess = false);
+    double do_line_search(const bool start_guess = false);
 
     //! parameters in strong wolfe or wolfe conditions
     double ls_c1 = 0.0;
@@ -64,10 +64,11 @@ class LineSearch
     //! x_new = x_k + alpha*p_k, if x is the same as the x in the last call to cal_phi(), nullptr is used.
     virtual void cal_dE_dx(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);
 
-    //! x_k, (dE_dx)_k, search direction p_k
+    //! x_k, (dE_dx)_k, search direction p_k and occupation numbers
     std::vector<double> var_x;
     std::vector<double> dE_dx;
     std::vector<double> search_direction;
+    ModuleBase::matrix occ_number;
 
     //! step_size, alpha: x_k+1 = x_k + alpha * p_k
     double step_size = 1.0;
