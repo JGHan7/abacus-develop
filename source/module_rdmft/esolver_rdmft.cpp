@@ -126,14 +126,25 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         }
 
         // optimize natural occupation numbers
-        this->opti_occ_num(this->dft_optimize);
-
-        // add something, to determine whether the optimization of the occ_number has converged
-        if(dft_optimize) break;
+        double diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
 
         std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(5);
         rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
         std::cout << std::endl << std::defaultfloat;
+
+        if( diff_occ_num_max < this->occ_num_thr )
+        {
+            double max_off_diag_F = this->iter_diag_orb.check_hermi_lambda();
+            if( max_off_diag_F < this->lambda_thr )
+            {
+                break;
+            }
+        }
+
+        // add something, to determine whether the optimization of the occ_number has converged
+        if(dft_optimize) break;
+
+
 
         // TODO: optimize occ_number
         // this->rdmft_solver.update_elec(occ_num_temp);
@@ -180,6 +191,7 @@ double ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type, bool first_time)
     // {
 
     // }
+    return diff_occ_num_max;
 }
 
 

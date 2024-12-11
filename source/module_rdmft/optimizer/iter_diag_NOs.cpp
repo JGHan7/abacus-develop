@@ -308,6 +308,8 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_Fock()
 {
+    this->max_off_diag_F = 0.0;
+
     for(int ik=0; ik<this->nk_total; ++ik)
     {   
         // c++ perspective: only the upper triangle of F is correct (excluding the diagonal)
@@ -324,29 +326,47 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                 int ir_global = para_Fij->local2global_row(ir);
 
 
-                if(ic_global > ir_global) 
-                {
-                    // the upper triangle
-                    this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
-                }
-
-                // // test
-                // if(ic_global < ir_global) 
+                // if(ic_global > ir_global) 
                 // {
                 //     // the upper triangle
                 //     this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
                 // }
+                // // // test
+                // // if(ic_global < ir_global) 
+                // // {
+                // //     // the upper triangle
+                // //     this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
+                // // }
+                // else if (ic_global == ir_global)
+                // {
+                //     // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
+                //     this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global];
+                // }
 
-                else if (ic_global == ir_global)
+                if( ic_global == ir_global )
                 {
                     // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
                     this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global];
+                }
+                else
+                {
+                    double norm_Fij = std::abs( this->Fock_like_mat[ik][ir+ic*nrow] );
+                    this->max_off_diag_F = std::max(this->max_off_diag_F, norm_Fij);
+
+                    if(ic_global > ir_global) 
+                    {
+                        // the upper triangle
+                        this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
+                    }
                 }
             }
         }
         // here or other place? 
         std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
     }
+
+    // get the max value of std::abs(Fij) in a global sense
+    rdmft::reduce_all_max(this->max_off_diag_F);
 
     // this->scale_Fock();
 
@@ -355,7 +375,18 @@ void IterDiag_NOs<TK, TR>::get_Fock()
         this->rotate_Fock();
     }
 
-    this->check_hermi(this->Fock_like_mat); // delete in the futuregggggG
+    // check the Hermitian property of Fock
+    double max_Fij = 0.0;
+    for(int ik=0; ik<this->Fock_like_mat.size(); ++ik)
+    {
+        double fix_k_max = rdmft::check_hermi(this->para_Fij, this->Fock_like_mat[ik], PARAM.inp.nbands);
+        max_Fij = std::max(max_Fij, fix_k_max);
+    }
+    if( max_Fij > 1e-12 )
+    {
+        std::cout << "\n\n******\n" << "Fock_like_mat is not Hermitian" << "\n******\n" << std::endl;
+    }
+    // this->check_hermi(this->Fock_like_mat); // delete in the futuregggggG
 }
 
 
@@ -500,20 +531,20 @@ void IterDiag_NOs<TK, TR>::adjust_scale()
 }
 
 
-template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::check_hermi(std::vector< std::vector<TK> >& mat)
-{
-    for(int ik=0; ik<mat.size(); ++ik)
-    {
-        std::vector<TK> zero_mat(mat[ik].size(), 0.0);
-        rdmft::antisymm_mat(this->para_Fij, PARAM.inp.nbands, mat[ik].data(), zero_mat.data(), 1.0);
+// template <typename TK, typename TR>
+// void IterDiag_NOs<TK, TR>::check_hermi(std::vector< std::vector<TK> >& mat)
+// {
+//     for(int ik=0; ik<mat.size(); ++ik)
+//     {
+//         std::vector<TK> zero_mat(mat[ik].size(), 0.0);
+//         rdmft::antisymm_mat(this->para_Fij, PARAM.inp.nbands, mat[ik].data(), zero_mat.data(), 1.0);
         
-        for(int iloc=0; iloc<zero_mat.size(); ++iloc)
-        {
-            if( std::abs(zero_mat[iloc]) > 1e-12 ) std::cout << "\n\n******\n" << "Fock_like_mat is not Hermitian" << "\n******\n" << std::endl;
-        }
-    }
-}
+//         for(int iloc=0; iloc<zero_mat.size(); ++iloc)
+//         {
+//             if( std::abs(zero_mat[iloc]) > 1e-12 ) std::cout << "\n\n******\n" << "Fock_like_mat is not Hermitian" << "\n******\n" << std::endl;
+//         }
+//     }
+// }
 
 
 

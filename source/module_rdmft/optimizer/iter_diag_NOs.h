@@ -22,19 +22,24 @@ class IterDiag_NOs
 
     void init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in);
 
+    //! use initial values ​​to form a first guess for iterative diagonalization
+    void get_start_guess(RDMFT<TK, TR>& rdmft_solver);
+
     void before_opti(int* scale_factor = nullptr);
 
-    // optimizing natural orbitals
+    //! optimizing natural orbitals
     double optimize_orb(RDMFT<TK, TR>& rdmft_solver);
 
-    // use initial values ​​to form a first guess for iterative diagonalization
-    void get_start_guess(RDMFT<TK, TR>& rdmft_solver);
+    //! check the Hermitian property of lambda for all k points
+    double check_hermi_lambda() { return this->max_off_diag_F; }
 
     const Parallel_2D* para_Fij = nullptr;
 
     const Parallel_Orbitals* ParaV = nullptr;
 
-    double scale_zeta;
+    double scale_zeta = 0.0;
+
+    double max_off_diag_F = 0.0;
 
 
   protected:
@@ -97,8 +102,8 @@ class IterDiag_NOs
     void rotate_Fock();
     bool if_rotate_Fock = true;
 
-    // temporary
-    void check_hermi(std::vector< std::vector<TK> >& mat);
+    // // temporary
+    // void check_hermi(std::vector< std::vector<TK> >& mat);
 
     // // fill the diagonal elements of F
     // void fill_diag_elem(const Parallel_2D* para_mat, 

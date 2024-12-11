@@ -12,8 +12,52 @@
 #include <random>
 #include <algorithm>
 
+#ifdef __MPI
+#include <mpi.h>
+#endif
+#include "module_base/parallel_comm.h"
+
 namespace rdmft
 {
+
+template <>
+void reduce_all_max<int>(int& object)
+{
+#ifdef __MPI
+    MPI_Allreduce(MPI_IN_PLACE, &object, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+#endif
+    return;
+}
+
+
+template <>
+void reduce_all_max<double>(double& object)
+{
+#ifdef __MPI
+    MPI_Allreduce(MPI_IN_PLACE, &object, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+#endif
+    return;
+}
+
+
+template <>
+void reduce_all_max<int>(int* object, const int n)
+{
+#ifdef __MPI
+    MPI_Allreduce(MPI_IN_PLACE, object, n, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+#endif
+    return;
+}
+
+
+template <>
+void reduce_all_max<double>(double* object, const int n)
+{
+#ifdef __MPI
+    MPI_Allreduce(MPI_IN_PLACE, object, n, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+#endif
+    return;
+}
 
 
 template <>

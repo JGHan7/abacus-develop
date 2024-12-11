@@ -91,14 +91,11 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                     {
                         this->x[is][ik*nbands+ib] = -2.0;
                     }
-                    std::cout << "\n******\n" << "start_guess: ebi, 0.3" << "\n******\n" << std::endl;
                     x_pass[ is*(nk_nospin*nbands) + ik*nbands + ib ] = this->x[is][ik*nbands+ib];
                 }
             }
         }
-        std::cout << "\n******\n" << "start_guess: ebi, 0.4" << "\n******\n" << std::endl;
         this->solving_mu();
-        std::cout << "\n******\n" << "start_guess: ebi, 0.5" << "\n******\n" << std::endl;
     }
     // use the externally passed occ_number_in as the initial value
     else
@@ -130,7 +127,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
             }
         }
     }
-
+    std::cout << "\n******\n" << "start_guess: ebi, 1.0" << "\n******\n" << std::endl;
 }
 
 
@@ -161,8 +158,6 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
     const double factor =  PARAM.inp.nspin==1 ? 2.0 : 1.0;
     std::vector< std::vector<double> > dE_deta(PARAM.inp.nspin, std::vector<double>(N, factor));
 
-    std::cout << "\n******\n" << "ebi: get_dE_dx(), 0.0" << "\n******\n" << std::endl;
-
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
         // convert format. consider spin up and spin down separately
@@ -171,18 +166,12 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
         std::vector<double> dmu_dx(N, 0.0);
         std::vector<double> docc_num_dx(N * N, 0.0);
 
-        std::cout << "\n******\n" << "ebi: get_dE_dx(), 0.1" << "\n******\n" << std::endl;
         this->cal_dmu_dx(dmu_dx, is);
-        std::cout << "\n******\n" << "ebi: get_dE_dx(), 0.2" << "\n******\n" << std::endl;
         this->cal_docc_num_dx(dmu_dx, docc_num_dx, is);
-        std::cout << "\n******\n" << "ebi: get_dE_dx(), 0.3" << "\n******\n" << std::endl;
 
         // rdmft::dgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
-
         rdmft::dgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
-        std::cout << "\n******\n" << "ebi: get_dE_dx(), 0.4" << "\n******\n" << std::endl;
     }
-    std::cout << "\n******\n" << "ebi: get_dE_dx(), 0.5" << "\n******\n" << std::endl;
 }
 
 
@@ -240,11 +229,7 @@ void EBI::solving_mu()
         }
     }
 
-    std::cout << "\n******\n" << "solving_mu: ebi, 0.5" << "\n******\n" << std::endl;
-
     this->cal_occ_num();
-
-    std::cout << "\n******\n" << "solving_mu: ebi, 0.6" << "\n******\n" << std::endl;
 }
 
 ModuleBase::matrix EBI::get_occ_number()

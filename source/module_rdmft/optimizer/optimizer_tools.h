@@ -18,8 +18,19 @@
 #include <iostream>
 #include <cmath>
 
+
+
 namespace rdmft
 {
+
+// learn from module_base/parallel_reduce.h
+//! obtain the maximum value of object between different processes and broadcasts it
+template <typename T>
+void reduce_all_max(T& object);
+
+
+template <typename T>
+void reduce_all_max(T* object, const int n);
 
 
 // anti-symmetrize mat
@@ -48,6 +59,26 @@ void antisymm_mat<double>(const Parallel_2D* para_mat,
                             const double* mat, 
                             double* asym_mat,
                             double alpha);
+
+
+//! check the Hermitian property or symmetry of a matrix
+//! return the max value of std::abs( Mij-conj(Mji) )
+template <typename TK>
+double check_hermi(const Parallel_2D* para_mat, const std::vector<TK>& mat, const int global_row_mat)
+{
+    double max_Mij = 0.0;
+    std::vector<TK> zero_mat(mat.size(), 0.0);
+    rdmft::antisymm_mat(para_mat, global_row_mat, mat.data(), zero_mat.data(), 1.0);
+    
+    for(int iloc=0; iloc<zero_mat.size(); ++iloc)
+    {
+        max_Mij = std::max( max_Mij, std::abs(zero_mat[iloc]) );
+    }
+
+    rdmft::reduce_all_max(max_Mij);
+
+    return max_Mij;
+}
 
 
 template<typename TK>
