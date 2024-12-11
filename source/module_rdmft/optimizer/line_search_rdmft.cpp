@@ -67,9 +67,12 @@ void LineSearch<TK, TR>::get_start_guess()
 template<typename TK, typename TR>
 double LineSearch<TK, TR>::do_line_search(const bool start_guess)
 {
-    if(start_guess) { this->get_start_guess(); }
+    if(start_guess)
+    {
+        this->get_start_guess();
+        std::cout << "\n******\n" << "start_guess: ls, 0.0" << "\n******\n" << std::endl;
+    }
 
-    std::cout << "\n******\n" << "start_guess: ls, 0.0" << "\n******\n" << std::endl;
     // rdmft cal dE_docc_num, EBI convert dE_docc_num to dE_dx
     this->cal_dE_dx(this->dE_dx);
 
@@ -94,6 +97,8 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
 
     // convert x_k+1 to occ_num, rdmft_solver update occ_num, Hk, etc.
     this->phi_0 = this->cal_phi(this->var_x);   // has be calculated in swolfe() or zoom() ?
+
+    std::cout << "\n******\n" << "cal phi_0" << "\n******\n" << std::endl;
 
     // ModuleBase::matrix diff_occ_num = ( this->occ_number );
     // this->occ_number = this->ebi.get_occ_number();
@@ -218,6 +223,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
             f_low = trial_phi;
         }
 
+        ++times;
         if( times >= 10 ) { break; }
     }
 

@@ -155,7 +155,8 @@ void EBI::update_x_occ_num(const std::vector<double>& x_in)
 void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx)
 {
     const int N = nk_nospin*nbands;
-    const double factor =  PARAM.inp.nspin==1 ? 2.0 : 1.0;
+    // const double factor =  PARAM.inp.nspin==1 ? 2.0 : 1.0;
+    const double factor =  PARAM.inp.nspin==1 ? 0.5 : 1.0;
     std::vector< std::vector<double> > dE_deta(PARAM.inp.nspin, std::vector<double>(N, factor));
 
     for(int is=0; is<PARAM.inp.nspin; ++is)
