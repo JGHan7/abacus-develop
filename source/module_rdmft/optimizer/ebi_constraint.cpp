@@ -109,7 +109,8 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
 
         // give an initial guess for mu, 0.0 or other value
         // also we can use the above approach, according to artificial rules, to get x from determined occ_num, then do solving_mu()
-        mu.resize(PARAM.inp.nspin, 0.0);
+        // mu.resize(PARAM.inp.nspin, 0.0);
+        mu.resize(PARAM.inp.nspin, 0.2);    // test
 
         for(int ik=0; ik<num_temp.nr; ++ik)
         {
@@ -214,7 +215,8 @@ void EBI::solving_mu()
         this->mu[is] = 0.0;
         std::vector<double> f_der(2, 1.0);
 
-        while( f_der[0] > this->solve_mu_thr )
+        // while( f_der[0] > this->solve_mu_thr )
+        while( std::abs(f_der[0]) > this->solve_mu_thr )
         {
             f_der = this->cal_f_der(this->mu[is], is);
             double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
@@ -232,6 +234,8 @@ void EBI::solving_mu()
                 this->mu[is] -= sign * f1_divided_f2;
             }
         }
+
+        std::cout << "******\n" << "solving_mu, mu: " << this->mu[is] << "\n******" << std::endl;
     }
 
     this->cal_occ_num();

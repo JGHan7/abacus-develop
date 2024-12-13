@@ -49,6 +49,9 @@ class EBI
     //! pass the mu in EBI method
     std::vector<double> get_mu() { return this->mu; }
 
+    // temp 
+    std::vector<double> get_nelec_spin() { return this->sys_nelec_spin; }
+
 
 
   protected:

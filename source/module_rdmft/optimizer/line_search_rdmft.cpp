@@ -127,61 +127,64 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
 template<typename TK, typename TR>
 void LineSearch<TK, TR>::strong_wolfe()
 {
-    // initial step_size before each iteration
-    this->step_size = (1.0 < this->max_step_size) ? 1.0 : this->max_step_size/2.0;
+    // // initial step_size before each iteration
+    // this->step_size = (1.0 < this->max_step_size) ? 1.0 : this->max_step_size/2.0;
 
-    // 0: represents the relevant quantity under x_k, that is, var_x
-    // phi_0, dphi_0 have obtained
+    // // 0: represents the relevant quantity under x_k, that is, var_x
+    // // phi_0, dphi_0 have obtained
 
-    // old: represents the relevant quantity under the last trial_step_size/trial_x
-    double step_size_old =0.0;
-    double phi_old = this->phi_0;
+    // // old: represents the relevant quantity under the last trial_step_size/trial_x
+    // double step_size_old =0.0;
+    // double phi_old = this->phi_0;
 
-    // trial_x = x_k(or this->var_x) + trial_step_size * p_k
-    std::vector<double> trial_x(this->var_x.size() ,0.0);
-    std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
+    // // trial_x = x_k(or this->var_x) + trial_step_size * p_k
+    // std::vector<double> trial_x(this->var_x.size() ,0.0);
+    // std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
 
-    int times = 0;
-    while(1)
-    {
-        for(int i=0; i<trial_x.size(); ++i)
-        {
-            trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
-        }
+    // int times = 0;
+    // while(1)
+    // {
+    //     for(int i=0; i<trial_x.size(); ++i)
+    //     {
+    //         trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
+    //     }
 
-        double trial_phi = this->cal_phi(trial_x);
-        if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi > phi_old)
-        {
-            this->zoom(step_size_old, phi_old, this->step_size);
-            break;
-        }
+    //     double trial_phi = this->cal_phi(trial_x);
+    //     if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi > phi_old)
+    //     {
+    //         this->zoom(step_size_old, phi_old, this->step_size);
+    //         break;
+    //     }
 
-        double trial_dphi = this->cal_dphi(trial_dE_dx);
-        if( std::abs(trial_dphi) <= -this->ls_c2 * this->dphi_0 )
-        {
-            for(int i=0; i<trial_x.size(); ++i) { this->var_x[i] = trial_x[i]; }
-            break;
-        }
+    //     double trial_dphi = this->cal_dphi(trial_dE_dx);
+    //     if( std::abs(trial_dphi) <= -this->ls_c2 * this->dphi_0 )
+    //     {
+    //         for(int i=0; i<trial_x.size(); ++i) { this->var_x[i] = trial_x[i]; }
+    //         break;
+    //     }
 
-        if( trial_dphi >= 0 )
-        {
-            this->zoom(this->step_size, trial_phi, step_size_old);
-            break;
-        }
+    //     if( trial_dphi >= 0 )
+    //     {
+    //         this->zoom(this->step_size, trial_phi, step_size_old);
+    //         break;
+    //     }
 
-        step_size_old = this->step_size;
-        phi_old = trial_phi;
+    //     step_size_old = this->step_size;
+    //     phi_old = trial_phi;
 
-        ++times;
-        if( this->step_size > this->max_step_size || times>=20 )
-        {
-            std::cout << "\n******\n" << "strong wolfe times: " << times << "\n******\n" << std::endl;
-            break;
-        }
+    //     ++times;
+    //     if( this->step_size > this->max_step_size || times>=20 )
+    //     {
+    //         std::cout << "\n******\n" << "strong wolfe times: " << times << "\n******\n" << std::endl;
+    //         break;
+    //     }
 
-        // needs improvement, using quadratic or cubic, currently using dichotomy
-        this->step_size = ( this->step_size + this->max_step_size ) / 2.0;
-    }
+    //     // needs improvement, using quadratic or cubic, currently using dichotomy
+    //     this->step_size = ( this->step_size + this->max_step_size ) / 2.0;
+    // }
+
+    // test
+    this->step_size = 0.5;
 
     // update x_k+1 = x_k + step_size * p_k
     for(int i=0; i<this->var_x.size(); ++i) { this->var_x[i] += this->step_size * this->search_direction[i]; }

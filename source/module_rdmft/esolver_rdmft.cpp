@@ -136,6 +136,11 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             sys_nelec_now += rdmft_solver.occ_number.c[i];
         }
         std::cout << "\n system nelec now: " <<  sys_nelec_now  << "\ndiff_occ_num_max: " << diff_occ_num_max << std::endl << std::defaultfloat;
+        std::vector<double> sys_nelec_spin =  this->ls_opti_occ_num.ebi.get_nelec_spin();
+        if( std::abs( sys_nelec_now - sys_nelec_spin[0] ) > 1e-10 )
+        {
+            rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, this->ls_opti_occ_num.get_var_x()->data(), "now var_x", 10);
+        }
 
         if( diff_occ_num_max < this->occ_num_thr )
         {

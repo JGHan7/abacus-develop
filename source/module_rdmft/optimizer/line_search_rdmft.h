@@ -27,6 +27,9 @@ class LineSearch
     //! use an approximate line search method to find a suitable step size
     double do_line_search(const bool start_guess = false);
 
+    // temp?
+    std::vector<double>* get_var_x() { return &this->var_x; }
+
     //! parameters in strong wolfe or wolfe conditions
     double ls_c1 = 0.0;
     double ls_c2 = 0.0;
