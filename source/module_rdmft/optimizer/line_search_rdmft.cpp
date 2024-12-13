@@ -7,6 +7,8 @@
 #include "module_rdmft/optimizer/optimizer_tools.h"
 #include <algorithm>
 
+#include "module_rdmft/rdmft_tools.h" // temp
+
 namespace rdmft
 {
 
@@ -28,7 +30,7 @@ template<typename TK, typename TR>
 void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
 {
     this->rdmft_solver = rdmft_in;
-    this->ebi.init(rdmft_solver->nk_total);
+    this->ebi.init(rdmft_solver->nk_total, rdmft_solver->get_kv().get_nkstot_full());
     this->bfgs_opti_x.init(rdmft_solver->nk_total, PARAM.inp.nbands);
 
     this->var_x.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
@@ -139,6 +141,7 @@ void LineSearch<TK, TR>::strong_wolfe()
     std::vector<double> trial_x(this->var_x.size() ,0.0);
     std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
 
+    int times = 0;
     while(1)
     {
         for(int i=0; i<trial_x.size(); ++i)
@@ -168,6 +171,13 @@ void LineSearch<TK, TR>::strong_wolfe()
 
         step_size_old = this->step_size;
         phi_old = trial_phi;
+
+        ++times;
+        if( this->step_size > this->max_step_size || times>=20 )
+        {
+            std::cout << "\n******\n" << "strong wolfe times: " << times << "\n******\n" << std::endl;
+            break;
+        }
 
         // needs improvement, using quadratic or cubic, currently using dichotomy
         this->step_size = ( this->step_size + this->max_step_size ) / 2.0;
@@ -224,7 +234,11 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         }
 
         ++times;
-        if( times >= 10 ) { break; }
+        if( times >= 20 )
+        {
+            std::cout << "\n******\n" << "zoom times: " << times << "\n******\n" << std::endl;
+            break;
+        }
     }
 
 
@@ -280,6 +294,9 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::ve
     // EBI: convert dE_docc_num to dE_dx (x in EBI is the latest, that is, it is consistent with dE_dx)
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
     this->ebi.get_dE_dx(dE_docc_num, dE_dx_new);
+    std::cout << "\n******\n" << "in cal_dE_dx" << std::endl;
+    rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, dE_dx_new.data(), "E_gradient_occNum");
+    std::cout << "\n******\n" << std::endl;
 }
 
 

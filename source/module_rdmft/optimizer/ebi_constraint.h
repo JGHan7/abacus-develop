@@ -21,7 +21,7 @@ class EBI
     EBI();
     ~EBI();
 
-    void init(int nk_total);
+    void init(const int nk_total, const int nkstot_full);
 
     bool random_inital = false;
 
@@ -61,7 +61,7 @@ class EBI
 
     int nk_nospin = 0;
     int nbands = 0;
-    std::vector<double> nelec_spin;
+    std::vector<double> sys_nelec_spin;
 
     std::vector<double> mu;
 

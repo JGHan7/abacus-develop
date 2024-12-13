@@ -130,7 +130,12 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
         std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(5);
         rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
-        std::cout << std::endl << std::defaultfloat;
+        double sys_nelec_now = 0.0;
+        for(int i=0; i<rdmft_solver.occ_number.nr*rdmft_solver.occ_number.nc; ++i)
+        {
+            sys_nelec_now += rdmft_solver.occ_number.c[i];
+        }
+        std::cout << "\n system nelec now: " <<  sys_nelec_now  << "\ndiff_occ_num_max: " << diff_occ_num_max << std::endl << std::defaultfloat;
 
         if( diff_occ_num_max < this->occ_num_thr )
         {

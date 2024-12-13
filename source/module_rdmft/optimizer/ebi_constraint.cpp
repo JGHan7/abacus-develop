@@ -28,7 +28,7 @@ EBI::~EBI()
 }
 
 
-void EBI::init(int nk_total)
+void EBI::init(const int nk_total, const int nkstot_full)
 {
     // this->random_inital = PARAM.inp.;
     
@@ -36,7 +36,7 @@ void EBI::init(int nk_total)
     this->nk_nospin = nk_total/PARAM.inp.nspin;
     this->nbands = PARAM.inp.nbands;
     mu.resize(PARAM.inp.nspin);
-    nelec_spin.resize(PARAM.inp.nspin);
+    sys_nelec_spin.resize(PARAM.inp.nspin);
     x.resize(PARAM.inp.nspin);
     occ_number.resize(PARAM.inp.nspin);
     // dmu_dx.resize(PARAM.inp.nspin);
@@ -52,12 +52,15 @@ void EBI::init(int nk_total)
 
     if( PARAM.inp.nspin == 1 )
     {
-        this->nelec_spin[0] = PARAM.inp.nelec / 2.0;
+        this->sys_nelec_spin[0] = (PARAM.inp.nelec / 2.0) * nkstot_full;
+        std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
     }
     else if( PARAM.inp.nspin == 2 )
     {
-        this->nelec_spin[0] = (PARAM.inp.nelec + PARAM.inp.nupdown) / 2.0;
-        this->nelec_spin[1] = (PARAM.inp.nelec - PARAM.inp.nupdown) / 2.0;
+        this->sys_nelec_spin[0] = ((PARAM.inp.nelec + PARAM.inp.nupdown) / 2.0) * nkstot_full;
+        this->sys_nelec_spin[1] = ((PARAM.inp.nelec - PARAM.inp.nupdown) / 2.0) * nkstot_full;
+        std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "this->sys_nelec_spin[1]: " << this->sys_nelec_spin[1] << "\n******\n" << std::endl;
     }
 
 }
@@ -73,7 +76,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
         {
             int M = 0;
             std::vector<double> random_num(nk_nospin*nbands, 0.0);
-            rdmft::random_descend(random_num, &nelec_spin[is], &M);
+            rdmft::random_descend(random_num, &sys_nelec_spin[is], &M);
 
             // to avoid the low bands with large-k points getting too small values ​
             // ​and the high bands with small-k points getting too large values
@@ -102,7 +105,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
     {
         // distinguishing up and down spin, 0 < occNum < 1
         ModuleBase::matrix num_temp = (*occ_number_in);
-        if( PARAM.inp.nspin == 1 ) { num_temp *= 0.5; }
+        // if( PARAM.inp.nspin == 1 ) { num_temp *= 0.5; }
 
         // give an initial guess for mu, 0.0 or other value
         // also we can use the above approach, according to artificial rules, to get x from determined occ_num, then do solving_mu()
@@ -156,7 +159,8 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
 {
     const int N = nk_nospin*nbands;
     // const double factor =  PARAM.inp.nspin==1 ? 2.0 : 1.0;
-    const double factor =  PARAM.inp.nspin==1 ? 0.5 : 1.0;
+    // const double factor =  PARAM.inp.nspin==1 ? 0.5 : 1.0;   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    const double factor = 1.0;
     std::vector< std::vector<double> > dE_deta(PARAM.inp.nspin, std::vector<double>(N, factor));
 
     for(int is=0; is<PARAM.inp.nspin; ++is)
@@ -252,7 +256,7 @@ ModuleBase::matrix EBI::get_occ_number()
         }
     }
 
-    if(PARAM.inp.nspin == 1) occ_num_pass *= 2;
+    // if(PARAM.inp.nspin == 1) occ_num_pass *= 2;
 
     return occ_num_pass;
 }
@@ -300,8 +304,8 @@ std::vector<double> EBI::cal_f_der(double mu_in, int is)
         sum[2] += erf_der2(this->x[is][i] + mu_in);
     }
 
-    f_der[0] = ( sum[0] - this->nelec_spin[is] ) * sum[1];
-    f_der[1] = 0.5*std::pow(sum[1], 2) + ( sum[0] - this->nelec_spin[is] ) * sum[2];
+    f_der[0] = ( sum[0] - this->sys_nelec_spin[is] ) * sum[1];
+    f_der[1] = 0.5*std::pow(sum[1], 2) + ( sum[0] - this->sys_nelec_spin[is] ) * sum[2];
 
     return f_der;
 }
