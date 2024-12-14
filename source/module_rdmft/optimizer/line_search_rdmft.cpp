@@ -173,7 +173,7 @@ void LineSearch<TK, TR>::strong_wolfe()
     //     phi_old = trial_phi;
 
     //     ++times;
-    //     if( this->step_size > this->max_step_size || times>=20 )
+    //     if( this->step_size > this->max_step_size || times>=30 )
     //     {
     //         std::cout << "\n******\n" << "strong wolfe times: " << times << "\n******\n" << std::endl;
     //         break;
@@ -184,7 +184,7 @@ void LineSearch<TK, TR>::strong_wolfe()
     // }
 
     // test
-    this->step_size = 0.5;
+    this->step_size = 0.001;
 
     // update x_k+1 = x_k + step_size * p_k
     for(int i=0; i<this->var_x.size(); ++i) { this->var_x[i] += this->step_size * this->search_direction[i]; }
@@ -237,7 +237,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         }
 
         ++times;
-        if( times >= 20 )
+        if( times >= 30 )
         {
             std::cout << "\n******\n" << "zoom times: " << times << "\n******\n" << std::endl;
             break;

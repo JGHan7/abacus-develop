@@ -58,7 +58,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
 
     this->iter_diag_orb.scale_zeta = 0.01;
     this->ls_opti_occ_num.ebi.solve_mu_thr = 1e-10;
-    this->ls_opti_occ_num.ebi.random_inital = true;
+    // this->ls_opti_occ_num.ebi.random_inital = true;
     this->ls_opti_occ_num.ls_c1 = 0.0001;
     this->ls_opti_occ_num.ls_c2 = 0.999;
     this->ls_opti_occ_num.ls_condition = "swolfe";
@@ -211,11 +211,17 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
     // get start guess occ_number and optimize once
     this->opti_occ_num(this->dft_optimize, true);
     
+    std::cout << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
+
     // get start guess natural orbitals
     this->iter_diag_orb.get_start_guess(rdmft_solver);
 
+    std::cout << "\n******\n" << "get inital value in orbitals !!!!!!" << "\n******\n" << std::endl;
+
     // optimize occ_number
     this->opti_occ_num(this->dft_optimize);
+
+    std::cout << "\n******\n" << "after ESolver_RDMF::get_start_guess() !!!!!!" << "\n******\n" << std::endl;
 }
 
 

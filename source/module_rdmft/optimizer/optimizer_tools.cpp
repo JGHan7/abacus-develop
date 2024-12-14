@@ -210,9 +210,49 @@ void dgemm_lapack(const double* A,
 /********* the following function is just used by the EBI_constraint method *********/
 
 // check this approximation using std::erf( erf_inv_own(x) ) - x
+// double erf_inv_own(double x) 
+// {
+//     if (x < -1.0 || x > 1.0) {
+//         throw std::domain_error("Input out of range: erf_inv(x) requires -1 <= x <= 1.");
+//     }
+
+//     if (x == 0.0) return 0.0;
+//     if (x == 1.0) return std::numeric_limits<double>::infinity();
+//     if (x == -1.0) return -std::numeric_limits<double>::infinity();
+
+//     // High-precision initial approximation
+//     double w, p;
+//     if (std::abs(x) <= 0.7) 
+//     {
+//         w = 0.5 * (1 - x);
+//         p = std::sqrt(-2.0 * std::log(w));
+//         // Abramowitz & Stegun (26.2.23) initial Approximation
+//         p = (((-0.140543331 * p + 0.914624893) * p - 1.645349621) * p + 0.886226899) /
+//             ((((0.012229801 * p - 0.329097515) * p + 1.442710462) * p - 2.118377725) * p + 1.0);
+//     }
+//     else
+//     {
+//         w = std::sqrt(-std::log((1.0 - std::abs(x)) / 2.0));
+//         p = (((1.641345311 * w + 3.429567803) * w - 1.62490649) * w - 1.970840454) /
+//             ((1.637067800 * w + 3.543889200) * w + 1.0);
+//         if (x < 0) p = -p;
+//     }
+
+//     // Newton-Raphson iterative Improvement
+//     for (int i = 0; i < 5; ++i) {
+//         double err = std::erf(p) - x; // current Error
+//         double deriv = 2.0 / std::sqrt(M_PI) * std::exp(-p * p); // derivative of erf
+//         p -= err / deriv; // update
+//     }
+
+//     return p;
+// }
+
+// check this approximation using std::erf( erf_inv_own(x) ) - x
 double erf_inv_own(double x) 
 {
-    if (x < -1.0 || x > 1.0) {
+    if (x < -1.0 || x > 1.0)
+    {
         throw std::domain_error("Input out of range: erf_inv(x) requires -1 <= x <= 1.");
     }
 
@@ -220,29 +260,46 @@ double erf_inv_own(double x)
     if (x == 1.0) return std::numeric_limits<double>::infinity();
     if (x == -1.0) return -std::numeric_limits<double>::infinity();
 
-    // High-precision initial approximation
-    double w, p;
-    if (std::abs(x) <= 0.7) {
-        w = 0.5 * (1 - x);
-        p = std::sqrt(-2.0 * std::log(w));
-        // Abramowitz & Stegun (26.2.23) initial Approximation
-        p = (((-0.140543331 * p + 0.914624893) * p - 1.645349621) * p + 0.886226899) /
-            ((((0.012229801 * p - 0.329097515) * p + 1.442710462) * p - 2.118377725) * p + 1.0);
-    } else {
-        w = std::sqrt(-std::log((1.0 - std::abs(x)) / 2.0));
-        p = (((1.641345311 * w + 3.429567803) * w - 1.62490649) * w - 1.970840454) /
-            ((1.637067800 * w + 3.543889200) * w + 1.0);
-        if (x < 0) p = -p;
+    double result; 
+    double abs_x = std::abs(x);
+
+    // Piecewise approach
+    if (abs_x <= 0.4)
+    {
+        // Taylor expansion for |x| < 0.5
+        const double p = x * x;
+        result = x * (1.0 + p * (1.0 / 3.0 + p * (1.0 / 10.0 + p * (1.0 / 42.0))));
+    }
+    else
+    {
+        double w = 0.0;
+        // Abramowitz and Stegun method for |x| > 0.5
+        if (abs_x > 0.7)
+        {
+            w = std::sqrt(-std::log((1.0 - abs_x) / 2.0));
+            // More accurate initial guess
+            result = (((1.641345311 * w + 3.429567803) * w - 1.62490649) * w - 1.970840454) / 
+                     ((1.637067800 * w + 3.543889200) * w + 1.0);
+        }
+        else
+        {
+            w = std::sqrt(-2.0 * std::log( 0.5 * (1 - x) ));
+            // Intermediate region initial guess
+            result = x * (((-0.140543331 * w + 0.914624893) * w - 1.645349621) * w + 0.886226899) /
+                         ((((0.012229801 * w - 0.329097515) * w + 1.442710462) * w - 2.118377725) * w + 1.0);
+        }
+
+        if (x < 0) result = -result;
     }
 
-    // Newton-Raphson iterative Improvement
-    for (int i = 0; i < 5; ++i) {
-        double err = std::erf(p) - x; // current Error
-        double deriv = 2.0 / std::sqrt(M_PI) * std::exp(-p * p); // derivative of erf
-        p -= err / deriv; // update
+    // Newton-Raphson refinement
+    for (int i = 0; i < 4; ++i) {
+        double err = std::erf(result) - x; 
+        double deriv = 2.0 / std::sqrt(M_PI) * std::exp(-result * result); 
+        result -= err / deriv; 
     }
 
-    return p;
+    return result;
 }
 
 

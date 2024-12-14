@@ -13,6 +13,8 @@
 #include "module_rdmft/optimizer/optimizer_tools.h"
 #include "module_parameter/parameter.h"
 
+#include "module_rdmft/rdmft_tools.h" // temp
+
 namespace rdmft
 {
 
@@ -110,26 +112,122 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
         // give an initial guess for mu, 0.0 or other value
         // also we can use the above approach, according to artificial rules, to get x from determined occ_num, then do solving_mu()
         // mu.resize(PARAM.inp.nspin, 0.0);
-        mu.resize(PARAM.inp.nspin, 0.2);    // test
+        mu.resize(PARAM.inp.nspin, 0.01);    // test
 
-        for(int ik=0; ik<num_temp.nr; ++ik)
+        std::cout << "\n******\n" << "erf_inv_own(1.0 - 1e-12) = " << erf_inv_own(1.0 - 1e-12) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-6) = " << erf_inv_own(0.0 + 1e-6) << "\n******\n\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(1.0 - 1e-16) = " << erf_inv_own(1.0 - 1e-16) << "\n******\n\n" << std::endl;
+
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-16) = " << erf_inv_own(0.0 + 1e-16) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-14) = " << erf_inv_own(0.0 + 1e-14) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-12) = " << erf_inv_own(0.0 + 1e-12) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-10) = " << erf_inv_own(0.0 + 1e-10) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-8) = " << erf_inv_own(0.0 + 1e-8) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-6) = " << erf_inv_own(0.0 + 1e-6) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-5) = " << erf_inv_own(0.0 + 1e-5) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-4) = " << erf_inv_own(0.0 + 1e-4) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-3) = " << erf_inv_own(0.0 + 1e-3) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-2) = " << erf_inv_own(0.0 + 1e-2) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-1) = " << erf_inv_own(0.0 + 1e-1) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(0.0) = " << erf_inv_own(0.0) << "\n******\n\n" << std::endl;
+
+        std::cout << "\n******\n" << "erf(1e12) = " << std::erf(1e12) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf(-1e12) = " << std::erf(-1e12) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf(1e16) = " << std::erf(1e16) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf(-1e16) = " << std::erf(-1e16) << "\n******\n\n" << std::endl;
+
+        std::cout << "\n******\n" << "erf( erf_inv_own(1.0 - 1e-12) ) = " << std::erf( erf_inv_own(1.0 - 1e-12) ) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf( erf_inv_own(1.0 - 1e-16) ) = " << std::erf( erf_inv_own(1.0 - 1e-16) ) << "\n******\n\n" << std::endl;
+
+        std::cout << "\n******\n" << "erf( 10 ) = " << std::erf( 10 ) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf( -10 ) = " << std::erf( -10 ) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf( -9 ) = " << std::erf( -9 ) << "\n******\n" << std::endl;
+
+        std::cout << "\n******\n" << "erf_inv_own(-1.0 + 1e-14) = " << erf_inv_own(-1.0 + 1e-14) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(-1.0 + 1e-12) = " << erf_inv_own(-1.0 + 1e-12) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(-1.0 + 1e-10) = " << erf_inv_own(-1.0 + 1e-10) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(-1.0 + 1e-8) = " << erf_inv_own(-1.0 + 1e-8) << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "erf_inv_own(-1.0 + 1e-6) = " << erf_inv_own(-1.0 + 1e-6) << "\n******\n" << std::endl;
+
+        std::cout << "\n******\n" << "check: \n\n";
+        std::cout << "erf( erf_inv_own(0.9999) ) = " << std::erf( erf_inv_own(0.9999) ) << ", diff: " << std::erf( erf_inv_own(0.9999) ) - 0.9999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.8999) ) = " << std::erf( erf_inv_own(0.8999) ) << ", diff: " << std::erf( erf_inv_own(0.8999) ) - 0.8999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.7999) ) = " << std::erf( erf_inv_own(0.7999) ) << ", diff: " << std::erf( erf_inv_own(0.7999) ) - 0.7999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.6999) ) = " << std::erf( erf_inv_own(0.6999) ) << ", diff: " << std::erf( erf_inv_own(0.6999) ) - 0.6999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.5999) ) = " << std::erf( erf_inv_own(0.5999) ) << ", diff: " << std::erf( erf_inv_own(0.5999) ) - 0.5999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.6999) ) = " << std::erf( erf_inv_own(0.6372) ) << ", diff: " << std::erf( erf_inv_own(0.6372) ) - 0.6372 << std::endl;
+        std::cout << "erf( erf_inv_own(0.5999) ) = " << std::erf( erf_inv_own(0.5369) ) << ", diff: " << std::erf( erf_inv_own(0.5369) ) - 0.5369 << std::endl;
+        std::cout << "erf( erf_inv_own(0.4999) ) = " << std::erf( erf_inv_own(0.4999) ) << ", diff: " << std::erf( erf_inv_own(0.4999) ) - 0.4999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.3999) ) = " << std::erf( erf_inv_own(0.3999) ) << ", diff: " << std::erf( erf_inv_own(0.3999) ) - 0.3999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.2999) ) = " << std::erf( erf_inv_own(0.2999) ) << ", diff: " << std::erf( erf_inv_own(0.2999) ) - 0.2999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.1999) ) = " << std::erf( erf_inv_own(0.1999) ) << ", diff: " << std::erf( erf_inv_own(0.1999) ) - 0.1999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.0999) ) = " << std::erf( erf_inv_own(0.0999) ) << ", diff: " << std::erf( erf_inv_own(0.0999) ) - 0.0999 << std::endl;
+        std::cout << "erf( erf_inv_own(0.0099) ) = " << std::erf( erf_inv_own(0.0099) ) << ", diff: " << std::erf( erf_inv_own(0.0099) ) - 0.0099 << std::endl;
+        std::cout << "erf( erf_inv_own(0.0001) ) = " << std::erf( erf_inv_own(0.0001) ) << ", diff: " << std::erf( erf_inv_own(0.0001) ) - 0.0001 << std::endl;
+        std::cout << "erf( erf_inv_own(0.00001) ) = " << std::erf( erf_inv_own(0.00001) ) << ", diff: " << std::erf( erf_inv_own(0.00001) ) - 0.00001 << std::endl;
+        std::cout << "erf( erf_inv_own(1e-8) ) = " << std::erf( erf_inv_own(1e-8) ) << ", diff: " << std::erf( erf_inv_own(1e-8) ) - 1e-8 << "\n\n\n" << std::endl;
+
+        std::cout << "erf( erf_inv_own(-1.0+1e-8) ) = " << std::erf( erf_inv_own(-1.0+1e-8) ) << ", diff: " << std::erf( erf_inv_own(-1.0+1e-8) ) - (-1.0+1e-8) << std::endl;
+        std::cout << "erf( erf_inv_own(-1.0+1e-10) ) = " << std::erf( erf_inv_own(-1.0+1e-10) ) << ", diff: " << std::erf( erf_inv_own(-1.0+1e-10) ) - (-1.0+1e-10) << std::endl;
+        std::cout << "erf( erf_inv_own(-1.0+1e-12) ) = " << std::erf( erf_inv_own(-1.0+1e-12) ) << ", diff: " << std::erf( erf_inv_own(-1.0+1e-12) ) - (-1.0+1e-12) << std::endl;
+        std::cout << "erf( erf_inv_own(-1.0+1e-14) ) = " << std::erf( erf_inv_own(-1.0+1e-14) ) << ", diff: " << std::erf( erf_inv_own(-1.0+1e-14) ) - (-1.0+1e-14) << std::endl;
+        std::cout << "erf( erf_inv_own(-1.0+1e-16) ) = " << std::erf( erf_inv_own(-1.0+1e-16) ) << ", diff: " << std::erf( erf_inv_own(-1.0+1e-16) ) - (-1.0+1e-16) << std::endl;
+        std::cout << "erf( erf_inv_own(-1.0+1e-18) ) = " << std::erf( erf_inv_own(-1.0+1e-18) ) << ", diff: " << std::erf( erf_inv_own(-1.0+1e-18) ) - (-1.0+1e-18) << std::endl;
+        std::cout << "erf( erf_inv_own(-1.0+1e-20) ) = " << std::erf( erf_inv_own(-1.0+1e-20) ) << ", diff: " << std::erf( erf_inv_own(-1.0+1e-20) ) - (-1.0+1e-20) << std::endl;
+
+        std::cout << "erf( erf_inv_own(1.0+1e-18) ) = " << std::erf( erf_inv_own(1.0+1e-18) ) << ", diff: " << std::erf( erf_inv_own(1.0+1e-18) ) - (1.0+1e-18) << std::endl;
+        std::cout << "erf( erf_inv_own(1.0+1e-20) ) = " << std::erf( erf_inv_own(1.0+1e-20) ) << ", diff: " << std::erf( erf_inv_own(1.0+1e-20) ) - (1.0+1e-20) << std::endl;
+        for(int is=0; is<PARAM.inp.nspin; ++is)
         {
-            for(int ib=0; ib<num_temp.nc; ++ib)
+            for(int ik=0; ik<nk_nospin; ++ik)
             {
-                if( ik < num_temp.nr/PARAM.inp.nspin )
+                for(int ib=0; ib<PARAM.inp.nbands; ++ib)
                 {
-                    x[0][ik*nbands + ib] = erf_inv_own( 2 * num_temp(ik, ib) - 1 ) - mu[0];
-                    occ_number[0][ik*nbands + ib] = num_temp(ik, ib);
-                    x_pass[ ik*nbands + ib ] = this->x[0][ik*nbands+ib];
-                }
-                else
-                {
-                    x[PARAM.inp.nspin-1][ik*nbands + ib] = erf_inv_own( 2 * num_temp(ik, ib) - 1 ) - mu[PARAM.inp.nspin-1];
-                    occ_number[PARAM.inp.nspin-1][ik*nbands + ib] = num_temp(ik, ib);
-                    x_pass[ (PARAM.inp.nspin-1)*(nk_nospin*nbands) + ik*nbands + ib ] = this->x[PARAM.inp.nspin-1][ik*nbands+ib];
+                    double num = num_temp( is*nk_nospin + ik, ib );
+                    if( std::abs(num - 1.0) < 1e-16 )
+                    {   
+                        // find right x to ensure that erf( x + mu[is] ) = 1.0
+                        // this->x[is][ik*nbands + ib] = 10;
+                        num_temp( is*nk_nospin + ik, ib ) = 1.0 - 1e-16;
+                    }
+                    else if( std::abs(num - 0.0) < 1e-16 )
+                    {
+                        // find right x to ensure that erf( x + mu[is] ) = 0.0
+                        // this->x[is][ik*nbands + ib] = -10;
+                        num_temp( is*nk_nospin + ik, ib ) = 0.0 + 1e-16;
+                    }
+                    // else
+                    // {
+                    //     this->x[is][ik*nbands + ib] = erf_inv_own( 2 * num_temp( is*nk_nospin + ik, ib ) - 1 ) - this->mu[is];
+                    // }
+
+                    this->x[is][ik*nbands + ib] = erf_inv_own( 2 * num_temp( is*nk_nospin + ik, ib ) - 1 ) - this->mu[is];
+                    this->occ_number[is][ik*nbands + ib] = num_temp( is*nk_nospin + ik, ib );
+                    x_pass[ is*(nk_nospin*nbands) + ik*nbands + ib ] = this->x[is][ik*nbands+ib];    
                 }
             }
         }
+
+        // for(int ik=0; ik<num_temp.nr; ++ik)
+        // {
+        //     for(int ib=0; ib<num_temp.nc; ++ib)
+        //     {
+        //         if( ik < num_temp.nr/PARAM.inp.nspin )
+        //         {
+        //             x[0][ik*nbands + ib] = erf_inv_own( 2 * num_temp(ik, ib) - 1 ) - mu[0];
+        //             occ_number[0][ik*nbands + ib] = num_temp(ik, ib);
+        //             x_pass[ ik*nbands + ib ] = this->x[0][ik*nbands+ib];
+        //         }
+        //         else
+        //         {
+        //             x[PARAM.inp.nspin-1][ik*nbands + ib] = erf_inv_own( 2 * num_temp(ik, ib) - 1 ) - mu[PARAM.inp.nspin-1];
+        //             occ_number[PARAM.inp.nspin-1][ik*nbands + ib] = num_temp(ik, ib);
+        //             x_pass[ (PARAM.inp.nspin-1)*(nk_nospin*nbands) + ik*nbands + ib ] = this->x[PARAM.inp.nspin-1][ik*nbands+ib];
+        //         }
+        //     }
+        // }
+        rdmft::printMatrix_pointer(num_temp.nr, num_temp.nc, occ_number_in->c, "occ_number_from_ks", 10);
+        rdmft::printMatrix_pointer(num_temp.nr, num_temp.nc, this->x[0].data(), "var_x from ks_occ_num", 10);
     }
     std::cout << "\n******\n" << "start_guess: ebi, 1.0" << "\n******\n" << std::endl;
 }
