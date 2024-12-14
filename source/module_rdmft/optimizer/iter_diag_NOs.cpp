@@ -108,11 +108,12 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
     for(int ik=0; ik<nk_total; ++ik)
     {
         // std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
-        // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
+        // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);gg
 
         // get Fii and new_wfc in NOs
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
                                     this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
+        // rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->Fock_like_mat[ik].data(), "Fock mat", 10); // test
         // get new_wfc in NAOs
         if( !this->if_get_wfc1 )
         {
