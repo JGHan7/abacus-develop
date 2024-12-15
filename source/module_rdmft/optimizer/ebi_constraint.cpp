@@ -317,11 +317,19 @@ void EBI::solving_mu()
             {
                 occ_num_error = this->cal_occ_num(is) - this->sys_nelec_spin[is];
 
-                if( occ_num_error > this->tot_nelec_thr )
+                if( std::abs(occ_num_error) > this->tot_nelec_thr )
                 {
-                    double sum_x = std::accumulate(this->x[is].begin(), this->x[is].end(), 0.0);
-                    this->mu[is] = ( rdmft::erf_inv_own( 2*this->sys_nelec_spin[is] - nk_nospin*nbands ) - sum_x )/nk_nospin*nbands;
+                    // double sum_x = std::accumulate(this->x[is].begin(), this->x[is].end(), 0.0);
+                    // this->mu[is] = ( rdmft::erf_inv_own( 2*this->sys_nelec_spin[is] - nk_nospin*nbands ) - sum_x )/nk_nospin*nbands;
                     std::cout << "\n" << "guess mu?" << this->mu[is] << "\n" << std::endl;
+                    if(occ_num_error > 0)
+                    {
+                        this->mu[is] -= 1.0;
+                    }
+                    else
+                    {
+                        this->mu[is] += 1.0;
+                    }
                 }
             }
             // if( std::abs(f1_divided_f2) - 1 > 0 )
