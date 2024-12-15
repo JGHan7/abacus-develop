@@ -42,6 +42,8 @@ class EBI
 
     double solve_mu_thr;
 
+    double tot_nelec_thr;
+
 
     //! pass the occ_number as a matrix object, spins and k-points share the same index
     ModuleBase::matrix get_occ_number();
@@ -80,7 +82,7 @@ class EBI
     void solving_mu();
 
     //! when x and mu are determined, get occ_number
-    void cal_occ_num();
+    double cal_occ_num(int is);
 
     // //! when spin = is, mu=mu_in, return the sum of occ_num, erf_der1, and erf_der2 respectively
     // std::vector<double> cal_sum(double mu_in, int is = 0);

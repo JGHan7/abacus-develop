@@ -58,6 +58,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
 
     this->iter_diag_orb.scale_zeta = 0.01;
     this->ls_opti_occ_num.ebi.solve_mu_thr = 1e-10;
+    this->ls_opti_occ_num.ebi.tot_nelec_thr = 1e-10;
     this->ls_opti_occ_num.ebi.random_inital = true;
     this->ls_opti_occ_num.ls_c1 = 0.0001;
     this->ls_opti_occ_num.ls_c2 = 0.999;

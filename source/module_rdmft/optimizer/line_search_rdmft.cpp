@@ -128,7 +128,7 @@ template<typename TK, typename TR>
 void LineSearch<TK, TR>::strong_wolfe()
 {
     // initial step_size before each iteration
-    this->step_size = (1.0 < this->max_step_size) ? 1.0 : this->max_step_size/2.0;
+    this->step_size = (1.0 < this->max_step_size) ? 0.2 : this->max_step_size/2.0;
 
     // 0: represents the relevant quantity under x_k, that is, var_x
     // phi_0, dphi_0 have obtained
@@ -175,12 +175,21 @@ void LineSearch<TK, TR>::strong_wolfe()
         ++times;
         if( this->step_size > this->max_step_size || times>=30 )
         {
-            std::cout << "\n******\n" << "strong wolfe times: " << times << "\n******\n" << std::endl;
+            std::cout << "\n******\n" << "strong wolfe times to big: " << times << "\n******\n" << std::endl;
             break;
         }
 
-        // needs improvement, using quadratic or cubic, currently using dichotomy
-        this->step_size = ( this->step_size + this->max_step_size ) / 2.0;
+        // // since max is too large, the dichotomy is too extreme
+        // // and it is easy to fall into a saddle point when solving mu
+        // // i.e., the number of particles is not conserved
+        // this->step_size = ( this->step_size + this->max_step_size ) / 2.0; // needs improvement, using quadratic or cubic, currently using dichotomy
+
+        // quadratic interpolation
+        // improved using cubic interpolation ?
+        double temp_step = - this->dphi_0 * this->step_size * this->step_size / ( trial_phi - this->phi_0 - this->dphi_0 * this->step_size ) / 2.0;
+        this->step_size = ( 1.1 * this->step_size < temp_step ) ? temp_step : 1.1 * this->step_size;
+        this->step_size = ( this->step_size < this->max_step_size ) ? this->step_size : this->max_step_size;
+        std::cout << "\n" << "quadratic interpolation in strong wolfe, update_step:" << temp_step << "\n" << std::endl;
     }
 
     // // test
@@ -262,6 +271,7 @@ double LineSearch<TK, TR>::cal_phi(const std::vector<double>& x_new)
 {
     // convert x_k+1 to occ_num
     this->ebi.update_x_occ_num(x_new);
+    std::cout << "\n" << "step size now: " << this->step_size << "\n" << std::endl;
 
     // rdmft_solver update occ_num, Hk, etc.
     ModuleBase::matrix occ_number = this->ebi.get_occ_number();
@@ -298,7 +308,7 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::ve
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
     this->ebi.get_dE_dx(dE_docc_num, dE_dx_new);
     std::cout << "\n******\n" << "in cal_dE_dx" << std::endl;
-    rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, dE_dx_new.data(), "E_gradient_occNum");
+    rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, dE_dx_new.data(), "dE_dx_new");
     rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->var_x.data(), "now var_x", 10);
     std::cout << "\n******\n" << std::endl;
 }
