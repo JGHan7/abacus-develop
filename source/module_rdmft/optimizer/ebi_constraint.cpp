@@ -107,7 +107,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
     else
     {
         // distinguishing up and down spin, 0 < occNum < 1
-        ModuleBase::matrix num_temp = (*occ_number_in);
+        ModuleBase::matrix num_temp( *occ_number_in );
         // if( PARAM.inp.nspin == 1 ) { num_temp *= 0.5; }
 
         // give an initial guess for mu, 0.0 or other value
@@ -284,7 +284,7 @@ void EBI::solving_mu()
         // this->mu[is] = mu_temp;
         /********* is there an error in the paper formula? *********/
 
-        this->mu[is] = 0.0; // Is it possible to consider using the last result of mu instead of 0.0 as the initial value?
+        // this->mu[is] = 0.0; // Is it possible to consider using the last result of mu instead of 0.0 as the initial value?
         std::vector<double> f_der(2, 1.0);
         double occ_num_error = 1.0;
 
@@ -322,6 +322,8 @@ void EBI::solving_mu()
                     // double sum_x = std::accumulate(this->x[is].begin(), this->x[is].end(), 0.0);
                     // this->mu[is] = ( rdmft::erf_inv_own( 2*this->sys_nelec_spin[is] - nk_nospin*nbands ) - sum_x )/nk_nospin*nbands;
                     std::cout << "\n" << "guess mu?" << this->mu[is] << "\n" << std::endl;
+                    
+                    // a more appropriate step size can be used for mu
                     if(occ_num_error > 0)
                     {
                         this->mu[is] -= 1.0;
@@ -344,7 +346,7 @@ void EBI::solving_mu()
     // this->cal_occ_num();
 
     //test
-    ModuleBase::matrix print_occ = this->get_occ_number();
+    ModuleBase::matrix print_occ( this->get_occ_number() );
     rdmft::printMatrix_pointer(print_occ.nr, print_occ.nc, print_occ.c, "occ_number_after_opti", 10);
 
     double trial_occ_num = 0.0;

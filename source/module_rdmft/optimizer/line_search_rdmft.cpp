@@ -54,7 +54,7 @@ void LineSearch<TK, TR>::get_start_guess()
         ebi.get_inital_guess(this->var_x);
 
         // update rdmft elec_state
-        ModuleBase::matrix occ_number = this->ebi.get_occ_number();
+        ModuleBase::matrix occ_number( this->ebi.get_occ_number() );
         this->rdmft_solver->update_elec( &occ_number );
     }
     else
@@ -107,7 +107,7 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     // diff_occ_num -= this->occ_number;
     
     // std::abs( diff_occ_num )
-    ModuleBase::matrix temp_occ = this->ebi.get_occ_number();
+    ModuleBase::matrix temp_occ( this->ebi.get_occ_number() );
     std::vector<double> diff_occ_num(this->rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
     for(int ik=0; ik<temp_occ.nr; ++ik)
     {
@@ -152,6 +152,7 @@ void LineSearch<TK, TR>::strong_wolfe()
         double trial_phi = this->cal_phi(trial_x);
         if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi > phi_old)
         {
+            std::cout << "\n" << "Enter SW condition 1" << "\n" << std::endl;
             this->zoom(step_size_old, phi_old, this->step_size);
             break;
         }
@@ -159,12 +160,14 @@ void LineSearch<TK, TR>::strong_wolfe()
         double trial_dphi = this->cal_dphi(trial_dE_dx);
         if( std::abs(trial_dphi) <= -this->ls_c2 * this->dphi_0 )
         {
+            std::cout << "\n" << "Enter SW condition 2" << "\n" << std::endl;
             for(int i=0; i<trial_x.size(); ++i) { this->var_x[i] = trial_x[i]; }
             break;
         }
 
         if( trial_dphi >= 0 )
         {
+            std::cout << "\n" << "Enter SW condition 3" << "\n" << std::endl;
             this->zoom(this->step_size, trial_phi, step_size_old);
             break;
         }
@@ -175,7 +178,7 @@ void LineSearch<TK, TR>::strong_wolfe()
         ++times;
         if( this->step_size > this->max_step_size || times>=30 )
         {
-            std::cout << "\n******\n" << "strong wolfe times to big: " << times << "\n******\n" << std::endl;
+            std::cout << "\n******\n" << "strong wolfe times too big: " << times << "\n******\n" << std::endl;
             break;
         }
 
@@ -212,6 +215,8 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
     std::vector<double> trial_x(this->var_x.size() ,0.0);
     std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
 
+    std::cout << "\n" << "Enter ZOOM()" << "\n" << std::endl;
+
     int times = 0;
     while(1)
     {
@@ -226,6 +231,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         double trial_phi = this->cal_phi(trial_x);
         if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi >= f_low )
         {
+            std::cout << "\n" << "Enter ZOOM condition 1" << "\n" << std::endl;
             alpha_hi = this->step_size;
         }
         else
@@ -233,11 +239,13 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
             double trial_dphi = this->cal_dphi(trial_dE_dx);
             if( std::abs(trial_dphi) <= -this->ls_c2 * this->dphi_0 )
             {
+                std::cout << "\n" << "Enter ZOOM condition 2" << "\n" << std::endl;
                 break;
             }
 
             if( trial_dphi * (alpha_hi - alpha_lo) >= 0 )
             {
+                std::cout << "\n" << "Enter ZOOM condition 3, exchange high_low" << "\n" << std::endl;
                 alpha_hi = alpha_lo;
             }
 
@@ -252,8 +260,6 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
             break;
         }
     }
-
-
 
 }
 
@@ -274,11 +280,18 @@ double LineSearch<TK, TR>::cal_phi(const std::vector<double>& x_new)
     std::cout << "\n" << "step size now: " << this->step_size << "\n" << std::endl;
 
     // rdmft_solver update occ_num, Hk, etc.
-    ModuleBase::matrix occ_number = this->ebi.get_occ_number();
+    ModuleBase::matrix occ_number( this->ebi.get_occ_number() );
+
+    std::cout << "\n" << "ebi.get_occ_number()" << "\n" << std::endl;
+
     this->rdmft_solver->update_elec( &occ_number );
+
+    std::cout << "\n" << "rdmft_solver->update_elec()" << "\n" << std::endl;
 
     // cal phi(alpha) = E(x_k + alpha * p_k)
     double phi = this->rdmft_solver->cal_Energy();
+
+    std::cout << "\n" << "rdmft_solver->cal_Energy()" << "\n" << std::endl;
 
     return phi;
 }
@@ -301,13 +314,15 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::ve
 {
     if( x_new_ptr != nullptr ) { this->cal_phi( *x_new_ptr ); }
 
+    std::cout << "\n******\n" << "in cal_dE_dx" << std::endl;
+
     // rdmft cal dE_docc_num
     this->rdmft_solver->cal_E_grad_occ_num();
 
     // EBI: convert dE_docc_num to dE_dx (x in EBI is the latest, that is, it is consistent with dE_dx)
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
     this->ebi.get_dE_dx(dE_docc_num, dE_dx_new);
-    std::cout << "\n******\n" << "in cal_dE_dx" << std::endl;
+
     rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, dE_dx_new.data(), "dE_dx_new");
     rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->var_x.data(), "now var_x", 10);
     std::cout << "\n******\n" << std::endl;
