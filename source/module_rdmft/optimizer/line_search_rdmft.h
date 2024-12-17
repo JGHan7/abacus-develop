@@ -31,8 +31,12 @@ class LineSearch
     std::vector<double>* get_var_x() { return &this->var_x; }
 
     //! parameters in strong wolfe or wolfe conditions
-    double ls_c1 = 0.0;
-    double ls_c2 = 0.0;
+    double ls_wolfe_c1 = 0.0;
+    double ls_wolfe_c2 = 0.0;
+
+    //! parameters in Armijo-Goldstein conditions
+    double ls_armijo_c1 = 0.0;
+    double ls_armijo_c2 = 0.0;
 
     std::string ls_condition;
 
@@ -48,7 +52,7 @@ class LineSearch
     void wolfe();
 
     //! used in Strong Wolfe condition
-    void zoom(double step_size_low, double phi_low, double step_size_high);
+    void zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low);
 
     //! calculate phi(alpha) = E(x_k + alpha * p_k) and return it. x_new = x_k + alpha*p_k
     virtual double cal_phi(const std::vector<double>& x_new);

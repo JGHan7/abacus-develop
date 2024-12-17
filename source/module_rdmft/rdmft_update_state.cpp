@@ -58,7 +58,7 @@ template <typename TK, typename TR>
 void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const psi::Psi<TK>* wfc_in, const Charge* charge_in)
 {
 
-    std::cout << "\n" << "enter rdmft_solver: update_elec()" << "\n" << std::endl;
+    // std::cout << "\n" << "enter rdmft_solver: update_elec()" << "\n" << std::endl;
     if( occ_number_in != nullptr )
     {
         // // update occ_number, wg, wk_fun_occNum
@@ -73,7 +73,7 @@ void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const p
         //     }
         // }
         this->update_occNumber(*occ_number_in);
-        std::cout << "\n" << "rdmft_solver: update_occNumber()" << "\n" << std::endl;
+        // std::cout << "\n" << "rdmft_solver: update_occNumber()" << "\n" << std::endl;
     }
 
     if( wfc_in != nullptr )
@@ -86,7 +86,7 @@ void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const p
 
     // update charge
     this->update_charge();
-    std::cout << "\n" << "rdmft_solver: update_charge()" << "\n" << std::endl;
+    // std::cout << "\n" << "rdmft_solver: update_charge()" << "\n" << std::endl;
 
     // "default" = "pbe"
     // if(  !only_exx_type || this->cal_E_type != 1 )
@@ -97,11 +97,11 @@ void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const p
     }
 
     this->cal_V_hartree();
-    std::cout << "\n" << "rdmft_solver: cal_V_hartree()" << "\n" << std::endl;
+    // std::cout << "\n" << "rdmft_solver: cal_V_hartree()" << "\n" << std::endl;
     this->cal_V_XC();
-    std::cout << "\n" << "rdmft_solver: cal_V_XC()" << "\n" << std::endl;
+    // std::cout << "\n" << "rdmft_solver: cal_V_XC()" << "\n" << std::endl;
     this->cal_Hk_Hpsi();
-    std::cout << "\n" << "rdmft_solver: cal_Hk_Hpsi()" << "\n" << std::endl;
+    // std::cout << "\n" << "rdmft_solver: cal_Hk_Hpsi()" << "\n" << std::endl;
 
     // std::cout << "\n******\n" << "update elec in rdmft successfully" << "\n******\n" << std::endl;
 }
@@ -146,35 +146,38 @@ void RDMFT<TK, TR>::update_charge()
     {
         // calculate DMK and DMR
         elecstate::DensityMatrix<TK, double> DM(ParaV, nspin, this->kv.kvec_d, nk_total);
-        std::cout << "\n" << "rdmft_solver: DM()" << "\n" << std::endl;
+        // std::cout << "\n" << "rdmft_solver: DM()" << "\n" << std::endl;
 
-        ModuleBase::matrix test_wg(this->occ_number);
-        psi::Psi<TK> test_wfc(nk_total, ParaV->ncol_bands, ParaV->nrow);
-        for(int ik=0; ik < wg.nr; ++ik)
-        {
-            for(int inb=0; inb < wg.nc; ++inb)
-            {
-                test_wg(ik, inb) *= this->kv.wk[ik];
-            }
-        }
-        elecstate::cal_dm_psi(ParaV, test_wg, test_wfc, DM);
+        // ModuleBase::matrix test_wg(this->occ_number);
+        // psi::Psi<TK> test_wfc(nk_total, ParaV->ncol_bands, ParaV->nrow);
+        // for(int ik=0; ik < wg.nr; ++ik)
+        // {
+        //     for(int inb=0; inb < wg.nc; ++inb)
+        //     {
+        //         test_wg(ik, inb) *= this->kv.wk[ik];
+        //     }
+        // }
+        // TK* p_test = &( test_wfc(0, 0, 0) );
+        // TK* pwfc = &this->wfc(0, 0, 0);
+        // for(int i=0; i<wfc.size(); ++i) { p_test[i] = pwfc[i]; }
+        // elecstate::cal_dm_psi(ParaV, test_wg, test_wfc, DM);
 
-        // elecstate::cal_dm_psi(ParaV, wg, this->wfc, DM);
-        std::cout << "\n" << "rdmft_solver: cal_dm_psi()" << "\n" << std::endl;
+        elecstate::cal_dm_psi(ParaV, wg, this->wfc, DM);
+        // std::cout << "\n" << "rdmft_solver: cal_dm_psi()" << "\n" << std::endl;
         DM.init_DMR(&GlobalC::GridD, &GlobalC::ucell);
         DM.cal_DMR();
-        std::cout << "\n" << "rdmft_solver: DM.cal_DMR()" << "\n" << std::endl;
+        // std::cout << "\n" << "rdmft_solver: DM.cal_DMR()" << "\n" << std::endl;
 
         for (int is = 0; is < nspin; is++)
         {
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
-        std::cout << "\n" << "rdmft_solver: GlobalFunc::ZEROS()" << "\n" << std::endl;
+        // std::cout << "\n" << "rdmft_solver: GlobalFunc::ZEROS()" << "\n" << std::endl;
 
         this->GK.transfer_DM2DtoGrid(DM.get_DMR_vector());
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
         this->GK.cal_gint(&inout);
-        std::cout << "\n" << "rdmft_solver: GK.cal_gint()" << "\n" << std::endl;
+        // std::cout << "\n" << "rdmft_solver: GK.cal_gint()" << "\n" << std::endl;
 
         if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
         {
@@ -186,10 +189,10 @@ void RDMFT<TK, TR>::update_charge()
             // this->GK.cal_gint(&inout1);
             this->pelec->cal_tau(wfc);
         }
-        std::cout << "\n" << "rdmft_solver: pelec->cal_tau()" << "\n" << std::endl;
+        // std::cout << "\n" << "rdmft_solver: pelec->cal_tau()" << "\n" << std::endl;
 
         charge->renormalize_rho();
-        std::cout << "\n" << "rdmft_solver: charge->renormalize_rho()" << "\n" << std::endl;
+        // std::cout << "\n" << "rdmft_solver: charge->renormalize_rho()" << "\n" << std::endl;
     }
 
     // charge density symmetrization
@@ -200,7 +203,7 @@ void RDMFT<TK, TR>::update_charge()
     {
         srho.begin(is, *(this->charge), rho_basis, GlobalC::ucell.symm);
     }
-    std::cout << "\n" << "rdmft_solver: srho.begin()" << "\n" << std::endl;
+    // std::cout << "\n" << "rdmft_solver: srho.begin()" << "\n" << std::endl;
 
     // what this? it seems that it needs to be updated at each iteration
     if (PARAM.inp.vl_in_h)
@@ -211,7 +214,7 @@ void RDMFT<TK, TR>::update_charge()
             this->GK.renew();
         }
     }
-    std::cout << "\n" << "rdmft_solver: this->GK.renew()" << "\n" << std::endl;
+    // std::cout << "\n" << "rdmft_solver: this->GK.renew()" << "\n" << std::endl;
 
 }
 
@@ -236,7 +239,7 @@ void RDMFT<TK, TR>::update_occNumber(const ModuleBase::matrix& occ_number_in)
 template <typename TK, typename TR>
 void RDMFT<TK, TR>::inital_wfc_occNum()
 {
-    ModuleBase::matrix occ_number_ks = (this->pelec->wg);
+    ModuleBase::matrix occ_number_ks( this->pelec->wg );
     for(int ik=0; ik < occ_number_ks.nr; ++ik)
     {
         for(int inb=0; inb < occ_number_ks.nc; ++inb)
@@ -244,6 +247,10 @@ void RDMFT<TK, TR>::inital_wfc_occNum()
             occ_number_ks(ik, inb) /= this->kv.wk[ik];
         }
     }
+
+    rdmft::printMatrix_pointer(occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number_ks_inital", 10);
+    rdmft::printMatrix_pointer(ParaV->ncol_bands, ParaV->nrow, &(*this->psi)(0, 0, 0), "wfc_ks_inital", 10);
+
     // TK* pwfc_in = &( this->psi->operator()(0, 0, 0) );
     // TK* pwfc = &wfc(0, 0, 0);
     // for(int i=0; i<wfc.size(); ++i) pwfc[i] = pwfc_in[i];

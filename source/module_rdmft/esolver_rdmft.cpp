@@ -62,6 +62,8 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     // this->ls_opti_occ_num.ebi.random_inital = true;
     this->ls_opti_occ_num.ls_c1 = 0.0001;
     this->ls_opti_occ_num.ls_c2 = 0.999;
+    this->ls_opti_occ_num.ls_armijo_c1 = 0.0001;
+    this->ls_opti_occ_num.ls_armijo_c2 = 0.9;
     this->ls_opti_occ_num.ls_condition = "swolfe";
     this->ls_opti_occ_num.max_step_size = 1000;
 

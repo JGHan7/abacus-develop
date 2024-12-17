@@ -38,8 +38,10 @@ void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
     this->search_direction.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
     this->occ_number.create(rdmft_solver->nk_total, PARAM.inp.nbands);
 
-    this->ls_c1 = 0.0001;
-    this->ls_c2 = 0.999;
+    this->ls_wolfe_c1 = 0.0001;
+    this->ls_wolfe_c2 = 0.999;
+    this->ls_armijo_c1 = 0.0001;
+    this->ls_armijo_c2 = 0.9;
     this->ls_condition = "swolfe";
     this->max_step_size = 1000;
 }
@@ -136,6 +138,7 @@ void LineSearch<TK, TR>::strong_wolfe()
     // old: represents the relevant quantity under the last trial_step_size/trial_x
     double step_size_old =0.0;
     double phi_old = this->phi_0;
+    double dphi_old = this->dphi_0;
 
     // trial_x = x_k(or this->var_x) + trial_step_size * p_k
     std::vector<double> trial_x(this->var_x.size() ,0.0);
@@ -150,15 +153,15 @@ void LineSearch<TK, TR>::strong_wolfe()
         }
 
         double trial_phi = this->cal_phi(trial_x);
-        if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi > phi_old)
+        if( (trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0) || trial_phi > phi_old)
         {
             std::cout << "\n" << "Enter SW condition 1" << "\n" << std::endl;
-            this->zoom(step_size_old, phi_old, this->step_size);
+            this->zoom(step_size_old, phi_old, this->step_size, trial_phi, dphi_old);
             break;
         }
 
         double trial_dphi = this->cal_dphi(trial_dE_dx);
-        if( std::abs(trial_dphi) <= -this->ls_c2 * this->dphi_0 )
+        if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 )
         {
             std::cout << "\n" << "Enter SW condition 2" << "\n" << std::endl;
             for(int i=0; i<trial_x.size(); ++i) { this->var_x[i] = trial_x[i]; }
@@ -168,15 +171,22 @@ void LineSearch<TK, TR>::strong_wolfe()
         if( trial_dphi >= 0 )
         {
             std::cout << "\n" << "Enter SW condition 3" << "\n" << std::endl;
-            this->zoom(this->step_size, trial_phi, step_size_old);
+            this->zoom(this->step_size, trial_phi, step_size_old, phi_old, trial_dphi);
             break;
         }
 
         step_size_old = this->step_size;
         phi_old = trial_phi;
+        dphi_old = trial_dphi;
+
+        if( this->step_size > this->max_step_size )
+        {
+            std::cout << "\n******\n" << "in strong wolfe, step_size > max_step_size" << "\n******\n" << std::endl;
+            break;
+        }
 
         ++times;
-        if( this->step_size > this->max_step_size || times>=30 )
+        if( times>=15 )
         {
             std::cout << "\n******\n" << "strong wolfe times too big: " << times << "\n******\n" << std::endl;
             break;
@@ -205,11 +215,13 @@ void LineSearch<TK, TR>::strong_wolfe()
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_size_high)
+void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low)
 {
     double alpha_lo = step_size_low;
     double alpha_hi = step_size_high;
-    double f_low = phi_low;
+    double f_lo = phi_low;
+    double f_hi = phi_high;
+    double df_lo = dphi_low;
 
     // trial_x = x_k(or this->var_x) + trial_step_size * p_k
     std::vector<double> trial_x(this->var_x.size() ,0.0);
@@ -221,7 +233,21 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
     while(1)
     {
         // needs improvement, using quadratic or cubic, currently using dichotomy
-        this->step_size = (alpha_lo + alpha_hi)/2.0;
+        // this->step_size = (alpha_lo + alpha_hi)/2.0;
+
+        // improved using cubic interpolation ?
+        double diff_alpha = alpha_hi - alpha_lo;
+        double incr_alpha = - df_lo * diff_alpha * diff_alpha / ( f_hi - (f_lo + df_lo * diff_alpha) ) / 2.0;
+        if( incr_alpha < diff_alpha * this->ls_armijo_c1 )
+        {
+            incr_alpha = diff_alpha * this->ls_armijo_c1;
+        }
+        if( incr_alpha > diff_alpha * this->ls_armijo_c2 )
+        {
+            incr_alpha = diff_alpha * this->ls_armijo_c2;
+        }
+        this->step_size = alpha_lo + incr_alpha;
+
 
         for(int i=0; i<trial_x.size(); ++i)
         {
@@ -229,7 +255,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         }
 
         double trial_phi = this->cal_phi(trial_x);
-        if( (trial_phi > this->phi_0 + this->ls_c1 * this->step_size * this->dphi_0) || trial_phi >= f_low )
+        if( (trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0) || trial_phi >= f_low )
         {
             std::cout << "\n" << "Enter ZOOM condition 1" << "\n" << std::endl;
             alpha_hi = this->step_size;
@@ -237,7 +263,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         else
         {
             double trial_dphi = this->cal_dphi(trial_dE_dx);
-            if( std::abs(trial_dphi) <= -this->ls_c2 * this->dphi_0 )
+            if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 )
             {
                 std::cout << "\n" << "Enter ZOOM condition 2" << "\n" << std::endl;
                 break;
@@ -254,9 +280,9 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         }
 
         ++times;
-        if( times >= 30 )
+        if( times >= 10 )
         {
-            std::cout << "\n******\n" << "zoom times: " << times << "\n******\n" << std::endl;
+            std::cout << "\n******\n" << "zoom times too big: " << times << "\n******\n" << std::endl;
             break;
         }
     }
