@@ -255,7 +255,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         }
 
         double trial_phi = this->cal_phi(trial_x);
-        if( (trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0) || trial_phi >= f_low )
+        if( (trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0) || trial_phi >= f_lo )
         {
             std::cout << "\n" << "Enter ZOOM condition 1" << "\n" << std::endl;
             alpha_hi = this->step_size;
@@ -276,7 +276,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
             }
 
             alpha_lo = this->step_size;
-            f_low = trial_phi;
+            f_lo = trial_phi;
         }
 
         ++times;
