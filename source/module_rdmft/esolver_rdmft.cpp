@@ -107,7 +107,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         double orb_diag_ethr = iter_diag_ethr;
         if( diff_occ_num_max > 50 * this->occ_num_thr )
         {
-            orb_diag_ethr *= 100; // 1000 ?
+            orb_diag_ethr *= 1000; // 100 ?
         }
 
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
