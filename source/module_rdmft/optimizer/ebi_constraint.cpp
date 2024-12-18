@@ -80,6 +80,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
             int M = 0;
             std::vector<double> random_num(nk_nospin*nbands, 0.0);
             rdmft::random_descend(random_num, &sys_nelec_spin[is], &M);
+            rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, random_num.data(), "random_num used in EBI", 10);
 
             // to avoid the low bands with large-k points getting too small values ​
             // ​and the high bands with small-k points getting too large values
@@ -90,8 +91,14 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                 {
                     if( ik*nbands+ib < M )
                     {
-                        if( random_num[ik*nbands+ib] > (std::erf(2.0) + 1.0)/2.0 )  { this->x[is][ik*nbands+ib] = 2.0; }
-                        else { this->x[is][ik*nbands+ib] = erf_inv_own( random_num[ik*nbands+ib] * 2.0 - 1.0 ); }
+                        if( random_num[ik*nbands+ib] > (std::erf(2.0) + 1.0)/2.0 ) 
+                        {
+                            this->x[is][ik*nbands+ib] = 2.0;
+                        }
+                        else
+                        {
+                            this->x[is][ik*nbands+ib] = erf_inv_own( random_num[ik*nbands+ib] * 2.0 - 1.0 );
+                        }
                     }
                     else
                     {
@@ -102,6 +109,8 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
             }
         }
         this->solving_mu();
+        rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, this->x[0].data(), "random inital var_x", 10);
+        rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, this->occ_number[0].data(), "random inital occ_number", 10);
     }
     // use the externally passed occ_number_in as the initial value
     else
@@ -208,6 +217,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
 
 void EBI::update_x_occ_num(const std::vector<double>& x_in)
 {
+    std::cout << "\n" << "Enter ebi.update_x_occ_num()" << "\n" << std::endl;
     // update member variable x from external x_in
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
@@ -220,6 +230,7 @@ void EBI::update_x_occ_num(const std::vector<double>& x_in)
         }
     }
 
+    std::cout << "\n" << "before solving_mu()" << "\n" << std::endl;
     // get the new mu and occ_number
     this->solving_mu();
     // return this->get_occ_number();  
@@ -257,6 +268,7 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
 
 void EBI::solving_mu()
 {
+    std::cout << "\n" << "Enter solving_mu()" << "\n" << std::endl;
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
         /********* is there an error in the paper formula? mu should be updated at each step *********/
@@ -289,10 +301,24 @@ void EBI::solving_mu()
         double occ_num_error = 1.0;
 
         // while( f_der[0] > this->solve_mu_thr )
+        int solve_mu_times = 0; 
         while( std::abs(f_der[0]) > this->solve_mu_thr || std::abs(occ_num_error) > this->tot_nelec_thr )
         {
+            ++solve_mu_times;
+            if( solve_mu_times > 50 )
+            {
+                std::cout << "\n" << "solve_mu_times is too big: " << solve_mu_times << "\n" << std::endl;
+                std::cout << "\n" << "electron number is not conserved !!!!!!!!!!! " << "\n" << std::endl;
+                assert(solve_mu_times <= 50);
+                break;
+            }
+            
+            std::cout << "\n" << "in solving_mu(), while()" << "\n" << std::endl;
             f_der = this->cal_f_der(this->mu[is], is);
             double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
+
+            std::cout << "\n" << "after cal_f_der(), f_der1: " << f_der[0] << " f_der2: " << f_der[1] 
+                        << " f1_divided_f2: " << f1_divided_f2 << "\n" << std::endl;
 
             double sign = 0.0;
             if( f_der[0]>0 )
@@ -315,13 +341,15 @@ void EBI::solving_mu()
 
             if( std::abs(f_der[0]) < this->solve_mu_thr )
             {
+                std::cout << "\n" << "before cal_occ_num()" << "\n" << std::endl;
                 occ_num_error = this->cal_occ_num(is) - this->sys_nelec_spin[is];
 
                 if( std::abs(occ_num_error) > this->tot_nelec_thr )
                 {
+                    solve_mu_times = 0;
                     // double sum_x = std::accumulate(this->x[is].begin(), this->x[is].end(), 0.0);
                     // this->mu[is] = ( rdmft::erf_inv_own( 2*this->sys_nelec_spin[is] - nk_nospin*nbands ) - sum_x )/nk_nospin*nbands;
-                    std::cout << "\n" << "guess mu?" << this->mu[is] << "\n" << std::endl;
+                    std::cout << "\n" << "guess mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << "\n" << std::endl;
                     
                     // a more appropriate step size can be used for mu
                     if(occ_num_error > 0)
@@ -354,7 +382,7 @@ void EBI::solving_mu()
     {
         trial_occ_num += print_occ.c[i];
     }
-    std::cout << "\n trial_occ_num: " <<  trial_occ_num  << "\n" << std::endl;
+    std::cout << "\n total_trial_occ_num: " <<  trial_occ_num  << "\n" << std::endl;
 }
 
 ModuleBase::matrix EBI::get_occ_number()
@@ -423,6 +451,9 @@ std::vector<double> EBI::cal_f_der(double mu_in, int is)
         sum[1] += erf_der1(this->x[is][i] + mu_in);
         sum[2] += erf_der2(this->x[is][i] + mu_in);
     }
+
+    std::cout << "\n" << "in cal_f_der(): " << std::endl;
+    std::cout << "sum[0]: " << sum[0] << ", sum[1]: " << sum[1] << ", sum[2]: " << sum[2] << "\n" << std::endl;
 
     f_der[0] = ( sum[0] - this->sys_nelec_spin[is] ) * sum[1];
     f_der[1] = 0.5*std::pow(sum[1], 2) + ( sum[0] - this->sys_nelec_spin[is] ) * sum[2];

@@ -59,13 +59,14 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     this->iter_diag_orb.scale_zeta = 0.01;
     this->ls_opti_occ_num.ebi.solve_mu_thr = 1e-10;
     this->ls_opti_occ_num.ebi.tot_nelec_thr = 1e-10;
-    // this->ls_opti_occ_num.ebi.random_inital = true;
+    this->ls_opti_occ_num.ebi.random_inital = true;
     this->ls_opti_occ_num.ls_wolfe_c1 = 0.0001;
     this->ls_opti_occ_num.ls_wolfe_c2 = 0.999;
     this->ls_opti_occ_num.ls_armijo_c1 = 0.0001;
     this->ls_opti_occ_num.ls_armijo_c2 = 0.9;
     this->ls_opti_occ_num.ls_condition = "swolfe";
     this->ls_opti_occ_num.max_step_size = 1000;
+    this->ls_opti_occ_num.min_step_size = 1e-10;
 
 }
 
@@ -95,6 +96,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
     this->get_start_guess();
 
+    double diff_etotal = 1.0;
+    double diff_occ_num_max = 1.0;
+
     for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
     {
         int small_diffE = 0;
@@ -111,12 +115,19 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             }
 
             // optimize natural orbitals
-            double diff_etotal = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
+            diff_etotal = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
 
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
 
+            double orb_diag_ethr = iter_diag_ethr;
+            if( diff_occ_num_max > 50 * this->occ_num_thr )
+            {
+                orb_diag_ethr *= 1000;
+            }
+
             if( std::abs(diff_etotal) < iter_diag_ethr )
+            if( std::abs(diff_etotal) < orb_diag_ethr )
             {
                 ++small_diffE;
             }
@@ -124,12 +135,12 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             {
                 small_diffE = 0;
             }
-            if( small_diffE >= 2 && iter_orb > 5) break; // reference: relative error < 1e-7
+            if( small_diffE >= 2 && iter_orb >= 3) break; // reference: relative error < 1e-7
             // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
         }
 
         // optimize natural occupation numbers
-        double diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
+        diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
 
         std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(5);
         rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);

@@ -7,6 +7,7 @@
 #include "module_rdmft/optimizer/bfgs_opti_ONs.h"
 #include "module_rdmft/optimizer/optimizer_tools.h"
 
+#include "module_rdmft/rdmft_tools.h" // temp
 
 namespace rdmft
 {
@@ -63,15 +64,22 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
     {
         for(int j=0; j<x_new.size(); ++j)
         {
+            if( a_equal_b(x_new, this->var_x) ) { return; }
             // diff_x, sk = x_k+1 - x_k
             this->diff_x[j] = x_new[j] - this->var_x[j];
             // diff_grad, yk = (dE_dx)_k+1 - (dE_dx)_k
             this->diff_grad[j] = dE_dx_new[j] - this->dE_dx[j];
         }
 
+        rdmft::printMatrix_pointer(nk_total, nbands, this->diff_x.data(), "in BFGS_ONs, diff_x");
+        rdmft::printMatrix_pointer(nk_total, nbands, this->diff_grad.data(), "in BFGS_ONs, diff_grad");
+
         // cal rho = 1/( diffGrad^T * diffX )
         rdmft::dgemm_lapack(this->diff_grad.data(), this->diff_x.data(), &this->rho, 1, 1, nk_total*nbands, 'T', 'N');
+        std::cout << "\n******\n" << "in BFGS_ONs::get_pk(), 1.0/rho: " << this->rho << "\n******\n" << std::endl;
         this->rho = 1.0/this->rho;
+
+        std::cout << "\n******\n" << "in BFGS_ONs::get_pk(), rho: " << this->rho << "\n******\n" << std::endl;
 
         // cal rho * diffX * diffGrad^T, I - rho * diffX * diffGrad^T
         rdmft::dgemm_lapack( this->diff_x.data(), this->diff_grad.data(), this->rho_diffX_diffGrad.data(), nk_total*nbands, nk_total*nbands, 1, 'N', 'T', -(this->rho) );
@@ -89,6 +97,8 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
         for(int i=0; i<this->Hk.size(); ++i) { this->Hk[i] += this->rho_diffX_diffX_T[i]; }
 
     }
+
+    rdmft::printMatrix_pointer(nk_total*nbands, nk_total*nbands, this->Hk.data(), "BFGS: Hk");
 
     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
     // property: H = H^T, also depends on the initial guess H0!

@@ -33,6 +33,27 @@ template <typename T>
 void reduce_all_max(T* object, const int n);
 
 
+//! determine whether a is numerically equal to b
+template <typename TK>
+bool a_equal_b(const std::vector<TK>& a, const std::vector<TK>& b)
+{
+    double diff_sum = 0.0;
+    for(int i=0; i<a.size(); ++i)
+    {
+        diff_sum += std::abs( a[i] - b[i] );
+    }
+
+    if( diff_sum < 1e-16 )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 // anti-symmetrize mat
 // asym_mat = alpha * ( mat - mat^dagger )
 template <typename TK>

@@ -44,6 +44,7 @@ void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
     this->ls_armijo_c2 = 0.9;
     this->ls_condition = "swolfe";
     this->max_step_size = 1000;
+    this->min_step_size = 1e-10;
 }
 
 
@@ -81,9 +82,11 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     this->cal_dE_dx(this->dE_dx);
 
     this->cal_pk_dphi0(start_guess);
-    std::cout << "\n******\n" << "start_guess: ls, 1.0" << "\n******\n" << std::endl;
+    std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
 
-    // have pk, use strong wolfe to find step_size, update x_k+1 = x_k + step_size * p_k
+    std::vector<double> var_x_old = this->var_x;
+
+    // have pk, use strong wolfe to find step_size
     if(this->ls_condition == "swolfe") // PARAM.inp.ls_condition == "swolfe"
     {
         this->strong_wolfe();
@@ -97,12 +100,28 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
         this->strong_wolfe();
     }
 
+    // update x_k+1 = x_k + step_size * p_k
+    for(int i=0; i<this->var_x.size(); ++i)
+    {
+        this->var_x[i] += this->step_size * this->search_direction[i]; 
+    }
+    if( a_equal_b(var_x_old, this->var_x) )
+    {
+        std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
+        return 0.0;
+    }
+
+    // std::cout << "\n" << "after swolfe, this->step_size: " << this->step_size << "\n" << std::endl;
+    // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->search_direction.data(), "search_direction");
+    // std::cout << "\n******\n += [0]: " << this->step_size * this->search_direction[0] << "\n******\n" << std::endl;
+
     std::cout << "\n******\n" << "ls: strong_wolfe, 1.0" << "\n******\n" << std::endl;
+
 
     // convert x_k+1 to occ_num, rdmft_solver update occ_num, Hk, etc.
     this->phi_0 = this->cal_phi(this->var_x);   // has be calculated in swolfe() or zoom() ?
 
-    std::cout << "\n******\n" << "cal phi_0" << "\n******\n" << std::endl;
+    std::cout << "\n******\n" << "ls, phi_0: " << this->phi_0 << "\n******\n" << std::endl;
 
     // ModuleBase::matrix diff_occ_num = ( this->occ_number );
     // this->occ_number = this->ebi.get_occ_number();
@@ -129,12 +148,12 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
 template<typename TK, typename TR>
 void LineSearch<TK, TR>::strong_wolfe()
 {
+    std::cout << "\n" << "Enter strong_wolfe()" << "\n" << std::endl;
     // initial step_size before each iteration
-    this->step_size = (1.0 < this->max_step_size) ? 0.2 : this->max_step_size/2.0;
+    this->step_size = (1.0 < this->max_step_size) ? 1.0 : this->max_step_size/2.0;
 
     // 0: represents the relevant quantity under x_k, that is, var_x
     // phi_0, dphi_0 have obtained
-
     // old: represents the relevant quantity under the last trial_step_size/trial_x
     double step_size_old =0.0;
     double phi_old = this->phi_0;
@@ -143,16 +162,42 @@ void LineSearch<TK, TR>::strong_wolfe()
     // trial_x = x_k(or this->var_x) + trial_step_size * p_k
     std::vector<double> trial_x(this->var_x.size() ,0.0);
     std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
+    double trial_phi = 0.0;
+    double trial_dphi = 0.0;
 
     int times = 0;
     while(1)
     {
+        std::cout << "\n" << "in strong_wolfe(), while" << "\n" << std::endl;
+
+        if(times != 0)
+        {
+            // // since max is too large, the dichotomy is too extreme
+            // // and it is easy to fall into a saddle point when solving mu
+            // // i.e., the number of particles is not conserved
+            // this->step_size = ( this->step_size + this->max_step_size ) / 2.0; // needs improvement, using quadratic or cubic, currently using dichotomy
+
+            std::cout << "\n" << "before quadratic interpolation" << "\n" << std::endl;
+            // quadratic interpolation, temp_step = -b/(2a) in quadratic function
+            // improved using cubic interpolation ?
+            double temp_step = - this->dphi_0 * this->step_size * this->step_size / ( trial_phi - this->phi_0 - this->dphi_0 * this->step_size ) / 2.0;
+            this->step_size = ( 1.1 * this->step_size < temp_step ) ? temp_step : 1.1 * this->step_size;
+            this->step_size = ( this->step_size < this->max_step_size ) ? this->step_size : this->max_step_size;
+            std::cout << "\n" << "quadratic interpolation in strong wolfe, temp_step:" << temp_step << "\n" << std::endl;
+        }
+        
         for(int i=0; i<trial_x.size(); ++i)
         {
             trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
         }
+        if( a_equal_b(trial_x, this->var_x) )
+        {
+            std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
+            continue;
+        }
 
-        double trial_phi = this->cal_phi(trial_x);
+        std::cout << "\n" << "before cal_phi()" << "\n" << std::endl;
+        trial_phi = this->cal_phi(trial_x);
         if( (trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0) || trial_phi > phi_old)
         {
             std::cout << "\n" << "Enter SW condition 1" << "\n" << std::endl;
@@ -160,11 +205,11 @@ void LineSearch<TK, TR>::strong_wolfe()
             break;
         }
 
-        double trial_dphi = this->cal_dphi(trial_dE_dx);
+        std::cout << "\n" << "before cal_dphi()" << "\n" << std::endl;
+        trial_dphi = this->cal_dphi(trial_dE_dx);
         if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 )
         {
             std::cout << "\n" << "Enter SW condition 2" << "\n" << std::endl;
-            for(int i=0; i<trial_x.size(); ++i) { this->var_x[i] = trial_x[i]; }
             break;
         }
 
@@ -192,25 +237,8 @@ void LineSearch<TK, TR>::strong_wolfe()
             break;
         }
 
-        // // since max is too large, the dichotomy is too extreme
-        // // and it is easy to fall into a saddle point when solving mu
-        // // i.e., the number of particles is not conserved
-        // this->step_size = ( this->step_size + this->max_step_size ) / 2.0; // needs improvement, using quadratic or cubic, currently using dichotomy
 
-        // quadratic interpolation
-        // improved using cubic interpolation ?
-        double temp_step = - this->dphi_0 * this->step_size * this->step_size / ( trial_phi - this->phi_0 - this->dphi_0 * this->step_size ) / 2.0;
-        this->step_size = ( 1.1 * this->step_size < temp_step ) ? temp_step : 1.1 * this->step_size;
-        this->step_size = ( this->step_size < this->max_step_size ) ? this->step_size : this->max_step_size;
-        std::cout << "\n" << "quadratic interpolation in strong wolfe, update_step:" << temp_step << "\n" << std::endl;
     }
-
-    // // test
-    // this->step_size = 0.2;
-
-    // update x_k+1 = x_k + step_size * p_k
-    for(int i=0; i<this->var_x.size(); ++i) { this->var_x[i] += this->step_size * this->search_direction[i]; }
-
 }
 
 
@@ -232,6 +260,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
     int times = 0;
     while(1)
     {
+        std::cout << "\n" << "in ZOOM(), while" << "\n" << std::endl;
         // needs improvement, using quadratic or cubic, currently using dichotomy
         // this->step_size = (alpha_lo + alpha_hi)/2.0;
 
@@ -285,6 +314,8 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
             std::cout << "\n******\n" << "zoom times too big: " << times << "\n******\n" << std::endl;
             break;
         }
+
+        if( this->step_size <= this->min_step_size ) { break; }
     }
 
 }
@@ -301,6 +332,7 @@ void LineSearch<TK, TR>::wolfe()
 template<typename TK, typename TR>
 double LineSearch<TK, TR>::cal_phi(const std::vector<double>& x_new)
 {
+    std::cout << "\n" << "Enter cal_phi()" << "\n" << std::endl;
     // convert x_k+1 to occ_num
     this->ebi.update_x_occ_num(x_new);
     std::cout << "\n" << "step size now: " << this->step_size << "\n" << std::endl;
@@ -360,6 +392,8 @@ void LineSearch<TK, TR>::cal_pk_dphi0(const bool start_guess)
 {
     // get pk: EBI provide var_x and dE_dx to BFGS
     this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, start_guess);
+
+    rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->search_direction.data(), "search_direction");
 
     // get dphi_0
     rdmft::dgemm_lapack( this->dE_dx.data(), this->search_direction.data(), &this->dphi_0, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');

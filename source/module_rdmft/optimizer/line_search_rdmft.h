@@ -41,17 +41,18 @@ class LineSearch
     std::string ls_condition;
 
     double max_step_size = 0.0;
+    double min_step_size = 0.0;
 
 
   protected:
 
-    //! Strong Wolfe condition
+    //! Strong Wolfe condition, get the appropriate step length
     void strong_wolfe();
 
     //! Wolfe condition
     void wolfe();
 
-    //! used in Strong Wolfe condition
+    //! used in Strong Wolfe condition, get the appropriate step length
     void zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low);
 
     //! calculate phi(alpha) = E(x_k + alpha * p_k) and return it. x_new = x_k + alpha*p_k

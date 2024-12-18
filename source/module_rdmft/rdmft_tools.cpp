@@ -170,7 +170,7 @@ double occNum_func(const double eta, const int symbol, const std::string XC_func
     else if( XC_func_rdmft == "muller" ) { alpha = 0.5; }
     else { alpha = 1.0; }
 
-    assert(symbol <= 5);
+    assert( 0 <= symbol && symbol <= 5);
 
     if( symbol==0 ) { return eta;
     } else if ( symbol==1 ) { return 0.5*eta;
