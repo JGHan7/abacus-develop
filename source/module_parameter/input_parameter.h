@@ -598,8 +598,8 @@ struct Input_para
     double rdmft_power_alpha = 0.656;             // the alpha parameter of power-functional, g(occ_number) = occ_number^alpha
     // double rdmft_wp22_omega;                 // the omega parameter of wp22-functional = exx_hse_omega
     bool random_occ_num = true;
-    bool dft_opti = false;
-    bool conv_inital_value = false;
+    bool dft_opti = true; // should false
+    bool conv_inital_value = false; 
     bool init_orb_by_lambda = true;
     bool scale_fock = false;
     double scale_zeta = 0.01;
