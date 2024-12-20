@@ -41,6 +41,8 @@ class IterDiag_NOs
 
     double max_off_diag_F = 0.0;
 
+    bool init_orb_by_lambda = true;
+
 
   protected:
 
@@ -93,6 +95,7 @@ class IterDiag_NOs
     // scale the off-diagonal elements of Fock
     // ? the physical reasons still need to be considered
     void scale_Fock();
+    bool scale_F = false;
 
     // adjust scale_zeta used in scale_Fock()
     // any other better solutions?

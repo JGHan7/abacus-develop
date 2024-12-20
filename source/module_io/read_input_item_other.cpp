@@ -527,19 +527,31 @@ void ReadInput::item_others()
     }
     {
         Input_Item item("dft_opti");
-        item.annotation = "whether to perform DFT type optimization on natural occupation numbers, default is false";
+        item.annotation = "whether to perform DFT type optimization on natural occupation numbers";
         read_sync_bool(input.dft_opti);
         this->add_item(item);
     }
     {
         Input_Item item("conv_inital_value");
-        item.annotation = "whether to use the converged DFT results as initial values, default is false";
+        item.annotation = "whether to use the converged DFT results as initial values";
         read_sync_bool(input.conv_inital_value);
         this->add_item(item);
     }
     {
+        Input_Item item("init_orb_by_lambda");
+        item.annotation = "whether the initial natural orbital is provided by the symmetrized lambda, or KS-DFT";
+        read_sync_bool(input.init_orb_by_lambda);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("scale_fock");
+        item.annotation = "whether to scale the Fock-like matrix, in iterative diagonalization";
+        read_sync_bool(input.scale_fock);
+        this->add_item(item);
+    }
+    {
         Input_Item item("random_occ_num");
-        item.annotation = "whether to use a random occupation numbers as the initial value, default is false";
+        item.annotation = "whether to use a random occupation numbers as the initial value";
         read_sync_bool(input.random_occ_num);
         this->add_item(item);
     }

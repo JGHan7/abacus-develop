@@ -79,6 +79,8 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     this->occ_num_thr = PARAM.inp.occ_num_thr; // how much is proper?
     this->lambda_thr = PARAM.inp.lambda_thr;
 
+    this->iter_diag_orb.init_orb_by_lambda = PARAM.inp.init_orb_by_lambda;
+    this->iter_diag_orb.scale_F = PARAM.inp.scale_fock;
     this->iter_diag_orb.scale_zeta = PARAM.inp.scale_zeta;
 
     this->ls_opti_occ_num.ebi.random_inital = PARAM.inp.random_occ_num;

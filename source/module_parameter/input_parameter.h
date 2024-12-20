@@ -597,9 +597,12 @@ struct Input_para
     bool rdmft = false;                           // rdmft, reduced density matrix funcional theory
     double rdmft_power_alpha = 0.656;             // the alpha parameter of power-functional, g(occ_number) = occ_number^alpha
     // double rdmft_wp22_omega;                 // the omega parameter of wp22-functional = exx_hse_omega
+    bool random_occ_num = true;
     bool dft_opti = false;
     bool conv_inital_value = false;
-    bool random_occ_num = true;
+    bool init_orb_by_lambda = true;
+    bool scale_fock = false;
+    double scale_zeta = 0.01;
     double iter_diag_ethr = 1e-8;
     double occ_num_thr = 1e-5;
     double lambda_thr = 1e-4;
@@ -609,7 +612,6 @@ struct Input_para
     double ls_wolfe_c2 = 0.999;
     double ls_armijo_c1 = 0.0001;
     double ls_armijo_c2 = 0.9;
-    double scale_zeta = 0.01;
     double max_step_size = 1000.0;
     double min_step_size = 1e-10;
     std::string ls_condition = "swolfe";

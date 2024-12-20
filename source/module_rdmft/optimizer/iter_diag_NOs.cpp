@@ -107,8 +107,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 
     for(int ik=0; ik<nk_total; ++ik)
     {
-        // std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
-        // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);gg
+        std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
+        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
 
         // get Fii and new_wfc in NOs
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
@@ -193,8 +193,8 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bo
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, symm_lambda[ik].data(),
                                     this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
 
-        // get start_wfc in NAOs
-        rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        // // get start_wfc in NAOs
+        // rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
         // temp
         // get rotation_mat, rotation_mat_t-step = G_t * G_t-1 * ... * G_1
@@ -223,9 +223,14 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bo
     //     std::cout << "\n******\n" << "iterDiag: 0.3, once" << "\n******\n" << std::endl;
     // }
 
-    if( !conver_initial_value )
+    if( this->init_orb_by_lambda )
     {
-        // rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
+        for(int ik=0; ik<nk_total; ++ik)
+        {
+            // get start_wfc in NAOs
+            rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        }
+        rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
     }
 
     this->new_wfc.zero_out();
@@ -372,7 +377,11 @@ void IterDiag_NOs<TK, TR>::get_Fock()
     // get the max value of std::abs(Fij) in a global sense
     rdmft::reduce_all_max(this->max_off_diag_F);
 
-    // this->scale_Fock();
+    // if(PARAM.inp.scale_fock)
+    if( this->scale_F )
+    {
+        this->scale_Fock();
+    }
 
     if(if_rotate_Fock)
     {
