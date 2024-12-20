@@ -525,6 +525,103 @@ void ReadInput::item_others()
         };
         this->add_item(item);
     }
+    {
+        Input_Item item("dft_opti");
+        item.annotation = "whether to perform DFT type optimization on natural occupation numbers, default is false";
+        read_sync_bool(input.dft_opti);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("conv_inital_value");
+        item.annotation = "whether to use the converged DFT results as initial values, default is false";
+        read_sync_bool(input.conv_inital_value);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("random_occ_num");
+        item.annotation = "whether to use a random occupation numbers as the initial value, default is false";
+        read_sync_bool(input.random_occ_num);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("iter_diag_ethr");
+        item.annotation = "energy convergence criterion for iterative diagonalization of orbitals";
+        read_sync_double(input.iter_diag_ethr);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("occ_num_thr");
+        item.annotation = "convergence criterion for occupation numbers optimization";
+        read_sync_double(input.occ_num_thr);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("lambda_thr");
+        item.annotation = "convergence criterion of the lambda matrix in iterative diagonalization";
+        read_sync_double(input.lambda_thr);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("solve_mu_thr");
+        item.annotation = "convergence criterion of EBI method for solving mu";
+        read_sync_double(input.solve_mu_thr);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("tot_nelec_thr");
+        item.annotation = "convergence criterion for the conservation of the total number of electrons";
+        read_sync_double(input.tot_nelec_thr);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("ls_condition");
+        item.annotation = "condition type for inexact line search: swolfe, wolfe";
+        read_sync_string(input.ls_condition);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("ls_wolfe_c1");
+        item.annotation = "the first parameter of the wolfe condition";
+        read_sync_double(input.ls_wolfe_c1);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("ls_wolfe_c2");
+        item.annotation = "the second parameter of the wolfe condition";
+        read_sync_double(input.ls_wolfe_c2);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("ls_armijo_c1");
+        item.annotation = "the first parameter of an Armijo condition";
+        read_sync_double(input.ls_armijo_c1);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("ls_armijo_c2");
+        item.annotation = "the second parameter of an Armijo condition";
+        read_sync_double(input.ls_armijo_c2);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("scale_zeta");
+        item.annotation = "scaling factor for off-diagonal elements of Fock-like matrix, in iterative diagonalization";
+        read_sync_double(input.scale_zeta);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("max_step_size");
+        item.annotation = "maximum step size for line search";
+        read_sync_double(input.max_step_size);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("min_step_size");
+        item.annotation = "minimum step size for line search";
+        read_sync_double(input.min_step_size);
+        this->add_item(item);
+    }
+
 
 }
 } // namespace ModuleIO

@@ -177,7 +177,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
+void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bool conver_initial_value)
 {
     // this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
     this->get_lambda(rdmft_solver.occ_number, rdmft_solver.fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
@@ -223,7 +223,10 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver)
     //     std::cout << "\n******\n" << "iterDiag: 0.3, once" << "\n******\n" << std::endl;
     // }
 
-    rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
+    if( !conver_initial_value )
+    {
+        // rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
+    }
 
     this->new_wfc.zero_out();
 }

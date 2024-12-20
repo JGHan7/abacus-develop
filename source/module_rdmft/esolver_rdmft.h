@@ -51,6 +51,8 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
     bool dft_optimize = false;    // if use dft type to optimize occ_number
 
+    bool conver_initial_value = false;
+
     // Parallel_2D* para_H_ni_nj = nullptr;
 
   private:

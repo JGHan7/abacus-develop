@@ -50,23 +50,49 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     // this->ebi.init(rdmft_solver.nk_total);
     // this->bfgs_rdmft.init(rdmft_solver.nk_total, PARAM.inp.nbands);
 
-    // convergence parameters
+    // // convergence parameters
     // this->dft_optimize = true;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    this->iter_diag_ethr = 1e-8;
-    this->lambda_thr = 1e-4;
-    this->occ_num_thr = 1e-5; // how much is proper?
+    // this->conver_initial_value = true; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    this->iter_diag_orb.scale_zeta = 0.01;
-    this->ls_opti_occ_num.ebi.solve_mu_thr = 1e-10;
-    this->ls_opti_occ_num.ebi.tot_nelec_thr = 1e-10;
-    this->ls_opti_occ_num.ebi.random_inital = true;
-    this->ls_opti_occ_num.ls_wolfe_c1 = 0.0001;
-    this->ls_opti_occ_num.ls_wolfe_c2 = 0.999;
-    this->ls_opti_occ_num.ls_armijo_c1 = 0.0001;
-    this->ls_opti_occ_num.ls_armijo_c2 = 0.9;
-    this->ls_opti_occ_num.ls_condition = "swolfe";
-    this->ls_opti_occ_num.max_step_size = 1000;
-    this->ls_opti_occ_num.min_step_size = 1e-10;
+    // this->iter_diag_ethr = 1e-8;
+    // this->occ_num_thr = 1e-5; // how much is proper?
+    // this->lambda_thr = 1e-4;
+
+    // this->iter_diag_orb.scale_zeta = 0.01;
+
+    // this->ls_opti_occ_num.ebi.random_inital = true;
+    // this->ls_opti_occ_num.ebi.solve_mu_thr = 1e-10;
+    // this->ls_opti_occ_num.ebi.tot_nelec_thr = 1e-10;
+    // this->ls_opti_occ_num.ls_wolfe_c1 = 0.0001;
+    // this->ls_opti_occ_num.ls_wolfe_c2 = 0.999;
+    // this->ls_opti_occ_num.ls_armijo_c1 = 0.0001;
+    // this->ls_opti_occ_num.ls_armijo_c2 = 0.9;
+    // this->ls_opti_occ_num.ls_condition = "swolfe";
+    // this->ls_opti_occ_num.max_step_size = 1000.0;
+    // this->ls_opti_occ_num.min_step_size = 1e-10;
+
+    // convergence parameters
+    this->dft_optimize = PARAM.inp.dft_opti;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    this->conver_initial_value = PARAM.inp.conv_inital_value; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    this->iter_diag_ethr = PARAM.inp.iter_diag_ethr;
+    this->occ_num_thr = PARAM.inp.occ_num_thr; // how much is proper?
+    this->lambda_thr = PARAM.inp.lambda_thr;
+
+    this->iter_diag_orb.scale_zeta = PARAM.inp.scale_zeta;
+
+    this->ls_opti_occ_num.ebi.random_inital = PARAM.inp.random_occ_num;
+    this->ls_opti_occ_num.ebi.solve_mu_thr = PARAM.inp.solve_mu_thr;
+    this->ls_opti_occ_num.ebi.tot_nelec_thr = PARAM.inp.tot_nelec_thr;
+    this->ls_opti_occ_num.ls_wolfe_c1 = PARAM.inp.ls_wolfe_c1;
+    this->ls_opti_occ_num.ls_wolfe_c2 = PARAM.inp.ls_wolfe_c2;
+    this->ls_opti_occ_num.ls_armijo_c1 = PARAM.inp.ls_armijo_c1;
+    this->ls_opti_occ_num.ls_armijo_c2 = PARAM.inp.ls_armijo_c2;
+    this->ls_opti_occ_num.ls_condition = PARAM.inp.ls_condition;
+    this->ls_opti_occ_num.max_step_size = PARAM.inp.max_step_size;
+    this->ls_opti_occ_num.min_step_size = PARAM.inp.min_step_size;
+
+
 
 }
 
@@ -85,7 +111,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     }
     else
     {
-        rdmft_solver.modify_scf_nmax(1);
+        if( !this->conver_initial_value )
+        {
+            rdmft_solver.modify_scf_nmax(1);
+        }
         rdmft_solver.runner(ucell, istep);
     }
     this->rdmft_solver.inital_wfc_occNum();
@@ -104,10 +133,13 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         int small_diffE = 0;
         this->iter_diag_orb.before_opti();
 
-        double orb_diag_ethr = iter_diag_ethr;
-        if( diff_occ_num_max > 50 * this->occ_num_thr )
+        double temp_diag_ethr = iter_diag_ethr;
+        if( !this->conver_initial_value && !this->dft_optimize )
         {
-            orb_diag_ethr *= 1000; // 100 ?
+            if( diff_occ_num_max > 50 * this->occ_num_thr )
+            {
+                temp_diag_ethr *= 100; // 1000 ?
+            }
         }
 
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
@@ -129,7 +161,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
 
             // if( std::abs(diff_etotal) < iter_diag_ethr )
-            if( std::abs(diff_etotal) < orb_diag_ethr )
+            if( std::abs(diff_etotal) < temp_diag_ethr )
             {
                 ++small_diffE;
             }
@@ -140,6 +172,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             if( small_diffE >= 2 && iter_orb >= 3) break; // reference: relative error < 1e-7
             // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
         }
+
+        // 
+        if(dft_optimize) break;
 
         // optimize natural occupation numbers
         diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
@@ -166,10 +201,6 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 break;
             }
         }
-
-        // add something, to determine whether the optimization of the occ_number has converged
-        if(dft_optimize) break;
-
 
 
         // TODO: optimize occ_number
@@ -230,7 +261,7 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
     std::cout << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
 
     // get start guess natural orbitals
-    this->iter_diag_orb.get_start_guess(rdmft_solver);
+    this->iter_diag_orb.get_start_guess(rdmft_solver, this->conver_initial_value);
 
     std::cout << "\n******\n" << "get inital value in orbitals !!!!!!" << "\n******\n" << std::endl;
 
