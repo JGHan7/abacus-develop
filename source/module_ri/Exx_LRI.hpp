@@ -140,6 +140,13 @@ void Exx_LRI<Tdata>::cal_exx_ions(const bool write_cv)
 	if (write_cv && GlobalV::MY_RANK == 0) { LRI_CV_Tools::write_Vs_abf(Vs, PARAM.globalv.global_out_dir + "Vs"); }
 	this->exx_lri.set_Vs(std::move(Vs), this->info.V_threshold);
 
+	// added by jghan, 2024-12-22
+	if( PARAM.inp.esolver_type == "rdmft" )
+	{
+		// add code to print R in Vs,
+		// used to check if R = (0, 0, 0) in the molecular calculation
+	}
+
 	if(PARAM.inp.cal_force || PARAM.inp.cal_stress)
 	{
 		std::array<std::map<TA,std::map<TAC,RI::Tensor<Tdata>>>,3>

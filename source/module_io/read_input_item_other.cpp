@@ -526,6 +526,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("maxniter_occ_num");
+        item.annotation = "maximum number of iterations to optimize the natural occupation numbers";
+        read_sync_int(input.maxniter_occ_num);
+        this->add_item(item);
+    }
+    {
         Input_Item item("dft_opti");
         item.annotation = "whether to perform DFT type optimization on natural occupation numbers";
         read_sync_bool(input.dft_opti);

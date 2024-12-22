@@ -31,7 +31,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
 {
     rdmft_solver.before_all_runners(ucell, inp);
     this->maxniter = inp.scf_nmax;
-    this->maxniter_occ_num = this->maxniter;
+    this->maxniter_occ_num = PARAM.inp.maxniter_occ_num;
     this->maxniter_orb = this->maxniter;
 
     // initialize rdmft
