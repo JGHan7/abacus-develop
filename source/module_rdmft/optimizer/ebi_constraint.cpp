@@ -305,11 +305,11 @@ void EBI::solving_mu()
         while( std::abs(f_der[0]) > this->solve_mu_thr || std::abs(occ_num_error) > this->tot_nelec_thr )
         {
             ++solve_mu_times;
-            if( solve_mu_times > 50 )
+            if( solve_mu_times > 100 )
             {
                 std::cout << "\n" << "solve_mu_times is too big: " << solve_mu_times << "\n" << std::endl;
                 std::cout << "\n" << "electron number is not conserved !!!!!!!!!!! " << "\n" << std::endl;
-                assert(solve_mu_times <= 50);
+                assert(solve_mu_times <= 100);
                 break;
             }
             
@@ -346,20 +346,34 @@ void EBI::solving_mu()
 
                 if( std::abs(occ_num_error) > this->tot_nelec_thr )
                 {
-                    solve_mu_times = 0;
+                    // solve_mu_times = 0;
                     // double sum_x = std::accumulate(this->x[is].begin(), this->x[is].end(), 0.0);
                     // this->mu[is] = ( rdmft::erf_inv_own( 2*this->sys_nelec_spin[is] - nk_nospin*nbands ) - sum_x )/nk_nospin*nbands;
-                    std::cout << "\n" << "guess mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << "\n" << std::endl;
+                    std::cout << "\n" << "local minimum mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << "\n" << std::endl;
                     
-                    // a more appropriate step size can be used for mu
-                    if(occ_num_error > 0)
+                    // a more appropriate step size should be used for mu
+                    // if(occ_num_error > 0)
+                    // {
+                    //     this->mu[is] -= 1.0;
+                    // }
+                    // else
+                    // {
+                    //     this->mu[is] += 1.0;
+                    // }
+                    if( std::abs(occ_num_error) > 0.5 && f1_divided_f2 < 0.5 )
                     {
-                        this->mu[is] -= 1.0;
+                        double step = (occ_num_error > 0) ? 1.0 : -1.0;
+                        this->mu[is] -= step;
                     }
                     else
                     {
-                        this->mu[is] += 1.0;
+                        // use the step length and direction of the previous step to calculate one more step
+                        // this->mu[is] -= sign * f1_divided_f2;
+                        
+                        // do the calculation again
+                        continue;
                     }
+
                 }
             }
             // if( std::abs(f1_divided_f2) - 1 > 0 )
@@ -429,13 +443,13 @@ ModuleBase::matrix EBI::get_occ_number()
 
 double EBI::cal_occ_num(int is)
 {
-        double occ_num_now = 0.0;
-        for(int i=0; i<this->x[is].size(); ++i)
-        {
-            this->occ_number[is][i] = ( std::erf(this->x[is][i] + this->mu[is]) + 1.0 )/2.0;
-            occ_num_now += this->occ_number[is][i];
-        }
-        return occ_num_now;
+    double occ_num_now = 0.0;
+    for(int i=0; i<this->x[is].size(); ++i)
+    {
+        this->occ_number[is][i] = ( std::erf(this->x[is][i] + this->mu[is]) + 1.0 )/2.0;
+        occ_num_now += this->occ_number[is][i];
+    }
+    return occ_num_now;
 }
 
 
