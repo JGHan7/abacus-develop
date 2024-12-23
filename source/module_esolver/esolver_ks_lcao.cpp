@@ -1094,7 +1094,7 @@ void ESolver_KS_LCAO<TK, TR>::after_scf(UnitCell& ucell, const int istep)
         }
     }
 
-    GlobalV::ofs_running << "\n******\nocc_number_ks: " << std::endl << std::fixed << std::setprecision(5);
+    GlobalV::ofs_running << "\n******\nocc_number_ks: " << std::endl << std::fixed << std::setprecision(7);
     rdmft::global_printMatrix_pointer(occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number", 10);
     GlobalV::ofs_running << "\n******\n" << std::endl << std::defaultfloat;
 

@@ -313,7 +313,7 @@ void EBI::solving_mu()
                 break;
             }
             
-            std::cout << "\n" << "in solving_mu(), while()" << "\n" << std::endl;
+            std::cout << "\n" << "in solving_mu(), while()" << ", solve_mu_times: " << solve_mu_times << "\n" << std::endl;
             f_der = this->cal_f_der(this->mu[is], is);
             double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
 

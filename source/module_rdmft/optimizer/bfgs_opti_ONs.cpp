@@ -76,10 +76,10 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
 
         // cal rho = 1/( diffGrad^T * diffX )
         rdmft::dgemm_lapack(this->diff_grad.data(), this->diff_x.data(), &this->rho, 1, 1, nk_total*nbands, 'T', 'N');
-        std::cout << "\n******\n" << "in BFGS_ONs::get_pk(), 1.0/rho: " << this->rho << "\n******\n" << std::endl;
+        std::cout << "******\n" << "in BFGS_ONs::get_pk(), 1.0/rho: " << this->rho << "\n******" << std::endl;
         this->rho = 1.0/this->rho;
 
-        std::cout << "\n******\n" << "in BFGS_ONs::get_pk(), rho: " << this->rho << "\n******\n" << std::endl;
+        std::cout << "******\n" << "in BFGS_ONs::get_pk(), rho: " << this->rho << "\n******" << std::endl;
 
         // cal rho * diffX * diffGrad^T, I - rho * diffX * diffGrad^T
         rdmft::dgemm_lapack( this->diff_x.data(), this->diff_grad.data(), this->rho_diffX_diffGrad.data(), nk_total*nbands, nk_total*nbands, 1, 'N', 'T', -(this->rho) );

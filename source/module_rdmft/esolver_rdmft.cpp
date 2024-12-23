@@ -150,7 +150,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             if(this->dft_optimize)
             {
                 this->update_occ_num_dft(this->rdmft_solver);
-                GlobalV::ofs_running << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(5);
+                GlobalV::ofs_running << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(7);
                 rdmft::global_printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
                 GlobalV::ofs_running << std::endl << std::defaultfloat;
             }
@@ -159,7 +159,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             diff_etotal = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
 
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
-            std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******\n" << std::endl << std::defaultfloat;
+            std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******" << std::endl << std::defaultfloat;
 
 
             // if( std::abs(diff_etotal) < iter_diag_ethr )
@@ -181,7 +181,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         // optimize natural occupation numbers
         diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
 
-        std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(5);
+        std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(7);
         rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
         double sys_nelec_now = 0.0;
         for(int i=0; i<rdmft_solver.occ_number.nr*rdmft_solver.occ_number.nc; ++i)
