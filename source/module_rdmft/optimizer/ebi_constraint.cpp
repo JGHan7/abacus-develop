@@ -344,6 +344,7 @@ void EBI::solving_mu()
                 std::cout << "\n" << "before cal_occ_num()" << "\n" << std::endl;
                 occ_num_error = this->cal_occ_num(is) - this->sys_nelec_spin[is];
 
+                // determine whether it converges to a local minimum
                 if( std::abs(occ_num_error) > this->tot_nelec_thr )
                 {
                     // solve_mu_times = 0;
