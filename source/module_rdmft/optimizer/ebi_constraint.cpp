@@ -317,8 +317,8 @@ void EBI::solving_mu()
             f_der = this->cal_f_der(this->mu[is], is);
             double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
 
-            std::cout << "\n" << "after cal_f_der(), f_der1: " << f_der[0] << " f_der2: " << f_der[1] 
-                        << " f1_divided_f2: " << f1_divided_f2 << "\n" << std::endl;
+            std::cout << "\nis: " << is << ", mu: " << this->mu[is] << ", f_der1: " << f_der[0] << ", f_der2: " << f_der[1] 
+                        << ", f1_divided_f2: " << f1_divided_f2 << "\n" << std::endl;
 
             double sign = 0.0;
             if( f_der[0]>0 )
@@ -383,7 +383,7 @@ void EBI::solving_mu()
             // }
         }
 
-        std::cout << "******\n" << "solving_mu, mu: " << this->mu[is] << "\n******" << std::endl;
+        std::cout << "******\n" << "solving_mu, mu[" << is << "]: " << this->mu[is] << "\n******" << std::endl;
     }
 
     // this->cal_occ_num();
