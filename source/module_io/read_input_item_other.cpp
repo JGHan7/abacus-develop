@@ -639,7 +639,12 @@ void ReadInput::item_others()
         read_sync_double(input.min_step_size);
         this->add_item(item);
     }
-
+    {
+        Input_Item item("level_shifting");
+        item.annotation = "perform opposite shifts on the occupied and unoccupied diagonal elements of a Fock-like matrix";
+        read_sync_double(input.level_shifting);
+        this->add_item(item);
+    }
 
 }
 } // namespace ModuleIO

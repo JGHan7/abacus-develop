@@ -20,7 +20,7 @@ class IterDiag_NOs
     IterDiag_NOs();
     ~IterDiag_NOs();
 
-    void init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in);
+    void init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in, RDMFT<TK, TR>* rdmft_solver_in);
 
     //! use initial values ​​to form a first guess for iterative diagonalization
     void get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bool conver_initial_value = false); // delete conver_initial_value in the future?
@@ -51,6 +51,10 @@ class IterDiag_NOs
     int nk_total = 0;
 
     int nbands_total = 0;
+
+    std::vector<double> sys_nelec_spin;
+
+    RDMFT<TK, TR>* rdmft_solver_ = nullptr;
 
   private:
 

@@ -350,7 +350,13 @@ void EBI::solving_mu()
                     // solve_mu_times = 0;
                     // double sum_x = std::accumulate(this->x[is].begin(), this->x[is].end(), 0.0);
                     // this->mu[is] = ( rdmft::erf_inv_own( 2*this->sys_nelec_spin[is] - nk_nospin*nbands ) - sum_x )/nk_nospin*nbands;
-                    std::cout << "\n" << "local minimum mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << "\n" << std::endl;
+                    std::cout << "******\n" << "local minimum mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << std::endl;
+
+                    rdmft::printMatrix_pointer(nk_nospin, nbands, this->x[is].data(), "now var_x", 10);
+
+                    rdmft::printMatrix_pointer(nk_nospin, nbands, this->occ_number[is].data(), "now occ_number", 10);
+
+                    std::cout << "******\n" << std::endl;
                     
                     // a more appropriate step size should be used for mu
                     // if(occ_num_error > 0)
@@ -361,7 +367,7 @@ void EBI::solving_mu()
                     // {
                     //     this->mu[is] += 1.0;
                     // }
-                    if( std::abs(occ_num_error) > 0.5 && f1_divided_f2 < 0.5 )
+                    if( std::abs(occ_num_error) >= 0.5 && f1_divided_f2 < 0.5 )
                     {
                         double step = (occ_num_error > 0) ? 1.0 : -1.0;
                         this->mu[is] -= step;

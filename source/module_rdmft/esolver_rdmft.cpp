@@ -45,7 +45,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
         rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
     }
 
-    this->iter_diag_orb.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV));
+    this->iter_diag_orb.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV), &this->rdmft_solver);
     this->ls_opti_occ_num.init(&this->rdmft_solver);
     // this->ebi.init(rdmft_solver.nk_total);
     // this->bfgs_rdmft.init(rdmft_solver.nk_total, PARAM.inp.nbands);

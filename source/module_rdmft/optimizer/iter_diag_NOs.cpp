@@ -34,7 +34,7 @@ IterDiag_NOs<TK, TR>::~IterDiag_NOs()
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in)
+void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in, RDMFT<TK, TR>* rdmft_solver_in)
 {
     this->nk_total = nk_total_in;
     this->nbands_total = PARAM.inp.nbands;
@@ -63,6 +63,27 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
 
     // temp
     this->if_rotate_Fock = false;
+
+
+    this->rdmft_solver_ = rdmft_solver_in;
+
+    int nkstot_full = this->rdmft_solver_->get_kv().get_nkstot_full();
+
+    sys_nelec_spin.resize(PARAM.inp.nspin);
+    if( PARAM.inp.nspin == 1 )
+    {
+        this->sys_nelec_spin[0] = (PARAM.inp.nelec / 2.0) * nkstot_full;
+        std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
+    }
+    else if( PARAM.inp.nspin == 2 )
+    {
+        this->sys_nelec_spin[0] = ((PARAM.inp.nelec + PARAM.inp.nupdown) / 2.0) * nkstot_full;
+        this->sys_nelec_spin[1] = ((PARAM.inp.nelec - PARAM.inp.nupdown) / 2.0) * nkstot_full;
+        std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "this->sys_nelec_spin[1]: " << this->sys_nelec_spin[1] << "\n******\n" << std::endl;
+    }
+
+
 }
 
 
@@ -267,6 +288,7 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
     // times occNum
     for(int ik=0; ik<Fock_like_mat.size(); ++ik)
     {
+        // the first right one !!!!!!!!!!!!!!!!!!!!!!!!!!!
         int nrow = para_Fij->get_row_size();
         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
         {
@@ -280,6 +302,24 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
                                                 + H_exx[ik][ir + ic*nrow]*wk_fun_local;
             }
         }
+
+        // // test formula
+        // int nrow = para_Fij->get_row_size();
+        // for(int ir=0; ir<nrow; ++ir)
+        // {
+        //     // use wg or occ_number???
+        //     const double wg_local = wg(ik, para_Fij->local2global_row(ir));
+        //     const double wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_row(ir));
+
+        //     for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+        //     {
+        //         this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local 
+        //                                         + H_exx[ik][ir + ic*nrow]*wk_fun_local;
+        //     }
+        // }
+
+        std::cout << "\nik: " << ik << std::endl;
+        rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->lambda[ik].data(), "lambda[ik]", 10);
     }
 
     // // test T
@@ -356,22 +396,50 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                 {
                     // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
                     this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global];
+
+                    if( std::abs( PARAM.inp.level_shifting ) > 1e-12 )
+                    {
+                        // currently only applicable to molecular computing
+                        // ik now is ispin
+                        int occupied_state = static_cast<int>( std::ceil( this->sys_nelec_spin[ik] ) );
+                        if( ic_global < occupied_state )
+                        {
+                            this->Fock_like_mat[ik][ir+ic*nrow] -= PARAM.inp.level_shifting;
+                        }
+                        else
+                        {
+                            this->Fock_like_mat[ik][ir+ic*nrow] += PARAM.inp.level_shifting;
+                        }
+                    }
                 }
                 else
                 {
                     double norm_Fij = std::abs( this->Fock_like_mat[ik][ir+ic*nrow] );
                     this->max_off_diag_F = std::max(this->max_off_diag_F, norm_Fij);
 
+                    // the first right one !!!!!!!!!!!!!!!!!!!!!!!!!!!
                     if(ic_global > ir_global) 
                     {
                         // the upper triangle
                         this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
                     }
+
+                    // // test formula
+                    // if(ic_global > ir_global) 
+                    // {
+                    //     // the upper triangle
+                    //     this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
+                    // }
+
                 }
             }
         }
         // here or other place? 
         std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
+
+        std::cout << "\nik: " << ik << std::endl;
+        rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->Fock_like_mat[ik].data(), "Fock[ik]", 10);
+
     }
 
     // get the max value of std::abs(Fij) in a global sense

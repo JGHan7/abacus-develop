@@ -54,8 +54,6 @@ class EBI
     // temp 
     std::vector<double> get_nelec_spin() { return this->sys_nelec_spin; }
 
-
-
   protected:
 
 
