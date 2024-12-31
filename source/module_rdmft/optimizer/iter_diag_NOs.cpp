@@ -64,7 +64,6 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     // temp
     this->if_rotate_Fock = false;
 
-
     this->rdmft_solver_ = rdmft_solver_in;
 
     int nkstot_full = this->rdmft_solver_->get_kv().get_nkstot_full();
@@ -318,8 +317,8 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
         //     }
         // }
 
-        std::cout << "\nik: " << ik << std::endl;
-        rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->lambda[ik].data(), "lambda[ik]", 10);
+        // std::cout << "\nik: " << ik << std::endl;
+        // rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->lambda[ik].data(), "lambda[ik]", 10);
     }
 
     // // test T
@@ -397,11 +396,12 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                     // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
                     this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global];
 
-                    if( std::abs( PARAM.inp.level_shifting ) > 1e-12 )
+                    int occupied_state = static_cast<int>( std::ceil( this->sys_nelec_spin[ik] ) );
+                    if( (std::abs( PARAM.inp.level_shifting ) > 1e-12) && 
+                        (std::abs( this->diag_Fii[ik][occupied_state] - this->diag_Fii[ik][occupied_state-1] ) < std::abs(PARAM.inp.level_shifting)) )
                     {
                         // currently only applicable to molecular computing
                         // ik now is ispin
-                        int occupied_state = static_cast<int>( std::ceil( this->sys_nelec_spin[ik] ) );
                         if( ic_global < occupied_state )
                         {
                             this->Fock_like_mat[ik][ir+ic*nrow] -= PARAM.inp.level_shifting;
@@ -437,8 +437,8 @@ void IterDiag_NOs<TK, TR>::get_Fock()
         // here or other place? 
         std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
 
-        std::cout << "\nik: " << ik << std::endl;
-        rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->Fock_like_mat[ik].data(), "Fock[ik]", 10);
+        // std::cout << "\nik: " << ik << std::endl;
+        // rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->Fock_like_mat[ik].data(), "Fock[ik]", 10);
 
     }
 

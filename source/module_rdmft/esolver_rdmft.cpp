@@ -150,9 +150,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             if(this->dft_optimize)
             {
                 this->update_occ_num_dft(this->rdmft_solver);
-                GlobalV::ofs_running << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(7);
-                rdmft::global_printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
-                GlobalV::ofs_running << std::endl << std::defaultfloat;
+                // GlobalV::ofs_running << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(7);
+                // rdmft::global_printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
+                // GlobalV::ofs_running << std::endl << std::defaultfloat;
             }
 
             // optimize natural orbitals

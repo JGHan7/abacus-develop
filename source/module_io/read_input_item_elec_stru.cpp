@@ -197,6 +197,13 @@ void ReadInput::item_elec_stru()
         Input_Item item("nbands");
         item.annotation = "number of bands";
         read_sync_int(input.nbands);
+        // item.reset_value = [](const Input_Item& item, Parameter& para) {    // added by jghan, 2024-12-31
+        //     if( para.input.esolver_type == "rdmft" ) // && opti_orb == iter_diag ?
+        //     {
+        //         // variational space includes "occupied and unoccupied states"
+        //         para.input.nbands = PARAM.globalv.nlocal;
+        //     }
+        // };
         item.check_value = [](const Input_Item& item, const Parameter& para) {
             if (para.input.nbands < 0)
             {
