@@ -297,8 +297,8 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
 
             for(int ir=0; ir<nrow; ++ir)
             {
-                this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local 
-                                                + H_exx[ik][ir + ic*nrow]*wk_fun_local;
+                this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ir + ic*nrow]*wk_fun_local;
+                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ir + ic*nrow]*wg_local;
             }
         }
 
@@ -317,8 +317,11 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
         //     }
         // }
 
-        // std::cout << "\nik: " << ik << std::endl;
-        // rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->lambda[ik].data(), "lambda[ik]", 10);
+        if(PARAM.inp.print_fock)
+        {
+            std::cout << "\nik: " << ik << std::endl;
+            rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->lambda[ik].data(), "lambda[ik]", 10);
+        }
     }
 
     // // test T
@@ -437,8 +440,11 @@ void IterDiag_NOs<TK, TR>::get_Fock()
         // here or other place? 
         std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
 
-        // std::cout << "\nik: " << ik << std::endl;
-        // rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->Fock_like_mat[ik].data(), "Fock[ik]", 10);
+        if(PARAM.inp.print_fock)
+        {
+            std::cout << "\nik: " << ik << std::endl;
+            rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->Fock_like_mat[ik].data(), "Fock[ik]", 10);
+        }
 
     }
 

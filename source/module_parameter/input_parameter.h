@@ -617,6 +617,7 @@ struct Input_para
     double min_step_size = 1e-10;
     std::string ls_condition = "swolfe";
     double level_shifting = 0.0;
+    bool print_fock = false;
 
 };
 #endif

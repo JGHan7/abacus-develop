@@ -645,6 +645,12 @@ void ReadInput::item_others()
         read_sync_double(input.level_shifting);
         this->add_item(item);
     }
+    {
+        Input_Item item("print_fock");
+        item.annotation = "print Fock and lambda matrix in iterative diagonalization";
+        read_sync_bool(input.print_fock);
+        this->add_item(item);
+    }
 
 }
 } // namespace ModuleIO
