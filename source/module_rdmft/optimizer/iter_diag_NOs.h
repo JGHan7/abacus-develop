@@ -108,7 +108,7 @@ class IterDiag_NOs
 
     // rotate the Fock to the natural orbital representation of step 1
     void rotate_Fock();
-    bool if_rotate_Fock = true;
+    bool if_rotate_Fock = false;
 
     // // temporary
     // void check_hermi(std::vector< std::vector<TK> >& mat);
