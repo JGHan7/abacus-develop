@@ -11,6 +11,12 @@
 
 // #include "module_esolver/esolver_ks_lcao.h"
 
+// // test
+// #ifdef __EXX
+// #include "/public1/home/t6s000394/jghan/software/LibRI/unittests/print_stl.h"
+// #include "/public1/home/t6s000394/jghan/software/LibRI/unittests/global/Tensor-test.h"
+// #endif
+
 namespace rdmft
 {
 
@@ -249,12 +255,21 @@ void RDMFT<TK, TR>::inital_wfc_occNum()
     }
 
     rdmft::printMatrix_pointer(occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number_ks_inital", 10);
-    rdmft::printMatrix_pointer(ParaV->ncol_bands, ParaV->nrow, &(*this->psi)(0, 0, 0), "wfc_ks_inital", 10);
+    // rdmft::printMatrix_pointer(ParaV->ncol_bands, ParaV->nrow, &(*this->psi)(0, 0, 0), "wfc_ks_inital", 10);
 
     // TK* pwfc_in = &( this->psi->operator()(0, 0, 0) );
     // TK* pwfc = &wfc(0, 0, 0);
     // for(int i=0; i<wfc.size(); ++i) pwfc[i] = pwfc_in[i];
     this->update_elec(&occ_number_ks, this->psi);
+
+//     // print Hexx
+// #ifdef __EXX
+//     if(GlobalC::exx_info.info_global.cal_exx)
+//     {
+//         std::cout << "\n********\nHexx in rdmft, first get: \n" << this->Vxc_fromRI_c->Hexxs << "\n*********\n" << std::endl;
+//     }
+// #endif
+
 }
 
 // template <typename TK, typename TR>

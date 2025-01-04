@@ -134,32 +134,36 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
                                     this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
         // rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->Fock_like_mat[ik].data(), "Fock mat", 10); // test
+        
+        // rdmft::printMatrix_pointer(1, nbands_total, this->diag_Fii[ik].data(), "diag of Fock-like mat", 5);
+
         // get new_wfc in NAOs
-        if( !this->if_get_wfc1 )
-        {
-            // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
-            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        // if( !this->if_get_wfc1 )
+        // {
+        //     // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
+        //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
-            // // test T
-            // rdmft::pTgemm_scalapack( &para_wfc, &(rdmft_solver.wfc(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)),
-            //                             this->ParaV->desc[2], nbands_total, nbands_total, 'N', 'N', this->para_Fij, &para_wfc );
-        }
-        else
-        {
-            // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
-            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        //     // // test T
+        //     // rdmft::pTgemm_scalapack( &para_wfc, &(rdmft_solver.wfc(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)),
+        //     //                             this->ParaV->desc[2], nbands_total, nbands_total, 'N', 'N', this->para_Fij, &para_wfc );
+        // }
+        // else
+        // {
+        //     // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
+        //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
-            // std::vector<TK> mat_temp = this->rotation_mat[ik];
-            // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
-            //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
-        }
+        //     // std::vector<TK> mat_temp = this->rotation_mat[ik];
+        //     // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
+        //     //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
+        // }
         
         // get rotation_mat, rotation_mat_t-step = G_t * G_t-1 * ... * G_1
         // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->nos_rep_wfc[ik].data(),
         //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
-        std::vector<TK> mat_temp = this->rotation_mat[ik];
-        rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
-                                    this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
+        // std::vector<TK> mat_temp = this->rotation_mat[ik];
+        // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
+        //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
 
         // test T
 
@@ -223,6 +227,8 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bo
         // std::vector<TK> mat_temp = this->rotation_mat[ik];
         // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
         //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
+
+        // rdmft::printMatrix_pointer(1, nbands_total, this->diag_Fii[ik].data(), "diag of symm_lambda", 5);
     }
 
     // if( !this->if_get_wfc1 && this->if_rotate_Fock )
@@ -261,8 +267,8 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bo
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg, 
                                         const ModuleBase::matrix& wk_fun_occNum, 
-                                        std::vector< std::vector<TK> >& H_no_exx, 
-                                        std::vector< std::vector<TK> >& H_exx)
+                                        const std::vector< std::vector<TK> >& H_no_exx, 
+                                        const std::vector< std::vector<TK> >& H_exx)
 {
     // for(int i=0; i<lambda.size(); ++i) { lambda[i] = lambda_in[i]; }
 
@@ -284,9 +290,13 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
     //                                 H_exx[ik].data(), nbands_total, nbands_total, nbands_total, 'T', 'N');
     // }
 
+    // rdmft::printMatrix_pointer(wg.nr, wg.nc, wg.c, "occ_number used in lambda", 10);
+    // rdmft::printMatrix_pointer(wg.nr, wg.nc, wk_fun_occNum.c, "fun_occ_number used in lambda", 10);
+
     // times occNum
     for(int ik=0; ik<Fock_like_mat.size(); ++ik)
     {
+        this->lambda[ik].assign(this->lambda[ik].size(), 0.0);
         // the first right one !!!!!!!!!!!!!!!!!!!!!!!!!!!
         int nrow = para_Fij->get_row_size();
         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
@@ -299,8 +309,31 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
             {
                 this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ir + ic*nrow]*wk_fun_local;
                 // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ir + ic*nrow]*wg_local;
+                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local;
+
+                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local - H_exx[ik][ir + ic*nrow]*wk_fun_local;
+
+                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ic + ir*nrow]*wk_fun_local;
             }
         }
+
+        // if( GlobalC::exx_info.info_global.cal_exx )
+        // {
+        //     // test formula
+        //     int nrow = para_Fij->get_row_size();
+        //     for(int ir=0; ir<nrow; ++ir)
+        //     {
+        //         // use wg or occ_number???
+        //         const double wg_local = wg(ik, para_Fij->local2global_row(ir));
+        //         const double wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_row(ir));
+
+        //         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+        //         {
+        //             this->lambda[ik][ir + ic*nrow] += H_exx[ik][ir + ic*nrow]*wk_fun_local;
+        //         }
+        //     }
+        // }
+
 
         // // test formula
         // int nrow = para_Fij->get_row_size();
@@ -363,6 +396,7 @@ void IterDiag_NOs<TK, TR>::get_Fock()
 
     for(int ik=0; ik<this->nk_total; ++ik)
     {   
+        this->Fock_like_mat[ik].assign(this->Fock_like_mat[ik].size(), 0.0); 
         // c++ perspective: only the upper triangle of F is correct (excluding the diagonal)
         antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->Fock_like_mat[ik].data(), 1.0);
 

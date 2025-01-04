@@ -124,7 +124,8 @@ void pdiag_scalapack<double>(const Parallel_2D* para_mat,
 #endif
 
     if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzheev_()" << "\n***\n" << std::endl; }
-
+    // assert( info == 0 );
+    
 }
 
 
