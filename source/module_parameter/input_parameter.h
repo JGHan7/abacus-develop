@@ -618,6 +618,7 @@ struct Input_para
     std::string ls_condition = "swolfe";
     double level_shifting = 0.0;
     bool print_fock = false;
+    bool print_BFGS_Hk = false;
 
 };
 #endif

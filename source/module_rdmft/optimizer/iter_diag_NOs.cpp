@@ -310,30 +310,8 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
                 this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ir + ic*nrow]*wk_fun_local;
                 // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ir + ic*nrow]*wg_local;
                 // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local;
-
-                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local - H_exx[ik][ir + ic*nrow]*wk_fun_local;
-
-                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ic + ir*nrow]*wk_fun_local;
             }
         }
-
-        // if( GlobalC::exx_info.info_global.cal_exx )
-        // {
-        //     // test formula
-        //     int nrow = para_Fij->get_row_size();
-        //     for(int ir=0; ir<nrow; ++ir)
-        //     {
-        //         // use wg or occ_number???
-        //         const double wg_local = wg(ik, para_Fij->local2global_row(ir));
-        //         const double wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_row(ir));
-
-        //         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
-        //         {
-        //             this->lambda[ik][ir + ic*nrow] += H_exx[ik][ir + ic*nrow]*wk_fun_local;
-        //         }
-        //     }
-        // }
-
 
         // // test formula
         // int nrow = para_Fij->get_row_size();

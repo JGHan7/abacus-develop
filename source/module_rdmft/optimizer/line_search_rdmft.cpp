@@ -30,7 +30,7 @@ template<typename TK, typename TR>
 void LineSearch<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
 {
     this->rdmft_solver = rdmft_in;
-    this->ebi.init(rdmft_solver->nk_total, rdmft_solver->get_kv().get_nkstot_full());
+    this->ebi.init(rdmft_solver->nk_total, rdmft_solver->get_kv().get_nkstot_full(), rdmft_solver->get_kv().wk);
     this->bfgs_opti_x.init(rdmft_solver->nk_total, PARAM.inp.nbands);
 
     this->var_x.resize(rdmft_solver->nk_total * PARAM.inp.nbands);

@@ -215,7 +215,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
     }
 
+    std::cout << std::scientific << std::setprecision(3) << std::endl;
     rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
+    std::cout << std::defaultfloat;
 
     std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;
     std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;

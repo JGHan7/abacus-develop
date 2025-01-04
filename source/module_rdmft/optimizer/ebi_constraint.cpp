@@ -30,7 +30,7 @@ EBI::~EBI()
 }
 
 
-void EBI::init(const int nk_total, const int nkstot_full)
+void EBI::init(const int nk_total, const int nkstot_full, const std::vector<double> wk_in)
 {
     // this->random_inital = PARAM.inp.;
     
@@ -38,6 +38,7 @@ void EBI::init(const int nk_total, const int nkstot_full)
     this->tot_nelec_thr = 1e-10;
     this->nk_nospin = nk_total/PARAM.inp.nspin;
     this->nbands = PARAM.inp.nbands;
+    this->num_symm_k = wk_in;
     mu.resize(PARAM.inp.nspin);
     sys_nelec_spin.resize(PARAM.inp.nspin);
     x.resize(PARAM.inp.nspin);
@@ -56,6 +57,11 @@ void EBI::init(const int nk_total, const int nkstot_full)
     if( PARAM.inp.nspin == 1 )
     {
         this->sys_nelec_spin[0] = (PARAM.inp.nelec / 2.0) * nkstot_full;
+        // remove the weight of spin
+        for(int ik; ik<this->num_symm_k.size(); ++ik)
+        {
+            this->num_symm_k[ik] /= 2.0;
+        }
         std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
     }
     else if( PARAM.inp.nspin == 2 )
@@ -64,6 +70,12 @@ void EBI::init(const int nk_total, const int nkstot_full)
         this->sys_nelec_spin[1] = ((PARAM.inp.nelec - PARAM.inp.nupdown) / 2.0) * nkstot_full;
         std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
         std::cout << "\n******\n" << "this->sys_nelec_spin[1]: " << this->sys_nelec_spin[1] << "\n******\n" << std::endl;
+    }
+
+    // get the number of symmetric k-points
+    for(int ik; ik<this->num_symm_k.size(); ++ik)
+    {
+        this->num_symm_k[ik] *= nkstot_full;
     }
 
 }
@@ -77,9 +89,9 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
         this->random_inital = true;
         for(int is=0; is<PARAM.inp.nspin; ++is)
         {
-            int M = 0;
             std::vector<double> random_num(nk_nospin*nbands, 0.0);
-            rdmft::random_descend(random_num, &sys_nelec_spin[is], &M);
+            rdmft::random_descend(random_num);
+            int M = rdmft::smallest_loc_big_value(this->nk_nospin, PARAM.inp.nbands, this->sys_nelec_spin[is], random_num, this->num_symm_k);
             rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, random_num.data(), "random_num used in EBI", 10);
 
             // to avoid the low bands with large-k points getting too small values ​
@@ -89,27 +101,46 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
             {
                 for(int ib=0; ib<nbands; ++ib)
                 {
-                    if( ik*nbands+ib < M )
+                    // if( ik*nbands+ib < M )
+                    // {
+                    //     if( random_num[ik*nbands+ib] > (std::erf(2.0) + 1.0)/2.0 ) 
+                    //     {
+                    //         this->x[is][ik*nbands+ib] = 2.0;
+                    //     }
+                    //     else
+                    //     {
+                    //         this->x[is][ik*nbands+ib] = erf_inv_own( random_num[ik*nbands+ib] * 2.0 - 1.0 );
+                    //     }
+                    // }
+                    // else
+                    // {
+                    //     this->x[is][ik*nbands+ib] = -2.0;
+                    // }
+
+                    if( ib*nk_nospin + ik < M )
                     {
-                        if( random_num[ik*nbands+ib] > (std::erf(2.0) + 1.0)/2.0 ) 
+                        if( random_num[ib*nk_nospin + ik] > (std::erf(2.0) + 1.0)/2.0 ) 
                         {
                             this->x[is][ik*nbands+ib] = 2.0;
                         }
                         else
                         {
-                            this->x[is][ik*nbands+ib] = erf_inv_own( random_num[ik*nbands+ib] * 2.0 - 1.0 );
+                            this->x[is][ik*nbands+ib] = erf_inv_own( random_num[ib*nk_nospin + ik] * 2.0 - 1.0 );
                         }
                     }
                     else
                     {
                         this->x[is][ik*nbands+ib] = -2.0;
                     }
+
+
+
                     x_pass[ is*(nk_nospin*nbands) + ik*nbands + ib ] = this->x[is][ik*nbands+ib];
                 }
             }
         }
-        this->solving_mu();
         rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, this->x[0].data(), "random inital var_x", 10);
+        this->solving_mu();
         rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, this->occ_number[0].data(), "random inital occ_number", 10);
     }
     // use the externally passed occ_number_in as the initial value
@@ -450,13 +481,24 @@ ModuleBase::matrix EBI::get_occ_number()
 
 double EBI::cal_occ_num(int is)
 {
-    double occ_num_now = 0.0;
-    for(int i=0; i<this->x[is].size(); ++i)
+    double tot_occ_num = 0.0;
+    // for(int i=0; i<this->x[is].size(); ++i)
+    // {
+    //     this->occ_number[is][i] = ( std::erf(this->x[is][i] + this->mu[is]) + 1.0 )/2.0;
+    //     occ_num_now += this->occ_number[is][i];
+    // }
+
+    for(int ik=0; ik<nk_nospin; ++ik)
     {
-        this->occ_number[is][i] = ( std::erf(this->x[is][i] + this->mu[is]) + 1.0 )/2.0;
-        occ_num_now += this->occ_number[is][i];
+        for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+        {
+            
+            this->occ_number[is][ik*nbands + ib] = ( std::erf(this->x[is][ik*nbands + ib] + this->mu[is]) + 1.0 )/2.0;
+            tot_occ_num += this->occ_number[is][ik*nbands + ib] * this->num_symm_k[ik];
+        }
     }
-    return occ_num_now;
+
+    return tot_occ_num;
 }
 
 
@@ -466,12 +508,24 @@ std::vector<double> EBI::cal_f_der(double mu_in, int is)
 
     // std::vector<double> sum = this->cal_sum(mu_in, is);
     std::vector<double> sum(3, 0.0);
-    for(int i=0; i<this->x[is].size(); ++i)
+    // for(int i=0; i<this->x[is].size(); ++i)
+    // {
+    //     sum[0] += ( std::erf(this->x[is][i] + mu_in) + 1.0 )/2.0;
+    //     sum[1] += erf_der1(this->x[is][i] + mu_in);
+    //     sum[2] += erf_der2(this->x[is][i] + mu_in);
+    // }
+
+    for(int ik=0; ik<nk_nospin; ++ik)
     {
-        sum[0] += ( std::erf(this->x[is][i] + mu_in) + 1.0 )/2.0;
-        sum[1] += erf_der1(this->x[is][i] + mu_in);
-        sum[2] += erf_der2(this->x[is][i] + mu_in);
+        for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+        {
+            sum[0] += ( std::erf(this->x[is][ik*nbands + ib] + mu_in) + 1.0 ) * 0.5 * this->num_symm_k[ik];
+            sum[1] += erf_der1(this->x[is][ik*nbands + ib] + mu_in) * this->num_symm_k[ik];
+            sum[2] += erf_der2(this->x[is][ik*nbands + ib] + mu_in) * this->num_symm_k[ik];
+        }
     }
+
+
 
     std::cout << "\n" << "in cal_f_der(): " << std::endl;
     std::cout << "sum[0]: " << sum[0] << ", sum[1]: " << sum[1] << ", sum[2]: " << sum[2] << "\n" << std::endl;

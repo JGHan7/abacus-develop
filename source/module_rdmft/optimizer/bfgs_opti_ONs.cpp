@@ -71,8 +71,11 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
             this->diff_grad[j] = dE_dx_new[j] - this->dE_dx[j];
         }
 
-        rdmft::printMatrix_pointer(nk_total, nbands, this->diff_x.data(), "in BFGS_ONs, diff_x");
-        rdmft::printMatrix_pointer(nk_total, nbands, this->diff_grad.data(), "in BFGS_ONs, diff_grad");
+        if( PARAM.inp.print_BFGS_Hk )
+        {
+            rdmft::printMatrix_pointer(nk_total, nbands, this->diff_x.data(), "in BFGS_ONs, diff_x");
+            rdmft::printMatrix_pointer(nk_total, nbands, this->diff_grad.data(), "in BFGS_ONs, diff_grad");
+        }
 
         // cal rho = 1/( diffGrad^T * diffX )
         rdmft::dgemm_lapack(this->diff_grad.data(), this->diff_x.data(), &this->rho, 1, 1, nk_total*nbands, 'T', 'N');
@@ -98,7 +101,10 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
 
     }
 
-    rdmft::printMatrix_pointer(nk_total*nbands, nk_total*nbands, this->Hk.data(), "BFGS: Hk");
+    if( PARAM.inp.print_BFGS_Hk )
+    {
+        rdmft::printMatrix_pointer(nk_total*nbands, nk_total*nbands, this->Hk.data(), "BFGS: Hk", 10);
+    }
 
     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
     // property: H = H^T, also depends on the initial guess H0!

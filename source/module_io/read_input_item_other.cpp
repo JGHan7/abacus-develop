@@ -651,6 +651,12 @@ void ReadInput::item_others()
         read_sync_bool(input.print_fock);
         this->add_item(item);
     }
+    {
+        Input_Item item("print_BFGS_Hk");
+        item.annotation = "print BFGS-Hk matrix in occupation numbers optimization";
+        read_sync_bool(input.print_BFGS_Hk);
+        this->add_item(item);
+    }
 
 }
 } // namespace ModuleIO

@@ -21,7 +21,7 @@ class EBI
     EBI();
     ~EBI();
 
-    void init(const int nk_total, const int nkstot_full);
+    void init(const int nk_total, const int nkstot_full, const std::vector<double> wk_in);
 
     bool random_inital = false;
 
@@ -65,6 +65,9 @@ class EBI
     int nk_nospin = 0;
     int nbands = 0;
     std::vector<double> sys_nelec_spin;
+
+    //! the number of symmetric k-points
+    std::vector<double> num_symm_k;
 
     std::vector<double> mu;
 

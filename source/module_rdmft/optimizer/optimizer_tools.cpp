@@ -125,7 +125,7 @@ void pdiag_scalapack<double>(const Parallel_2D* para_mat,
 
     if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzheev_()" << "\n***\n" << std::endl; }
     // assert( info == 0 );
-    
+
 }
 
 
@@ -318,7 +318,34 @@ double erf_der2(double x)
 }
 
 
-void random_descend(std::vector<double>& num, const double* value, int* location)
+// void random_descend(std::vector<double>& num, const double* value, int* location, const std::vector<double>* num_symm_k = nullptr)
+// {
+//     // random seed, requires hardware support
+//     std::random_device rd;
+//     // mersenne Twister engine
+//     std::mt19937 gen(rd());     // std::mt19937 gen(42);
+//     // a uniform distribution in the range (0.0, 1.0)
+//     std::uniform_real_distribution<> dis( std::nextafter(0.0, 1.0), 1.0 );
+
+//     for(int i=0; i<num.size(); ++i) { num[i] = dis(gen); }
+//     // sort descending
+//     std::sort(num.begin(), num.end(), std::greater<>());
+
+//     if( value != nullptr && location != nullptr )
+//     {
+//         double sum_num = 0.0;
+//         for(int j=0; j<num.size(); ++j)
+//         {
+//             sum_num += num[j];
+//             if( sum_num > *value )
+//             {
+//                 *location = j;
+//                 break;
+//             }
+//         }
+//     }
+// }
+void random_descend(std::vector<double>& num)
 {
     // random seed, requires hardware support
     std::random_device rd;
@@ -330,22 +357,33 @@ void random_descend(std::vector<double>& num, const double* value, int* location
     for(int i=0; i<num.size(); ++i) { num[i] = dis(gen); }
     // sort descending
     std::sort(num.begin(), num.end(), std::greater<>());
+}
 
-    if( value != nullptr && location != nullptr )
+
+int smallest_loc_big_value(const int nk_total,
+                            const int nbands,
+                            const double value,
+                            const std::vector<double>& num,
+                            const std::vector<double>& num_symm_k)
+{
+    int location = 0;
+    double sum = 0.0;
+    for(int ib=0; ib<nbands; ++ib)
     {
-        double sum_num = 0.0;
-        for(int j=0; j<num.size(); ++j)
+        for(int ik=0; ik<nk_total; ++ik)
         {
-            sum_num += num[j];
-            if( sum_num > *value )
+            sum += num[ib*nk_total + ik] * num_symm_k[ik];
+            if( sum > value )
             {
-                *location = j;
-                break;
+                location = ib*nk_total + ik;
+                return location;
             }
         }
     }
-}
 
+    std::cout << "\n\n*******\nPossible error in rdmft calculation: EBI\n*******\n" << std::endl;
+    return 0;
+}
 
 
 
