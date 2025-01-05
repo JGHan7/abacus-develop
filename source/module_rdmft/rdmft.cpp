@@ -267,8 +267,8 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
 
         if( iter_diag )
         {
-            Hij_no_exx[ik].assign(Hij_no_exx[ik].size(), 0.0);
-            Hij_exx[ik].assign(Hij_exx[ik].size(), 0.0);
+            std::fill(Hij_no_exx[ik].begin(), Hij_no_exx[ik].end(), 0.0);
+            std::fill(Hij_exx[ik].begin(), Hij_exx[ik].end(), 0.0);
             for(int iloc=0; iloc<Hij_no_exx[ik].size(); ++iloc)
             {
                 Hij_no_exx[ik][iloc] = Eij_TV[iloc] + Eij_hartree[iloc] + Eij_dft_XC[iloc];

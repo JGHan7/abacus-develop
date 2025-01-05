@@ -296,7 +296,7 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
     // times occNum
     for(int ik=0; ik<Fock_like_mat.size(); ++ik)
     {
-        this->lambda[ik].assign(this->lambda[ik].size(), 0.0);
+        std::fill(this->lambda[ik].begin(), this->lambda[ik].end(), 0.0);
         // the first right one !!!!!!!!!!!!!!!!!!!!!!!!!!!
         int nrow = para_Fij->get_row_size();
         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
@@ -374,7 +374,7 @@ void IterDiag_NOs<TK, TR>::get_Fock()
 
     for(int ik=0; ik<this->nk_total; ++ik)
     {   
-        this->Fock_like_mat[ik].assign(this->Fock_like_mat[ik].size(), 0.0); 
+        std::fill(this->Fock_like_mat[ik].begin(), this->Fock_like_mat[ik].end(), 0.0);
         // c++ perspective: only the upper triangle of F is correct (excluding the diagonal)
         antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->Fock_like_mat[ik].data(), 1.0);
 

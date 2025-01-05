@@ -151,9 +151,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
         // if( PARAM.inp.nspin == 1 ) { num_temp *= 0.5; }
 
         // give an initial guess for mu, 0.0 or other value
-        // also we can use the above approach, according to artificial rules, to get x from determined occ_num, then do solving_mu()
-        // mu.resize(PARAM.inp.nspin, 0.0);
-        mu.resize(PARAM.inp.nspin, 0.01);    // test
+        std::fill(mu.begin(), mu.end(), 0.01);
 
         // std::cout << "\n******\n" << "erf_inv_own(1.0 - 1e-12) = " << erf_inv_own(1.0 - 1e-12) << "\n******\n" << std::endl;
         // std::cout << "\n******\n" << "erf_inv_own(0.0 + 1e-6) = " << erf_inv_own(0.0 + 1e-6) << "\n******\n\n" << std::endl;
@@ -196,22 +194,18 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                 for(int ib=0; ib<PARAM.inp.nbands; ++ib)
                 {
                     double num = num_temp( is*nk_nospin + ik, ib );
+
+                    // find the correct and finite x to ensure that erf( x + mu[is] ) = 1.0 or 0.0
                     if( std::abs(num - 1.0) < 1e-16 )
                     {   
-                        // find right x to ensure that erf( x + mu[is] ) = 1.0
-                        // this->x[is][ik*nbands + ib] = 10;
+                        // min_occ_num = 1e-16, this->x[is][ik*nbands + ib] = 5.8;
                         num_temp( is*nk_nospin + ik, ib ) = 1.0 - 1e-16;
                     }
                     else if( std::abs(num - 0.0) < 1e-16 )
                     {
-                        // find right x to ensure that erf( x + mu[is] ) = 0.0
-                        // this->x[is][ik*nbands + ib] = -10;
+                        // min_occ_num = 1e-16, this->x[is][ik*nbands + ib] = -5.8;
                         num_temp( is*nk_nospin + ik, ib ) = 0.0 + 1e-16;
                     }
-                    // else
-                    // {
-                    //     this->x[is][ik*nbands + ib] = erf_inv_own( 2 * num_temp( is*nk_nospin + ik, ib ) - 1 ) - this->mu[is];
-                    // }
 
                     this->x[is][ik*nbands + ib] = erf_inv_own( 2 * num_temp( is*nk_nospin + ik, ib ) - 1 ) - this->mu[is];
                     this->occ_number[is][ik*nbands + ib] = num_temp( is*nk_nospin + ik, ib );
@@ -219,6 +213,16 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                 }
             }
         }
+
+        double tot_occ_num_mow = this->cal_occ_num(0);
+        std::cout << std::fixed << std::setprecision(16) << "mu by ks_occ_num: " << this->mu[0] <<", tot_occ_num_mow: " << tot_occ_num_mow <<  std::endl;
+
+        // the strictness of the above method for the conservation of occupation number depends on the precision of own_erf_inv() (mu can be given arbitrarily)
+        // after obtaining the appropriate x, solving_mu() can be used to make a small move of mu
+        // and the strictness of the conservation of occupation number is consistent with that in solving_mu()
+        this->solving_mu();
+        tot_occ_num_mow = this->cal_occ_num(0);
+        std::cout << "mu by ks_occ_num: " << this->mu[0] << ", tot_occ_num_mow: " << tot_occ_num_mow <<  std::endl << std::defaultfloat;
 
         // for(int ik=0; ik<num_temp.nr; ++ik)
         // {
@@ -427,7 +431,7 @@ void EBI::solving_mu()
 
     //test
     ModuleBase::matrix print_occ( this->get_occ_number() );
-    rdmft::printMatrix_pointer(print_occ.nr, print_occ.nc, print_occ.c, "occ_number_after_opti", 10);
+    rdmft::printMatrix_pointer(print_occ.nr, print_occ.nc, print_occ.c, "occ_number_after_ebi", 10);
 
     double trial_occ_num = 0.0;
     for(int i=0; i<print_occ.nr*print_occ.nc; ++i)

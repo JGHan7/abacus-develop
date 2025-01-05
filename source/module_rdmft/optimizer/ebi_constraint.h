@@ -62,6 +62,12 @@ class EBI
 
   private:
 
+    // //! the minimum value allowed for occ_num when obtaining the initial value (or during the entire optimization process)
+    // const int min_occ_num = 1e-12; // 1e-16 now
+
+    // //! find the occupancy number less than min_occ_num and modify it to min_occ_num
+    // void check_occ_num();
+
     int nk_nospin = 0;
     int nbands = 0;
     std::vector<double> sys_nelec_spin;
@@ -94,8 +100,6 @@ class EBI
     void cal_dmu_dx(std::vector<double>& dmu_dx, int is = 0);
 
     void cal_docc_num_dx(const std::vector<double>& dmu_dx, std::vector<double>& docc_num_dx, int is = 0);
-
-
 
 
 
