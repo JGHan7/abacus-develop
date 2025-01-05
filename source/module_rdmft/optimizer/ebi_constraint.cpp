@@ -133,8 +133,6 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                         this->x[is][ik*nbands+ib] = -2.0;
                     }
 
-
-
                     x_pass[ is*(nk_nospin*nbands) + ik*nbands + ib ] = this->x[is][ik*nbands+ib];
                 }
             }
@@ -214,15 +212,10 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
             }
         }
 
-        double tot_occ_num_mow = this->cal_occ_num(0);
-        std::cout << std::fixed << std::setprecision(16) << "mu by ks_occ_num: " << this->mu[0] <<", tot_occ_num_mow: " << tot_occ_num_mow <<  std::endl;
-
         // the strictness of the above method for the conservation of occupation number depends on the precision of own_erf_inv() (mu can be given arbitrarily)
         // after obtaining the appropriate x, solving_mu() can be used to make a small move of mu
         // and the strictness of the conservation of occupation number is consistent with that in solving_mu()
         this->solving_mu();
-        tot_occ_num_mow = this->cal_occ_num(0);
-        std::cout << "mu by ks_occ_num: " << this->mu[0] << ", tot_occ_num_mow: " << tot_occ_num_mow <<  std::endl << std::defaultfloat;
 
         // for(int ik=0; ik<num_temp.nr; ++ik)
         // {

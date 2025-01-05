@@ -1691,6 +1691,13 @@ void cal_nbands(const int& nelec, const int& nlocal, const std::vector<double>& 
         }
     }
 
+    // added by jghan, 2025-01-05
+    if (PARAM.inp.basis_type == "lcao" && PARAM.inp.esolver_type == "rdmft") // && opti_orb == iter_diag ?
+    {
+        // variational space includes "occupied and unoccupied states" in rdmft
+        nbands = nlocal;
+    }
+
     // mohan update 2021-02-19
     // mohan add 2011-01-5
     if (PARAM.inp.basis_type == "lcao" || PARAM.inp.basis_type == "lcao_in_pw")
