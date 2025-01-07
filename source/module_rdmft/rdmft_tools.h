@@ -62,6 +62,23 @@ void printMatrix_pointer(int M, int N, const TK* matrixA, std::string nameA, int
     std::cout << std::endl;
 }
 
+//for print matrix
+template <typename TK>
+void printMatrix_pointer(std::ofstream& ofs, int M, int N, const TK* matrixA, std::string nameA, int num_each_line = 5)
+{
+    ofs << "\n" << nameA << ": \n";
+    for(int i=0; i<M; ++i)
+    {
+        for(int j=0; j<N; ++j)
+        {
+            if( j%num_each_line == 0 ) { ofs << "\n"; }
+            ofs << *(matrixA+i*N+j) << " ";
+        }
+        ofs << "\n";
+    }
+    ofs << std::endl;
+}
+
 
 //for print matrix
 template <typename TK>

@@ -43,7 +43,7 @@ bool a_equal_b(const std::vector<TK>& a, const std::vector<TK>& b)
         diff_sum += std::abs( a[i] - b[i] );
     }
 
-    if( diff_sum < 1e-16 )
+    if( diff_sum < 1e-14 ) // 1e-16 would be error in different processors?
     {
         return true;
     }

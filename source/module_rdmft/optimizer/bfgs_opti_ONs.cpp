@@ -8,6 +8,7 @@
 #include "module_rdmft/optimizer/optimizer_tools.h"
 
 #include "module_rdmft/rdmft_tools.h" // temp
+#include <iostream> // temp
 
 namespace rdmft
 {
@@ -41,7 +42,7 @@ void BFGS_ONs<TX>::init(int nk_total_in, int nbands_in)
     // dE_dx1.resize(nk_total*nbands);
     dE_dx.resize(nk_total*nbands);
     diff_grad.resize(nk_total*nbands);
-    Hk.resize( nk_total*nbands * nk_total*nbands );
+    Hk.resize( nk_total*nbands * nk_total*nbands, 0.0 );
     search_direction.resize(nk_total*nbands);
 
     rho_diffX_diffGrad.resize( nk_total*nbands * nk_total*nbands );
@@ -52,6 +53,22 @@ void BFGS_ONs<TX>::init(int nk_total_in, int nbands_in)
 template<typename TX>
 void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool start_guess)
 {
+
+#ifdef __MPI
+    // just for debug, print in different processes
+    int rank_now;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank_now);
+    std::stringstream temp_str;
+    temp_str << "process_" << rank_now << ".txt";
+    std::string process_file = temp_str.str();
+#endif
+
+    std::ofstream out_file(process_file, std::ios::app);
+    if (!out_file.is_open())
+    {
+        std::cerr << "Error opening file: " << process_file << std::endl;
+    }
+
     // set some vars zero?
 
     // get Hk
@@ -64,7 +81,17 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
     {
         for(int j=0; j<x_new.size(); ++j)
         {
-            if( a_equal_b(x_new, this->var_x) ) { return; }
+            // if( a_equal_b(x_new, this->var_x) ) { return; }
+
+            double temp_num = a_equal_b(x_new, this->var_x);
+            Parallel_Reduce::reduce_all(temp_num);
+            if( std::abs( temp_num ) > 1e-12 )
+            {
+                std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
+                return;
+            }
+
+
             // diff_x, sk = x_k+1 - x_k
             this->diff_x[j] = x_new[j] - this->var_x[j];
             // diff_grad, yk = (dE_dx)_k+1 - (dE_dx)_k
@@ -105,6 +132,10 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
     {
         rdmft::printMatrix_pointer(nk_total*nbands, nk_total*nbands, this->Hk.data(), "BFGS: Hk", 10);
     }
+
+    // rdmft::printMatrix_pointer(out_file, nk_total*nbands, nk_total*nbands, this->Hk.data(), "BFGS: Hk", 10);
+
+    out_file.close();
 
     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
     // property: H = H^T, also depends on the initial guess H0!

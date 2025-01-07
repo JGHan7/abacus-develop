@@ -206,6 +206,15 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
         HR_dft_XC->fix_gamma();
     }
 
+#ifdef __MPI
+    // just for debug, print in different processes
+    int rank_now;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank_now);
+    std::stringstream temp_str;
+    temp_str << "process_" << rank_now << ".txt";
+    this->process_file = temp_str.str();
+#endif
+
 }
 
 
@@ -358,6 +367,7 @@ void RDMFT<TK, TR>::cal_E_grad_occ_num()
 {
     // get the gradient of energy with respect to the natural occupation numbers, i.e., Wk_occNum_wfcHamiltWfc
     add_occNum(this->kv, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
+    Parallel_Reduce::reduce_all(occNum_wfcHamiltWfc.c, occNum_wfcHamiltWfc.nr * occNum_wfcHamiltWfc.nc);
     rdmft::printMatrix_pointer(occNum_wfcHamiltWfc.nr, occNum_wfcHamiltWfc.nc, &occNum_wfcHamiltWfc(0, 0), "E_gradient_occNum");
 }
 
@@ -433,26 +443,26 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
         // }
     }
 
-    // print results
-    std::cout << "\n\nfrom class RDMFT: \nXC_fun: " << XC_func_rdmft << std::endl;
-#ifdef __EXX
-    if( GlobalC::exx_info.info_global.cal_exx ) std::cout << "alpha_power: " << alpha_power << std::endl;
-#endif
-    std::cout << std::fixed << std::setprecision(10) 
-                << "******\nE(TV + Hartree + XC) by RDMFT:   " << E_RDMFT[3] 
-                << "\n\nE_TV_RDMFT:      " << E_RDMFT[0] 
-                << "\nE_hartree_RDMFT: " << E_RDMFT[1] 
-                << "\nExc_" << XC_func_rdmft << "_RDMFT:    " << E_RDMFT[2] 
-                << "\nE_Ewald:         " << E_Ewald
-                << "\nE_entropy(-TS):  " << E_entropy 
-                << "\nE_descf:         " << E_descf
-                << "\n\nEtotal_RDMFT:    " << Etotal 
-                << "\n\nExc_ksdft:       " << E_xc_KS 
-                << "\nE_exx_ksdft:     " << E_exx_KS 
-                <<"\n******\n\n" << std::endl;
+//     // print results
+//     std::cout << "\n\nfrom class RDMFT: \nXC_fun: " << XC_func_rdmft << std::endl;
+// #ifdef __EXX
+//     if( GlobalC::exx_info.info_global.cal_exx ) std::cout << "alpha_power: " << alpha_power << std::endl;
+// #endif
+//     std::cout << std::fixed << std::setprecision(10) 
+//                 << "******\nE(TV + Hartree + XC) by RDMFT:   " << E_RDMFT[3] 
+//                 << "\n\nE_TV_RDMFT:      " << E_RDMFT[0] 
+//                 << "\nE_hartree_RDMFT: " << E_RDMFT[1] 
+//                 << "\nExc_" << XC_func_rdmft << "_RDMFT:    " << E_RDMFT[2] 
+//                 << "\nE_Ewald:         " << E_Ewald
+//                 << "\nE_entropy(-TS):  " << E_entropy 
+//                 << "\nE_descf:         " << E_descf
+//                 << "\n\nEtotal_RDMFT:    " << Etotal 
+//                 << "\n\nExc_ksdft:       " << E_xc_KS 
+//                 << "\nE_exx_ksdft:     " << E_exx_KS 
+//                 <<"\n******\n\n" << std::endl;
 
-    std::cout << "\netxc:  " << etxc << "\nvtxc:  " << vtxc << "\n";
-    std::cout << "\nE_deband_KS:  " << E_deband_KS << "\nE_deband_harris_KS:  " << E_deband_harris_KS << "\n\n" << std::endl;
+//     std::cout << "\netxc:  " << etxc << "\nvtxc:  " << vtxc << "\n";
+//     std::cout << "\nE_deband_KS:  " << E_deband_KS << "\nE_deband_harris_KS:  " << E_deband_harris_KS << "\n\n" << std::endl;
 
     // if( PARAM.inp.esolver_type == "rdmft" )
     if( PARAM.inp.rdmft == true )

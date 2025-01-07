@@ -12,6 +12,7 @@
 #include "module_rdmft/optimizer/ebi_constraint.h"
 #include "module_rdmft/optimizer/optimizer_tools.h"
 #include "module_parameter/parameter.h"
+#include "module_base/parallel_common.h"
 
 #include "module_rdmft/rdmft_tools.h" // temp
 
@@ -86,7 +87,6 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
     // use random numbers to generate initial values
     if(occ_number_in == nullptr)
     {
-        this->random_inital = true;
         for(int is=0; is<PARAM.inp.nspin; ++is)
         {
             std::vector<double> random_num(nk_nospin*nbands, 0.0);
@@ -136,7 +136,15 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                     x_pass[ is*(nk_nospin*nbands) + ik*nbands + ib ] = this->x[is][ik*nbands+ib];
                 }
             }
+
+            // !!!!!!!!!
+            Parallel_Common::bcast_double(this->x[is].data(), nk_nospin*nbands);
+
         }
+        // !!!!!!!!!!!!!
+        Parallel_Common::bcast_double(x_pass.data(), nk_nospin*nbands*PARAM.inp.nspin);
+
+        
         rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, this->x[0].data(), "random inital var_x", 10);
         this->solving_mu();
         rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, this->occ_number[0].data(), "random inital occ_number", 10);
@@ -210,7 +218,14 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                     x_pass[ is*(nk_nospin*nbands) + ik*nbands + ib ] = this->x[is][ik*nbands+ib];    
                 }
             }
+
+            // !!!!!!!!!
+            Parallel_Common::bcast_double(this->x[is].data(), nk_nospin*nbands);
+
         }
+
+        // !!!!!!!!!!!!!
+        Parallel_Common::bcast_double(x_pass.data(), nk_nospin*nbands*PARAM.inp.nspin);
 
         // the strictness of the above method for the conservation of occupation number depends on the precision of own_erf_inv() (mu can be given arbitrarily)
         // after obtaining the appropriate x, solving_mu() can be used to make a small move of mu
@@ -418,20 +433,13 @@ void EBI::solving_mu()
         }
 
         std::cout << "******\n" << "solving_mu, mu[" << is << "]: " << this->mu[is] << "\n******" << std::endl;
+        double trial_occ_num = this->cal_occ_num(is);
+        std::cout << "spin: " << is <<"\n total_trial_occ_num: " <<  trial_occ_num  << "\n" << std::endl;
     }
-
-    // this->cal_occ_num();
 
     //test
     ModuleBase::matrix print_occ( this->get_occ_number() );
     rdmft::printMatrix_pointer(print_occ.nr, print_occ.nc, print_occ.c, "occ_number_after_ebi", 10);
-
-    double trial_occ_num = 0.0;
-    for(int i=0; i<print_occ.nr*print_occ.nc; ++i)
-    {
-        trial_occ_num += print_occ.c[i];
-    }
-    std::cout << "\n total_trial_occ_num: " <<  trial_occ_num  << "\n" << std::endl;
 }
 
 ModuleBase::matrix EBI::get_occ_number()

@@ -64,9 +64,9 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     // temp
     this->if_rotate_Fock = false;
 
-    this->rdmft_solver_ = rdmft_solver_in;
+    this->rdmft_solver = rdmft_solver_in;
 
-    int nkstot_full = this->rdmft_solver_->get_kv().get_nkstot_full();
+    int nkstot_full = this->rdmft_solver->get_kv().get_nkstot_full();
 
     sys_nelec_spin.resize(PARAM.inp.nspin);
     if( PARAM.inp.nspin == 1 )
@@ -96,12 +96,12 @@ void IterDiag_NOs<TK, TR>::before_opti(int* scale_factor)
 
 
 template<typename TK, typename TR>
-double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
+double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
 {
     this->etotal_old = this->etotal;
 
-    // this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
-    this->get_lambda(rdmft_solver.occ_number, rdmft_solver.fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
+    // this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
 
     this->get_Fock();
 
@@ -115,7 +115,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
     //     rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
     //                                 this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
     //     // get new_wfc in NAOs
-    //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+    //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
     // }
 
@@ -138,14 +138,14 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
         // rdmft::printMatrix_pointer(1, nbands_total, this->diag_Fii[ik].data(), "diag of Fock-like mat", 5);
 
         // get new_wfc in NAOs
-        rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         // if( !this->if_get_wfc1 )
         // {
         //     // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
-        //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
         //     // // test T
-        //     // rdmft::pTgemm_scalapack( &para_wfc, &(rdmft_solver.wfc(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)),
+        //     // rdmft::pTgemm_scalapack( &para_wfc, &(rdmft_solver_in.wfc(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)),
         //     //                             this->ParaV->desc[2], nbands_total, nbands_total, 'N', 'N', this->para_Fij, &para_wfc );
         // }
         // else
@@ -169,8 +169,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 
     }
 
-    rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
-    this->etotal = rdmft_solver.cal_Energy();
+    rdmft_solver_in.update_elec( nullptr, &(this->new_wfc) );
+    this->etotal = rdmft_solver_in.cal_Energy();
 
     double diff_e = this->etotal - this->etotal_old;
     if(diff_e < 0) { ++this->energy_drop; }
@@ -186,7 +186,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
         TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
         for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
 
-        // TK* p_new_wfc = &( rdmft_solver.wfc(0, 0, 0) );
+        // TK* p_new_wfc = &( rdmft_solver_in.wfc(0, 0, 0) );
         // TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
         // for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
 
@@ -201,10 +201,10 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver)
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bool conver_initial_value)
+void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver_in, const bool conver_initial_value)
 {
-    // this->get_lambda(rdmft_solver.wg, rdmft_solver.wk_fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
-    this->get_lambda(rdmft_solver.occ_number, rdmft_solver.fun_occNum, rdmft_solver.Hij_no_exx, rdmft_solver.Hij_exx);
+    // this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
 
     // get start_Fock = symm_lambda
     std::vector< std::vector<TK> > symm_lambda = lambda;
@@ -218,7 +218,7 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bo
                                     this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
 
         // // get start_wfc in NAOs
-        // rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        // rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
         // temp
         // get rotation_mat, rotation_mat_t-step = G_t * G_t-1 * ... * G_1
@@ -241,7 +241,7 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bo
     //     TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
     //     for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
 
-    //     // TK* p_new_wfc = &( rdmft_solver.wfc(0, 0, 0) );
+    //     // TK* p_new_wfc = &( rdmft_solver_in.wfc(0, 0, 0) );
     //     // TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
     //     // for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
 
@@ -254,9 +254,9 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver, const bo
         for(int ik=0; ik<nk_total; ++ik)
         {
             // get start_wfc in NAOs
-            rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+            rdmft::GkPsi( this->para_Fij, this->ParaV, nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
-        rdmft_solver.update_elec( nullptr, &(this->new_wfc) );
+        rdmft_solver_in.update_elec( nullptr, &(this->new_wfc) );
     }
 
     this->new_wfc.zero_out();

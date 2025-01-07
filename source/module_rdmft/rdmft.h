@@ -134,6 +134,9 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     std::vector<double> get_dE_docc_num();
 
+    // just for debug, print in different processes
+    std::string process_file;
+
 
   protected:
 
