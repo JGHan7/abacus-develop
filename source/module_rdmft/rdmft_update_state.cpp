@@ -182,25 +182,25 @@ void RDMFT<TK, TR>::update_charge()
         // for(int i=0; i<wfc.size(); ++i) { p_test[i] = pwfc[i]; }
         // elecstate::cal_dm_psi(ParaV, test_wg, test_wfc, DM);
 
-        // elecstate::cal_dm_psi(ParaV, wg, this->wfc, DM, &out_file);
+        elecstate::cal_dm_psi(ParaV, wg, this->wfc, DM);
 
-        psi::Psi<TK> wg_wfc(wfc);
-        conj_psi(wg_wfc);
-        occNum_MulPsi(ParaV, this->wg, wg_wfc, 0);
+//         psi::Psi<TK> wg_wfc(wfc);
+//         conj_psi(wg_wfc);
+//         occNum_MulPsi(ParaV, this->wg, wg_wfc, 0);
 
-        // get the special DM_XC used in constructing V_exx_XC
-        for(int ik=0; ik<wfc.get_nk(); ++ik)
-        {
-            // after this, be careful with wfc.get_pointer(), we can use &wfc(ik,inbn,inbs) instead
-            wfc.fix_k(ik);
-            wg_wfc.fix_k(ik);
-            TK* DM_Kpointer = DM.get_DMK_pointer(ik);
-#ifdef __MPI
-            elecstate::psiMulPsiMpi(wg_wfc, this->wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
-#else
-            elecstate::psiMulPsi(wg_wfc, this->wfc, DM_Kpointer);
-#endif            
-        }
+//         // get the special DM_XC used in constructing V_exx_XC
+//         for(int ik=0; ik<wfc.get_nk(); ++ik)
+//         {
+//             // after this, be careful with wfc.get_pointer(), we can use &wfc(ik,inbn,inbs) instead
+//             wfc.fix_k(ik);
+//             wg_wfc.fix_k(ik);
+//             TK* DM_Kpointer = DM.get_DMK_pointer(ik);
+// #ifdef __MPI
+//             elecstate::psiMulPsiMpi(wg_wfc, this->wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
+// #else
+//             elecstate::psiMulPsi(wg_wfc, this->wfc, DM_Kpointer);
+// #endif            
+//         }
 
 
         // out_file << "\n" << "rdmft_solver: cal_dm_psi()" << "\n" << std::endl;
