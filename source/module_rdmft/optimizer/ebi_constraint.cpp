@@ -74,9 +74,9 @@ void EBI::init(const int nk_total, const int nkstot_full, const std::vector<doub
     }
 
     // get the number of symmetric k-points
-    for(int ik; ik<this->num_symm_k.size(); ++ik)
+    for(int iks; iks<this->num_symm_k.size(); ++iks)
     {
-        this->num_symm_k[ik] *= nkstot_full;
+        this->num_symm_k[iks] *= nkstot_full;
     }
 
 }
@@ -91,8 +91,12 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
         {
             std::vector<double> random_num(nk_nospin*nbands, 0.0);
             rdmft::random_descend(random_num);
-            int M = rdmft::smallest_loc_big_value(this->nk_nospin, PARAM.inp.nbands, this->sys_nelec_spin[is], random_num, this->num_symm_k);
-            rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, random_num.data(), "random_num used in EBI", 10);
+            int M = rdmft::smallest_loc_big_value(this->nk_nospin,
+                                                    PARAM.inp.nbands,
+                                                    this->sys_nelec_spin[is],
+                                                    random_num,
+                                                    this->num_symm_k.data()+is*this->nk_nospin);
+            // rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, random_num.data(), "random_num used in EBI", 10);
 
             // to avoid the low bands with large-k points getting too small values ​
             // ​and the high bands with small-k points getting too large values
@@ -253,14 +257,14 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
         rdmft::printMatrix_pointer(num_temp.nr, num_temp.nc, occ_number_in->c, "occ_number_from_ks", 10);
         rdmft::printMatrix_pointer(num_temp.nr, num_temp.nc, this->x[0].data(), "var_x from ks_occ_num", 10);
     }
-    std::cout << "\n******\n" << "start_guess: ebi, 1.0" << "\n******\n" << std::endl;
+    // std::cout << "\n******\n" << "start_guess: ebi, 1.0" << "\n******\n" << std::endl;
 }
 
 
 
 void EBI::update_x_occ_num(const std::vector<double>& x_in)
 {
-    std::cout << "\n" << "Enter ebi.update_x_occ_num()" << "\n" << std::endl;
+    // std::cout << "\n" << "Enter ebi.update_x_occ_num()" << "\n" << std::endl;
     // update member variable x from external x_in
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
@@ -273,12 +277,12 @@ void EBI::update_x_occ_num(const std::vector<double>& x_in)
         }
     }
 
-    std::cout << "\n" << "before solving_mu()" << "\n" << std::endl;
+    // std::cout << "\n" << "before solving_mu()" << "\n" << std::endl;
     // get the new mu and occ_number
     this->solving_mu();
     // return this->get_occ_number();  
 
-    rdmft::printMatrix_pointer(nk_nospin*PARAM.inp.nspin, nbands, x_in.data(), "trial_x", 10);
+    // rdmft::printMatrix_pointer(nk_nospin*PARAM.inp.nspin, nbands, x_in.data(), "trial_x", 10);
 }
 
 
@@ -311,66 +315,48 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
 
 void EBI::solving_mu()
 {
-    std::cout << "\n" << "Enter solving_mu()" << "\n" << std::endl;
+    // std::cout << "\n" << "Enter solving_mu()" << "\n" << std::endl;
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
-        /********* is there an error in the paper formula? mu should be updated at each step *********/
-        // double mu_temp = 0.0;
-        // std::vector<double> f_der(2, 1.0);
-
-        // while( f_der[0] > this->solve_mu_thr )
-        // {
-        //     f_der = this->cal_f_der(this->mu[is], is);
-        //     double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
-        //     double sign = 0.0;
-        //     if( f_der[0]>0 ) { sign = 1.0; }
-        //     else if ( f_der[0]<0 ) { sign = -1.0; }
-
-        //     if( f1_divided_f2 > 1.0 )
-        //     {
-        //         mu_temp -= sign;
-        //     }
-        //     else
-        //     {
-        //         std::vector<double> f_der_temp = this->cal_f_der(mu_temp, is);
-        //         mu_temp -= sign * std::abs( f_der_temp[0]/f_der_temp[1] );
-        //     }
-        // }
-        // this->mu[is] = mu_temp;
-        /********* is there an error in the paper formula? *********/
-
         // this->mu[is] = 0.0; // Is it possible to consider using the last result of mu instead of 0.0 as the initial value?
         std::vector<double> f_der(2, 1.0);
         double occ_num_error = 1.0;
 
+        double high = 0.0;
+        double low = 0.0;
+
         // while( f_der[0] > this->solve_mu_thr )
-        int solve_mu_times = 0; 
-        while( std::abs(f_der[0]) > this->solve_mu_thr || std::abs(occ_num_error) > this->tot_nelec_thr )
+        // while( std::abs(f_der[0]) > this->solve_mu_thr || std::abs(occ_num_error) > this->tot_nelec_thr )
+        this->solve_mu_times = 0;
+        while( std::abs(occ_num_error) > this->tot_nelec_thr )
         {
-            ++solve_mu_times;
+            ++this->solve_mu_times;
             if( solve_mu_times > 100 )
             {
-                std::cout << "\n" << "solve_mu_times is too big: " << solve_mu_times << "\n" << std::endl;
-                std::cout << "\n" << "electron number is not conserved !!!!!!!!!!! " << "\n" << std::endl;
-                assert(solve_mu_times <= 100);
+                std::cout << "\nThe number of times to solve mu using the Newton's method is too many: " << solve_mu_times << "\n" << std::endl;
                 break;
             }
-            
-            std::cout << "\n" << "in solving_mu(), while()" << ", solve_mu_times: " << solve_mu_times << "\n" << std::endl;
+
             f_der = this->cal_f_der(this->mu[is], is);
             double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
 
-            std::cout << "\nis: " << is << ", mu: " << this->mu[is] << ", f_der1: " << f_der[0] << ", f_der2: " << f_der[1] 
-                        << ", f1_divided_f2: " << f1_divided_f2 << "\n" << std::endl;
+            if( this->solve_mu_times > 50 )
+            {
+                std::cout << "\nsolve_mu_times: " << this->solve_mu_times << "\nis: " << is << ", mu: " << this->mu[is] << ", f_der1: " << f_der[0] << ", f_der2: " << f_der[1] 
+                            << ", f1_divided_f2: " << f1_divided_f2 << ", occ_num_error: " 
+                            << std::scientific << std::setprecision(10) << occ_num_error << "\n******" << std::endl << std::defaultfloat;
+            }
 
             double sign = 0.0;
             if( f_der[0]>0 )
             {
                 sign = 1.0;
+                high = this->mu[is];
             }
             else if( f_der[0]<0 )
             {
                 sign = -1.0;
+                low = this->mu[is];
             }
 
             if( f1_divided_f2 > 1.0 )
@@ -382,34 +368,16 @@ void EBI::solving_mu()
                 this->mu[is] -= sign * f1_divided_f2;
             }
 
-            if( std::abs(f_der[0]) < this->solve_mu_thr )
+            if( std::abs(f_der[0]) < 1e-8 )
             {
-                std::cout << "\n" << "before cal_occ_num()" << "\n" << std::endl;
+                // std::cout << "\n" << "before cal_occ_num()" << "\n" << std::endl;
                 occ_num_error = this->cal_occ_num(is) - this->sys_nelec_spin[is];
 
                 // determine whether it converges to a local minimum
                 if( std::abs(occ_num_error) > this->tot_nelec_thr )
                 {
-                    // solve_mu_times = 0;
-                    // double sum_x = std::accumulate(this->x[is].begin(), this->x[is].end(), 0.0);
-                    // this->mu[is] = ( rdmft::erf_inv_own( 2*this->sys_nelec_spin[is] - nk_nospin*nbands ) - sum_x )/nk_nospin*nbands;
-                    std::cout << "******\n" << "local minimum mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << std::endl;
+                    std::cout << "******\n" << "local minimum mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << "\n******" << std::endl;
 
-                    rdmft::printMatrix_pointer(nk_nospin, nbands, this->x[is].data(), "now var_x", 10);
-
-                    rdmft::printMatrix_pointer(nk_nospin, nbands, this->occ_number[is].data(), "now occ_number", 10);
-
-                    std::cout << "******\n" << std::endl;
-                    
-                    // a more appropriate step size should be used for mu
-                    // if(occ_num_error > 0)
-                    // {
-                    //     this->mu[is] -= 1.0;
-                    // }
-                    // else
-                    // {
-                    //     this->mu[is] += 1.0;
-                    // }
                     if( std::abs(occ_num_error) >= 0.5 && f1_divided_f2 < 0.5 )
                     {
                         double step = (occ_num_error > 0) ? 1.0 : -1.0;
@@ -426,20 +394,90 @@ void EBI::solving_mu()
 
                 }
             }
-            // if( std::abs(f1_divided_f2) - 1 > 0 )
-            // {
-            //     std::cout << "\n" << "solving_mu, f1_divided_f2: " << f1_divided_f2 << "\n" << std::endl;
-            // }
         }
 
-        std::cout << "******\n" << "solving_mu, mu[" << is << "]: " << this->mu[is] << "\n******" << std::endl;
+        // for monotone problems, the bisection method can definitely be solved numerically
+        // The error function is extremely sensitive to the parameter mu
+        // so it is necessary to provide an initial value through the Newton's method
+        // otherwise the binary search will be extremely slow in extreme cases
+        if( std::abs(occ_num_error) > this->tot_nelec_thr )
+        {
+            this->mu[is] = high;
+            double error_hi = this->cal_occ_num(is) - this->sys_nelec_spin[is];
+            this->mu[is] = low;
+            double error_lo = this->cal_occ_num(is) - this->sys_nelec_spin[is];
+
+            // if the Newton's method does not provide a good initial value
+            // find high_mu and low_mu
+            if( std::abs(occ_num_error) > 1.0 || error_hi*error_lo > 0)
+            {
+                std::cout << "\n" << "the Newton's method does not provide a good initial value" << "\n" << std::endl;
+                double sign = occ_num_error > 0 ? 1.0: -1.0;
+                double mu_old = 0.0;
+                while( 1 )
+                {
+                    this->mu[is] -= sign;
+                    occ_num_error = this->cal_occ_num(is) - this->sys_nelec_spin[is];
+
+                    if( occ_num_error * sign < 0 )
+                    {
+                        if(sign > 0)
+                        {
+                            high = mu_old;
+                            low = this->mu[is];
+                        }
+                        else
+                        {
+                            low = mu_old;
+                            high = this->mu[is];
+                        }
+                        break;
+                    }
+
+                    mu_old = this->mu[is];
+                }
+            }
+
+            // binary search
+            while( std::abs(occ_num_error) > this->tot_nelec_thr )
+            {
+                // temp
+                ++this->solve_mu_times;
+                if( this->solve_mu_times > 500 )
+                {
+                    std::cout << "\n" << "solve_mu_times is too big: " << this->solve_mu_times << "\n" << std::endl;
+                    std::cout << "\n" << "electron number is not conserved !!!!!!!!!!! " << "\n" << std::endl;
+                    assert(this->solve_mu_times <= 500);
+                    break;
+                }
+
+                this->mu[is] = (high +low) / 2.0;
+                occ_num_error = this->cal_occ_num(is) - this->sys_nelec_spin[is];
+
+                std::cout << "\n******\n" << "in binary search: \n" << "is: " << is << ", times: " << this->solve_mu_times << ", mu: " << this->mu[is] 
+                            << ", occ_num_error: " << occ_num_error << "\n******" << std::endl;
+                
+                if( occ_num_error >= 0 )
+                {
+                    high = this->mu[is];
+                }
+                else
+                {
+                    low = this->mu[is];
+                }
+            }
+
+
+        }
+
+        std::cout << "******\n" << "solving_mu, mu[" << is << "]: " << this->mu[is] << "\n" << std::endl;
         double trial_occ_num = this->cal_occ_num(is);
-        std::cout << "spin: " << is <<"\n total_trial_occ_num: " <<  trial_occ_num  << "\n" << std::endl;
+        std::cout << "spin: " << is <<", total_trial_occ_num: " <<  trial_occ_num  << "\n******" << std::endl;
     }
 
     //test
-    ModuleBase::matrix print_occ( this->get_occ_number() );
-    rdmft::printMatrix_pointer(print_occ.nr, print_occ.nc, print_occ.c, "occ_number_after_ebi", 10);
+    // ModuleBase::matrix print_occ( this->get_occ_number() );
+    // rdmft::printMatrix_pointer(print_occ.nr, print_occ.nc, print_occ.c, "occ_number_after_ebi", 10);
 }
 
 ModuleBase::matrix EBI::get_occ_number()
@@ -499,7 +537,7 @@ double EBI::cal_occ_num(int is)
         {
             
             this->occ_number[is][ik*nbands + ib] = ( std::erf(this->x[is][ik*nbands + ib] + this->mu[is]) + 1.0 )/2.0;
-            tot_occ_num += this->occ_number[is][ik*nbands + ib] * this->num_symm_k[ik];
+            tot_occ_num += this->occ_number[is][ik*nbands + ib] * this->num_symm_k[is*this->nk_nospin + ik];
         }
     }
 
@@ -524,16 +562,16 @@ std::vector<double> EBI::cal_f_der(double mu_in, int is)
     {
         for(int ib=0; ib<PARAM.inp.nbands; ++ib)
         {
-            sum[0] += ( std::erf(this->x[is][ik*nbands + ib] + mu_in) + 1.0 ) * 0.5 * this->num_symm_k[ik];
-            sum[1] += erf_der1(this->x[is][ik*nbands + ib] + mu_in) * this->num_symm_k[ik];
-            sum[2] += erf_der2(this->x[is][ik*nbands + ib] + mu_in) * this->num_symm_k[ik];
+            sum[0] += ( std::erf(this->x[is][ik*nbands + ib] + mu_in) + 1.0 ) * 0.5 * this->num_symm_k[is*this->nk_nospin + ik];
+            sum[1] += erf_der1(this->x[is][ik*nbands + ib] + mu_in) * this->num_symm_k[is*this->nk_nospin + ik];
+            sum[2] += erf_der2(this->x[is][ik*nbands + ib] + mu_in) * this->num_symm_k[is*this->nk_nospin + ik];
         }
     }
 
-
-
-    std::cout << "\n" << "in cal_f_der(): " << std::endl;
-    std::cout << "sum[0]: " << sum[0] << ", sum[1]: " << sum[1] << ", sum[2]: " << sum[2] << "\n" << std::endl;
+    if( this->solve_mu_times > 50 )
+    {
+        std::cout << "\nsum[0]: " << sum[0] << ", sum[1]: " << sum[1] << ", sum[2]: " << sum[2] << "\n" << std::endl;
+    }
 
     f_der[0] = ( sum[0] - this->sys_nelec_spin[is] ) * sum[1];
     f_der[1] = 0.5*std::pow(sum[1], 2) + ( sum[0] - this->sys_nelec_spin[is] ) * sum[2];

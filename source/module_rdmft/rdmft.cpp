@@ -368,7 +368,7 @@ void RDMFT<TK, TR>::cal_E_grad_occ_num()
     // get the gradient of energy with respect to the natural occupation numbers, i.e., Wk_occNum_wfcHamiltWfc
     add_occNum(this->kv, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
     Parallel_Reduce::reduce_all(occNum_wfcHamiltWfc.c, occNum_wfcHamiltWfc.nr * occNum_wfcHamiltWfc.nc);
-    rdmft::printMatrix_pointer(occNum_wfcHamiltWfc.nr, occNum_wfcHamiltWfc.nc, &occNum_wfcHamiltWfc(0, 0), "E_gradient_occNum");
+    // rdmft::printMatrix_pointer(occNum_wfcHamiltWfc.nr, occNum_wfcHamiltWfc.nc, &occNum_wfcHamiltWfc(0, 0), "E_gradient_occNum");
 }
 
 

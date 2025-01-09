@@ -360,22 +360,22 @@ void random_descend(std::vector<double>& num)
 }
 
 
-int smallest_loc_big_value(const int nk_total,
+int smallest_loc_big_value(const int nk_nospin,
                             const int nbands,
                             const double value,
                             const std::vector<double>& num,
-                            const std::vector<double>& num_symm_k)
+                            const double* num_symm_k)
 {
     int location = 0;
     double sum = 0.0;
     for(int ib=0; ib<nbands; ++ib)
     {
-        for(int ik=0; ik<nk_total; ++ik)
+        for(int ik=0; ik<nk_nospin; ++ik)
         {
-            sum += num[ib*nk_total + ik] * num_symm_k[ik];
+            sum += num[ib*nk_nospin + ik] * num_symm_k[ik];
             if( sum > value )
             {
-                location = ib*nk_total + ik;
+                location = ib*nk_nospin + ik;
                 return location;
             }
         }

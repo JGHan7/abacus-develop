@@ -318,11 +318,11 @@ void random_descend(std::vector<double>& num);
 
 //! return location which is the smallest number( = ib*nk_total + ik) satisfying \sum_{p=1}^{location} num_{p} >= value
 //! according to the same bands, different k order sum, that is, first sum k, then sum band
-int smallest_loc_big_value(const int nk_total,
+int smallest_loc_big_value(const int nk_nospin,
                             const int nbands,
                             const double value,
                             const std::vector<double>& num,
-                            const std::vector<double>& num_symm_k);
+                            const double* num_symm_k);
 
 
 

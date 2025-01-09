@@ -126,15 +126,6 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     std::cout << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
     this->rdmft_solver.cal_Energy();
 
-    std::ofstream out_file(this->rdmft_solver.process_file, std::ios::app);
-    if (!out_file.is_open())
-    {
-        std::cerr << "Error opening file: " << this->rdmft_solver.process_file << std::endl;
-    }
-    out_file << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
-
-    out_file.close();
-
     this->get_start_guess();
 
     double diff_etotal = 1.0;
@@ -195,19 +186,20 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         // optimize natural occupation numbers
         diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
 
-        std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num << std::endl << std::fixed << std::setprecision(7);
+        std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
         rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
-        double sys_nelec_now = 0.0;
-        for(int i=0; i<rdmft_solver.occ_number.nr*rdmft_solver.occ_number.nc; ++i)
-        {
-            sys_nelec_now += rdmft_solver.occ_number.c[i];
-        }
-        std::cout << "\n system nelec now: " <<  sys_nelec_now  << "\ndiff_occ_num_max: " << diff_occ_num_max << std::endl << std::defaultfloat;
-        std::vector<double> sys_nelec_spin =  this->ls_opti_occ_num.ebi.get_nelec_spin();
-        if( std::abs( sys_nelec_now - sys_nelec_spin[0] ) > 1e-10 )
-        {
-            rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, this->ls_opti_occ_num.get_var_x()->data(), "now var_x", 10);
-        }
+        
+        // double sys_nelec_now = 0.0;
+        // for(int i=0; i<rdmft_solver.occ_number.nr*rdmft_solver.occ_number.nc; ++i)
+        // {
+        //     sys_nelec_now += rdmft_solver.occ_number.c[i];
+        // }
+        // std::cout << "\n system nelec now: " <<  sys_nelec_now  << "\ndiff_occ_num_max: " << diff_occ_num_max << std::endl << std::defaultfloat;
+        // std::vector<double> sys_nelec_spin =  this->ls_opti_occ_num.ebi.get_nelec_spin();
+        // if( std::abs( sys_nelec_now - sys_nelec_spin[0] ) > 1e-10 )
+        // {
+        //     rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, this->ls_opti_occ_num.get_var_x()->data(), "now var_x", 10);
+        // }
 
         if( diff_occ_num_max < this->occ_num_thr )
         {
@@ -273,32 +265,20 @@ double ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type, bool first_time)
 template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::get_start_guess()
 {
-    std::ofstream out_file(this->rdmft_solver.process_file, std::ios::app);
-    if (!out_file.is_open())
-    {
-        std::cerr << "Error opening file: " << this->rdmft_solver.process_file << std::endl;
-    }
-
     // get start guess occ_number and optimize once
     this->opti_occ_num(this->dft_optimize, true);
     
     std::cout << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
-
-    out_file << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
 
     // get start guess natural orbitals
     this->iter_diag_orb.get_start_guess(rdmft_solver, this->conver_initial_value);
 
     std::cout << "\n******\n" << "get inital value in orbitals !!!!!!" << "\n******\n" << std::endl;
 
-    out_file << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
-
     // optimize occ_number
     this->opti_occ_num(this->dft_optimize);
 
     std::cout << "\n******\n" << "after ESolver_RDMF::get_start_guess() !!!!!!" << "\n******\n" << std::endl;
-
-    out_file << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
 }
 
 

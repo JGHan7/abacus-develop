@@ -49,10 +49,14 @@ class EBI
     ModuleBase::matrix get_occ_number();
 
     //! pass the mu in EBI method
-    std::vector<double> get_mu() { return this->mu; }
+    const std::vector<double>& get_mu() { return this->mu; }
 
     // temp 
-    std::vector<double> get_nelec_spin() { return this->sys_nelec_spin; }
+    const std::vector<double>& get_nelec_spin() { return this->sys_nelec_spin; }
+
+    //! pass the number of symmetric k-points
+    const std::vector<double>& get_num_symm_k() { return this->num_symm_k; }
+
 
   protected:
 
@@ -67,6 +71,9 @@ class EBI
 
     // //! find the occupancy number less than min_occ_num and modify it to min_occ_num
     // void check_occ_num();
+
+    //! temp, for debug
+    int solve_mu_times = 0;
 
     int nk_nospin = 0;
     int nbands = 0;

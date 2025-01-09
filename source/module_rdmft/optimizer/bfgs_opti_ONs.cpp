@@ -53,22 +53,6 @@ void BFGS_ONs<TX>::init(int nk_total_in, int nbands_in)
 template<typename TX>
 void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool start_guess)
 {
-
-#ifdef __MPI
-    // just for debug, print in different processes
-    int rank_now;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank_now);
-    std::stringstream temp_str;
-    temp_str << "process_" << rank_now << ".txt";
-    std::string process_file = temp_str.str();
-#endif
-
-    std::ofstream out_file(process_file, std::ios::app);
-    if (!out_file.is_open())
-    {
-        std::cerr << "Error opening file: " << process_file << std::endl;
-    }
-
     // set some vars zero?
 
     // get Hk
@@ -81,15 +65,19 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
     {
         for(int j=0; j<x_new.size(); ++j)
         {
-            // if( a_equal_b(x_new, this->var_x) ) { return; }
-
-            double temp_num = a_equal_b(x_new, this->var_x);
-            Parallel_Reduce::reduce_all(temp_num);
-            if( std::abs( temp_num ) > 1e-12 )
+            if( a_equal_b(x_new, this->var_x) )
             {
-                std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
+                std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!" << "\n" << std::endl;
                 return;
             }
+
+            // double temp_num = a_equal_b(x_new, this->var_x);
+            // Parallel_Reduce::reduce_all(temp_num);
+            // if( std::abs( temp_num ) > 1e-12 )
+            // {
+            //     std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
+            //     return;
+            // }
 
 
             // diff_x, sk = x_k+1 - x_k
@@ -132,10 +120,6 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
     {
         rdmft::printMatrix_pointer(nk_total*nbands, nk_total*nbands, this->Hk.data(), "BFGS: Hk", 10);
     }
-
-    // rdmft::printMatrix_pointer(out_file, nk_total*nbands, nk_total*nbands, this->Hk.data(), "BFGS: Hk", 10);
-
-    out_file.close();
 
     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
     // property: H = H^T, also depends on the initial guess H0!
