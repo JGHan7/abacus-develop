@@ -277,10 +277,14 @@ void EBI::update_x_occ_num(const std::vector<double>& x_in)
         }
     }
 
-    // std::cout << "\n" << "before solving_mu()" << "\n" << std::endl;
+    std::cout << "\n" << "before solving_mu()" << "\n" << std::endl;
+    rdmft::printMatrix_pointer(nk_nospin*PARAM.inp.nspin, nbands, x_in.data(), "trial_x", 10);
+
     // get the new mu and occ_number
     this->solving_mu();
-    // return this->get_occ_number();  
+    // return this->get_occ_number();
+
+    rdmft::printMatrix_pointer(nk_nospin, nbands, this->occ_number[0].data(), "spin=1, occ_number", 10);
 
     // rdmft::printMatrix_pointer(nk_nospin*PARAM.inp.nspin, nbands, x_in.data(), "trial_x", 10);
 }
@@ -337,13 +341,14 @@ void EBI::solving_mu()
                 break;
             }
 
+            std::cout << "\n******\nsolve_mu_times: " << this->solve_mu_times << "\nis: " << is << std::endl;
+
             f_der = this->cal_f_der(this->mu[is], is);
             double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
 
-            if( this->solve_mu_times > 50 )
+            if( this->solve_mu_times > 0 ) // 50
             {
-                std::cout << "\nsolve_mu_times: " << this->solve_mu_times << "\nis: " << is << ", mu: " << this->mu[is] << ", f_der1: " << f_der[0] << ", f_der2: " << f_der[1] 
-                            << ", f1_divided_f2: " << f1_divided_f2 << ", occ_num_error: " 
+                std::cout << "mu: " << this->mu[is] << ", f_der1: " << f_der[0] << ", f_der2: " << f_der[1] << ", f1_divided_f2: " << f1_divided_f2 << ", occ_num_error: " 
                             << std::scientific << std::setprecision(10) << occ_num_error << "\n******" << std::endl << std::defaultfloat;
             }
 
@@ -568,9 +573,9 @@ std::vector<double> EBI::cal_f_der(double mu_in, int is)
         }
     }
 
-    if( this->solve_mu_times > 50 )
+    if( this->solve_mu_times > 0 ) // 50
     {
-        std::cout << "\nsum[0]: " << sum[0] << ", sum[1]: " << sum[1] << ", sum[2]: " << sum[2] << "\n" << std::endl;
+        std::cout << "\nsum[0]: " << sum[0] << ", sum[1]: " << sum[1] << ", sum[2]: " << sum[2] << std::endl;
     }
 
     f_der[0] = ( sum[0] - this->sys_nelec_spin[is] ) * sum[1];

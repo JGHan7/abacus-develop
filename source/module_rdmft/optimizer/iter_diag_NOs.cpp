@@ -62,7 +62,8 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     this->nos_rep_wfc = this->lambda;
 
     // temp
-    this->if_rotate_Fock = false;
+    // this->if_rotate_Fock = false;
+    this->if_rotate_Fock = true;
 
     this->rdmft_solver = rdmft_solver_in;
 
@@ -137,27 +138,30 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
         
         // rdmft::printMatrix_pointer(1, nbands_total, this->diag_Fii[ik].data(), "diag of Fock-like mat", 5);
 
-        // get new_wfc in NAOs
-        rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
-        // if( !this->if_get_wfc1 )
-        // {
-        //     // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
-        //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        // // get new_wfc in NAOs
+        // rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
-        //     // // test T
-        //     // rdmft::pTgemm_scalapack( &para_wfc, &(rdmft_solver_in.wfc(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)),
-        //     //                             this->ParaV->desc[2], nbands_total, nbands_total, 'N', 'N', this->para_Fij, &para_wfc );
-        // }
-        // else
-        // {
-        //     // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
-        //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
-        //     // std::vector<TK> mat_temp = this->rotation_mat[ik];
-        //     // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
-        //     //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
-        // }
+        if( !this->if_get_wfc1 )
+        {
+            // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
+            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+
+            // // test T
+            // rdmft::pTgemm_scalapack( &para_wfc, &(rdmft_solver_in.wfc(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)),
+            //                             this->ParaV->desc[2], nbands_total, nbands_total, 'N', 'N', this->para_Fij, &para_wfc );
+        }
+        else
+        {
+            // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
+            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+
+            // std::vector<TK> mat_temp = this->rotation_mat[ik];
+            // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
+            //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
+        }
         
+        // the right one?
         // get rotation_mat, rotation_mat_t-step = G_t * G_t-1 * ... * G_1
         // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->nos_rep_wfc[ik].data(),
         //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
@@ -165,26 +169,23 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
         // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
         //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
 
-        // test T
+        // test T, the right one?
+        std::vector<TK> mat_temp = this->rotation_mat[ik];
+        rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
+                                    this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total );
 
     }
 
-    rdmft_solver_in.update_elec( nullptr, &(this->new_wfc) );
-    this->etotal = rdmft_solver_in.cal_Energy();
-
-    double diff_e = this->etotal - this->etotal_old;
-    if(diff_e < 0) { ++this->energy_drop; }
-    else { ++this->energy_rise; }
-
+    // update from 1-step_wfc?
     if( !this->if_get_wfc1 && this->if_rotate_Fock )
     {
         // rotate the Fock-like matrix to the first step NOs representation,
         // then new_wfc = nos_rep_wfc * ( nos_rep_wfc1 * NAOs_rep_wfc0) for each iteration
 
         // get NAOs_rep_wfc1 = nos_rep_wfc1 * NAOs_rep_wfc0
-        TK* p_new_wfc = &this->new_wfc(0, 0, 0);
+        TK* p_wfc = &rdmft_solver_in.wfc(0, 0, 0);
         TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
-        for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
+        for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_wfc[i]; }
 
         // TK* p_new_wfc = &( rdmft_solver_in.wfc(0, 0, 0) );
         // TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
@@ -193,6 +194,34 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
         this->if_get_wfc1 = true;
         // std::cout << "\n******\n" << "iterDiag: 0.3, once" << "\n******\n" << std::endl;
     }
+
+
+    rdmft_solver_in.update_elec( nullptr, &(this->new_wfc) );
+    this->etotal = rdmft_solver_in.cal_Energy();
+
+    double diff_e = this->etotal - this->etotal_old;
+    if(diff_e < 0) { ++this->energy_drop; }
+    else { ++this->energy_rise; }
+
+    // if( !this->if_get_wfc1 && this->if_rotate_Fock )
+    // {
+    //     // rotate the Fock-like matrix to the first step NOs representation,
+    //     // then new_wfc = nos_rep_wfc * ( nos_rep_wfc1 * NAOs_rep_wfc0) for each iteration
+
+    //     // get NAOs_rep_wfc1 = nos_rep_wfc1 * NAOs_rep_wfc0
+    //     TK* p_new_wfc = &this->new_wfc(0, 0, 0);
+    //     TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
+    //     for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
+
+    //     // TK* p_new_wfc = &( rdmft_solver_in.wfc(0, 0, 0) );
+    //     // TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
+    //     // for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
+
+    //     this->if_get_wfc1 = true;
+    //     // std::cout << "\n******\n" << "iterDiag: 0.3, once" << "\n******\n" << std::endl;
+    // }
+
+
     this->new_wfc.zero_out();
 
     return diff_e;
@@ -375,6 +404,8 @@ void IterDiag_NOs<TK, TR>::get_Fock()
     for(int ik=0; ik<this->nk_total; ++ik)
     {   
         std::fill(this->Fock_like_mat[ik].begin(), this->Fock_like_mat[ik].end(), 0.0);
+
+        // the first right one !!!!!!!!!!!!!!!!!!!!!!!!!!!
         // c++ perspective: only the upper triangle of F is correct (excluding the diagonal)
         antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->Fock_like_mat[ik].data(), 1.0);
 
@@ -438,6 +469,15 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                         // the upper triangle
                         this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
                     }
+
+                    // // test
+                    // if(ic_global < ir_global) 
+                    // {
+                    //     // fortran perspective: only the upper triangle of F is correct (excluding the diagonal)
+                    //     // now make the lower triangle and diagonal elements correct as well
+                    //     // the lower triangle
+                    //     this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
+                    // }
 
                     // // test formula
                     // if(ic_global > ir_global) 
@@ -549,12 +589,12 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
         // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
         //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
         
-        // work to local minimum ??????!!!
-        // without any T, may be right ?!
-        rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
-                                    mat_temp.data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
-        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), mat_temp.data(),
-                                    this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
+        // // work to local minimum ??????!!!
+        // // without any T, may be right ?!
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
+        //                             mat_temp.data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+        // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), mat_temp.data(),
+        //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
 
         // // without any T
         // rdmft::pTgemm_scalapack( this->para_Fij, this->Fock_like_mat[ik].data(), this->rotation_mat[ik].data(),
@@ -567,6 +607,12 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
         //                             mat_temp.data(), nbands_total, nbands_total, nbands_total, 'T', 'N' );
         // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
         //                             this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+
+        // test Fji fortran, G in cpp
+        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->Fock_like_mat[ik].data(),
+                                    mat_temp.data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+        rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
+                                    this->Fock_like_mat[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
 
 
         // test: verify the unitarity of the rotation matrix

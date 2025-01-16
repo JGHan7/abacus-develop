@@ -160,8 +160,10 @@ void LineSearch<TK, TR>::strong_wolfe()
 {
     // std::cout << "\n" << "Enter strong_wolfe()" << "\n" << std::endl;
 
+    // big problem here, in theory, step_size_0 should -> 0 !!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // initial step_size before each iteration
     this->step_size = (1.0 < this->max_step_size) ? 1.0 : this->max_step_size/2.0;
+    // this->step_size = (0.1 < this->max_step_size) ? 0.1 : this->max_step_size/2.0;
 
     // 0: represents the relevant quantity under x_k, that is, var_x
     // phi_0, dphi_0 have obtained
@@ -181,7 +183,7 @@ void LineSearch<TK, TR>::strong_wolfe()
     {
         ++times;
 
-        // std::cout << "\n" << "in strong_wolfe(), while" << "\n" << std::endl;
+        std::cout << "\n" << "in strong_wolfe(), while: " << times << ", step_size: " << this->step_size << "\n" << std::endl;
 
         if(times != 1)
         {
@@ -195,6 +197,7 @@ void LineSearch<TK, TR>::strong_wolfe()
             // improved using cubic interpolation ?
             double temp_step = - this->dphi_0 * this->step_size * this->step_size / ( trial_phi - this->phi_0 - this->dphi_0 * this->step_size ) / 2.0;
             this->step_size = ( 1.1 * this->step_size < temp_step ) ? temp_step : 1.1 * this->step_size;
+            // this->step_size = ( 1.5 * this->step_size < temp_step ) ? temp_step : 1.5 * this->step_size;
             this->step_size = ( this->step_size < this->max_step_size ) ? this->step_size : this->max_step_size;
             std::cout << "\n" << "quadratic interpolation in strong wolfe, temp_step:" << temp_step << "\n" << std::endl;
 
@@ -252,8 +255,7 @@ void LineSearch<TK, TR>::strong_wolfe()
             break;
         }
 
-        ++times;
-        if( times>=15 )
+        if( times>=20 )
         {
             std::cout << "\n******\n" << "strong wolfe times too big: " << times << "\n******\n" << std::endl;
             break;
@@ -281,6 +283,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
     int times = 0;
     while(1)
     {
+        std::cout << "\n" << "in ZOOM(), while: " << times << ", step_size: " << this->step_size << "\n" << std::endl;
         // std::cout << "\n" << "in ZOOM(), while" << "\n" << std::endl;
         // needs improvement, using quadratic or cubic, currently using dichotomy
         // this->step_size = (alpha_lo + alpha_hi)/2.0;
@@ -331,7 +334,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         }
 
         ++times;
-        if( times >= 15 )
+        if( times >= 20 )
         {
             std::cout << "\n******\n" << "zoom times too big: " << times << "\n******\n" << std::endl;
             break;
