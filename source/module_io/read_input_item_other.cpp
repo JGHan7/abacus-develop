@@ -657,6 +657,12 @@ void ReadInput::item_others()
         read_sync_bool(input.print_BFGS_Hk);
         this->add_item(item);
     }
+    {
+        Input_Item item("rotate_fock");
+        item.annotation = "rotate the Fock to the natural orbital representation of step 1";
+        read_sync_bool(input.rotate_fock);
+        this->add_item(item);
+    }
 
 }
 } // namespace ModuleIO

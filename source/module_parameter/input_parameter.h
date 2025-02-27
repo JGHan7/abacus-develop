@@ -619,6 +619,7 @@ struct Input_para
     double level_shifting = 0.0;
     bool print_fock = false;
     bool print_BFGS_Hk = false;
+    bool rotate_fock = true;
 
 };
 #endif

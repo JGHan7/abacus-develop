@@ -7,6 +7,6 @@ rm -rf build
 cmake -B build -DCMAKE_INSTALL_PREFIX=/mnt/sg001/home/ks_iopcas_jghan/software/rdmft-abacus -DCMAKE_CXX_COMPILER=icpx -DMPI_CXX_COMPILER=mpiicpc -DELPA_DIR=/mnt/sg001/home/ks_iopcas_jghan/software/elpa-2021.11.001 -DLibxc_DIR=/mnt/sg001/home/ks_iopcas_jghan/software/libxc -DLIBRI_DIR=/mnt/sg001/home/ks_iopcas_jghan/software/LibRI -DLIBCOMM_DIR=/mnt/sg001/home/ks_iopcas_jghan/software/LibComm -DCEREAL_INCLUDE_DIR=/mnt/sg001/home/ks_iopcas_jghan/software/cereal-1.3.2/include
 
 #cmake --build build -j 42 2>job.err
-cmake --build build -j 48
+cmake --build build -j 42
 
 cmake --install build

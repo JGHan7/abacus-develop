@@ -82,6 +82,8 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     this->iter_diag_orb.init_orb_by_lambda = PARAM.inp.init_orb_by_lambda;
     this->iter_diag_orb.scale_F = PARAM.inp.scale_fock;
     this->iter_diag_orb.scale_zeta = PARAM.inp.scale_zeta;
+    // this->iter_diag_orb.if_rotate_Fock = PARAM.inp.rotate_fock;
+    // this->iter_diag_orb.if_rotate_Fock = false;
 
     this->ls_opti_occ_num.ebi.random_inital = PARAM.inp.random_occ_num;
     this->ls_opti_occ_num.ebi.solve_mu_thr = PARAM.inp.solve_mu_thr;
@@ -176,7 +178,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             {
                 small_diffE = 0;
             }
-            if( small_diffE >= 2 && iter_orb >= 3) break; // reference: relative error < 1e-7
+            // if( small_diffE >= 2 && iter_orb >= 3) break; // reference: relative error < 1e-7
+            if( small_diffE >= 1 && iter_orb >= 3) break; // reference: relative error < 1e-7
             // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
         }
 
@@ -207,6 +210,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             if( max_off_diag_F < this->lambda_thr )
             {
                 break;
+            }
+            else
+            {
+                std::cout << "\n******\nmax_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
             }
         }
 
