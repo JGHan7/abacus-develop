@@ -61,6 +61,14 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     this->Fock_like_mat = this->lambda;
     this->nos_rep_wfc = this->lambda;
 
+    if(mixing_Fock)
+    {
+        for(int i=0; i<this->mixing_step; ++i)
+        {
+            this->Fock_record[i] = std::vector<std::vector<TK>>(nk_total, std::vector<TK>( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 ));
+        }
+    }
+
     // temp
     // this->if_rotate_Fock = false;
     this->if_rotate_Fock = PARAM.inp.rotate_fock;
@@ -93,6 +101,7 @@ void IterDiag_NOs<TK, TR>::before_opti(int* scale_factor)
     if( scale_factor != nullptr && scale_factor > 0 ) this->scale_zeta = *scale_factor;
     this->energy_drop = 0;
     this->energy_rise = 0;
+    this->iter_step = 0;
 }
 
 
@@ -238,6 +247,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
 
 
     this->new_wfc.zero_out();
+
+    this->diff_Etotal = diff_e;
 
     return diff_e;
 }
@@ -518,6 +529,11 @@ void IterDiag_NOs<TK, TR>::get_Fock()
     // get the max value of std::abs(Fij) in a global sense
     rdmft::reduce_all_max(this->max_off_diag_F);
 
+    if( this->mixing_Fock && std::abs(this->diff_Etotal)<1e-4 ) // !test!!!!!!!!!!!!!!
+    {
+        this->mixing();
+    }
+
     // if(PARAM.inp.scale_fock)
     if( this->scale_F )
     {
@@ -651,6 +667,65 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
             }
         }
     }
+}
+
+
+template <typename TK, typename TR>
+void IterDiag_NOs<TK, TR>::mixing()
+{
+    // if(iter_step < this->mixing_step-1)
+    // {
+    //     // store the Fock matrix of the previous (mixing_step-1) step
+    //     auto pair_Fock = this->Fock_record.find(this->iter_step);
+    //     if( pair_Fock != Fock_record.end() )
+    //     {
+    //         std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
+    //         for(int ik=0; ik<this->nk_total; ++ik)
+    //         {
+    //             for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+    //             {
+    //                 Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
+    //             }
+    //         }
+    //     }
+    // }
+
+    // store the Fock matrix of the i-step
+    auto pair_Fock = this->Fock_record.find(this->iter_step % this->mixing_step);
+    std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        // std::fill(Fock_ith[ik].begin(), Fock_ith[ik].end(), 0.0);
+        for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+        {
+            Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
+        }
+    }
+
+    // else
+    if( iter_step >= this->mixing_step-1 )
+    {
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            std::fill(Fock_like_mat[ik].begin(), Fock_like_mat[ik].end(), 0.0);
+            for(int j=0; j<this->mixing_step; ++j)
+            {
+                std::vector< std::vector<TK> > & Fock_jth = this->Fock_record.find( (this->iter_step + j) % this->mixing_step )->second;
+                for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+                {
+                    this->Fock_like_mat[ik][iloc] += Fock_jth[ik][iloc] * this->mixing_coef[(j+this->mixing_step-1) % this->mixing_step];
+                }
+
+            }
+
+            for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+            {
+                Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
+            }
+        }
+    }
+
+    ++this->iter_step;
 }
 
 

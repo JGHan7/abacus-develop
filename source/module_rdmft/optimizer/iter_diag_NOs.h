@@ -6,6 +6,7 @@
 #define ITER_DIAG_NOS_H
 
 #include "module_rdmft/rdmft.h"
+#include <map>
 
 namespace rdmft
 {
@@ -31,6 +32,8 @@ class IterDiag_NOs
     double optimize_orb(RDMFT<TK, TR>& rdmft_solver_in);
 
     //! check the Hermitian property of lambda for all k points
+    //! the mixing of Fock matrices broke this functionality
+    //! TODO: modify it to a separate function implementation, not dependent on get_Fock()
     double check_hermi_lambda() { return this->max_off_diag_F; }
 
     const Parallel_2D* para_Fij = nullptr;
@@ -55,6 +58,29 @@ class IterDiag_NOs
     std::vector<double> sys_nelec_spin;
 
     RDMFT<TK, TR>* rdmft_solver = nullptr;
+
+    void mixing();
+
+    bool mixing_Fock = true;
+
+    // const int mixing_step = 3;
+
+    // //! the length of mixing_coef = mixing_step
+    // //! the index is in ascending order from step 0 to step k
+    // std::vector<double> mixing_coef = {0.15, 0.25, 0.6};
+
+    const int mixing_step = 3;
+
+    //! the length of mixing_coef = mixing_step
+    //! the index is in ascending order from step 0 to step k
+    std::vector<double> mixing_coef = {0.15, 0.25, 0.6};
+
+
+    int iter_step = 0;
+
+    std::map<int, std::vector< std::vector<TK> > > Fock_record;
+
+    double diff_Etotal = 0.0;
 
   private:
 
