@@ -69,11 +69,11 @@ class IterDiag_NOs
     // //! the index is in ascending order from step 0 to step k
     // std::vector<double> mixing_coef = {0.15, 0.25, 0.6};
 
-    const int mixing_step = 3;
+    const int mixing_step = 2;
 
     //! the length of mixing_coef = mixing_step
     //! the index is in ascending order from step 0 to step k
-    std::vector<double> mixing_coef = {0.15, 0.25, 0.6};
+    std::vector<double> mixing_coef = {0.2, 0.8};
 
 
     int iter_step = 0;

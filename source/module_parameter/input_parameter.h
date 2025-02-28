@@ -620,6 +620,7 @@ struct Input_para
     bool print_fock = false;
     bool print_BFGS_Hk = false;
     bool rotate_fock = true;
+    bool mixing_fock = true;
 
 };
 #endif

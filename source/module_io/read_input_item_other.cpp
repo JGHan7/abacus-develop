@@ -663,6 +663,12 @@ void ReadInput::item_others()
         read_sync_bool(input.rotate_fock);
         this->add_item(item);
     }
+    {
+        Input_Item item("mixing_fock");
+        item.annotation = "linear mixing of Fock matrix";
+        read_sync_bool(input.mixing_fock);
+        this->add_item(item);
+    }
 
 }
 } // namespace ModuleIO
