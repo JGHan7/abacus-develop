@@ -177,6 +177,10 @@ void IDMFT<TK, TR>::opti_occ_num()
 
     this->rdmft_solver->update_elec( &occ_num_pass );
 
+    std::cout << std::scientific << std::setprecision(6) << std::endl;
+    rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_number", 10);
+    std::cout << std::defaultfloat;
+
 }
 
 
@@ -261,7 +265,24 @@ double IDMFT<TK, TR>::cal_occ_num(const int is)
 }
 
 
-
+template <typename TK, typename TR>
+void IDMFT<TK, TR>::solve_zero_occ_num()
+{
+    ModuleBase::matrix& temp_occ_num = this->rdmft_solver->occ_number;
+    for(int ik=0; ik<temp_occ_num.nr; ++ik)
+    {
+        int zero_num = 0;
+        for(int ib=0; ib<temp_occ_num.nc; ++ib)
+        {
+            if( std::abs(temp_occ_num(ik, ib)) < 1e-14 )
+            {
+                ++zero_num;
+                temp_occ_num(ik, ib) = 1e-14;
+            }
+        }
+        temp_occ_num(ik, 0) -= zero_num * 1e-14;
+    }
+}
 
 
 

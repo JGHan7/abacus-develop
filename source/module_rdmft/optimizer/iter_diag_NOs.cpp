@@ -61,6 +61,9 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     this->Fock_like_mat = this->lambda;
     this->nos_rep_wfc = this->lambda;
 
+    // this->mixing_Fock = PARAM.inp.mixing_fock;
+    this->mixing_Fock = false;
+
     if(mixing_Fock)
     {
         for(int i=0; i<this->mixing_step; ++i)
@@ -72,7 +75,6 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
     // temp
     // this->if_rotate_Fock = false;
     this->if_rotate_Fock = PARAM.inp.rotate_fock;
-    this->mixing_Fock = PARAM.inp.mixing_fock;
 
     this->rdmft_solver = rdmft_solver_in;
 
