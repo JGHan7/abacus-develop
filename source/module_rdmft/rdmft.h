@@ -155,6 +155,10 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     
     void update_charge();
 
+    void cal_Ecum();
+
+    double Ecum_entropy = 0.0;
+
   private:
 
     //! Hamiltonian matrices in real space

@@ -365,6 +365,8 @@ void RDMFT<TK, TR>::cal_E_grad_wfc()
 template <typename TK, typename TR>
 void RDMFT<TK, TR>::cal_E_grad_occ_num()
 {
+    // gradient calculation does not take i-DMFT into account !
+
     // get the gradient of energy with respect to the natural occupation numbers, i.e., Wk_occNum_wfcHamiltWfc
     add_occNum(this->kv, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
     Parallel_Reduce::reduce_all(occNum_wfcHamiltWfc.c, occNum_wfcHamiltWfc.nr * occNum_wfcHamiltWfc.nc);
@@ -443,6 +445,13 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
         // }
     }
 
+    // i-DMFT, entropy accumulation energy
+    if( PARAM.inp.rdmft_orb_opti == "idmft" )
+    {
+        this->cal_Ecum();
+        this->Etotal += this->Ecum_entropy;
+    }
+
 //     // print results
 //     std::cout << "\n\nfrom class RDMFT: \nXC_fun: " << XC_func_rdmft << std::endl;
 // #ifdef __EXX
@@ -452,7 +461,8 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
 //                 << "******\nE(TV + Hartree + XC) by RDMFT:   " << E_RDMFT[3] 
 //                 << "\n\nE_TV_RDMFT:      " << E_RDMFT[0] 
 //                 << "\nE_hartree_RDMFT: " << E_RDMFT[1] 
-//                 << "\nExc_" << XC_func_rdmft << "_RDMFT:    " << E_RDMFT[2] 
+//                 << "\nExc_" << XC_func_rdmft << "_RDMFT:    " << E_RDMFT[2]
+//                 << "\nEcum_entropy: " << Ecum_entropy
 //                 << "\nE_Ewald:         " << E_Ewald
 //                 << "\nE_entropy(-TS):  " << E_entropy 
 //                 << "\nE_descf:         " << E_descf
@@ -477,7 +487,8 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
                 << "\n******\nE(TV + Hartree + XC) by RDMFT:   " << E_RDMFT[3] 
                 << "\n\nE_TV_RDMFT:      " << E_RDMFT[0] 
                 << "\nE_hartree_RDMFT: " << E_RDMFT[1] 
-                << "\nExc_" << XC_func_rdmft << "_RDMFT:    " << E_RDMFT[2] 
+                << "\nExc_" << XC_func_rdmft << "_RDMFT:    " << E_RDMFT[2]
+                << "\nEcum_entropy: " << Ecum_entropy
                 << "\nE_Ewald:         " << E_Ewald
                 << "\nE_entropy(-TS):  " << E_entropy 
                 << "\nE_descf:         " << E_descf 
@@ -491,6 +502,23 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
 
     return this->Etotal;
 
+}
+
+
+template <typename TK, typename TR>
+void RDMFT<TK, TR>::cal_Ecum()
+{
+    double entropy = 0.0;
+    for(int ik=0; ik < this->occ_number.nr; ++ik)
+    {
+        for(int inb=0; inb < this->occ_number.nc; ++inb)
+        {
+            double temp_num = this->occ_number(ik, inb);
+            entropy -= ( temp_num * std::log(temp_num) + (1-temp_num) * std::log(1-temp_num) );
+        }
+    }
+
+    this->Ecum_entropy = -(PARAM.inp.idmft_kappa * entropy) - PARAM.inp.idmft_beta;
 }
 
 

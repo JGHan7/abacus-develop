@@ -389,6 +389,9 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
             std::cout << "\nik: " << ik << std::endl;
             rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->lambda[ik].data(), "lambda[ik]", 10);
         }
+
+        // std::cout << "\n******\ncheck lambda hermi: " << rdmft::check_hermi(this->para_Fij, this->lambda[ik], this->nbands_total) << "\n******\n" << std::endl;
+
     }
 
     // // test T
@@ -530,7 +533,12 @@ void IterDiag_NOs<TK, TR>::get_Fock()
     // get the max value of std::abs(Fij) in a global sense
     rdmft::reduce_all_max(this->max_off_diag_F);
 
-    if( this->mixing_Fock && std::abs(this->diff_Etotal)<1e-4 ) // !test!!!!!!!!!!!!!!
+    if( !this->start_mixing && this->mixing_Fock )
+    {
+        if( std::abs(this->diff_Etotal)<1e-4 ) { this->start_mixing = true; }
+    }
+    
+    if( this->mixing_Fock && this->start_mixing ) // !test!!!!!!!!!!!!!!
     {
         this->mixing();
     }

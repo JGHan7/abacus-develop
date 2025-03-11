@@ -621,6 +621,9 @@ struct Input_para
     bool print_BFGS_Hk = false;
     bool rotate_fock = true;
     bool mixing_fock = true;
+    std::string rdmft_orb_opti = "iterdiag"; // iterdiag, idmft, rcg, bfgs...
+    double idmft_kappa = 0.1;
+    double idmft_beta = 0.0;
 
 };
 #endif

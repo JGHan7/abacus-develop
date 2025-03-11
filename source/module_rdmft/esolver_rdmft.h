@@ -11,6 +11,7 @@
 #include "module_rdmft/optimizer/line_search_rdmft.h"
 #include "module_rdmft/optimizer/ebi_constraint.h"
 #include "module_rdmft/optimizer/bfgs_opti_ONs.h"
+#include "module_rdmft/optimizer/idmft.h"
 
 
 namespace rdmft
@@ -65,6 +66,9 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
 
     //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
     rdmft::LineSearch<TK, TR> ls_opti_occ_num;
+
+    //! 
+    rdmft::IDMFT<TK, TR> idmft;
 
     // rdmft::EBI ebi;
 

@@ -13,6 +13,7 @@ if(ENABLE_LCAO)
         optimizer/line_search_rdmft.cpp
         optimizer/bfgs_opti_ONs.cpp
         optimizer/ebi_constraint.cpp
+        optimizer/idmft.cpp
     )
 endif()
 

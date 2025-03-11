@@ -669,6 +669,24 @@ void ReadInput::item_others()
         read_sync_bool(input.mixing_fock);
         this->add_item(item);
     }
+    {
+        Input_Item item("rdmft_orb_opti");
+        item.annotation = "optimization method of natural orbitals in rdmft";
+        read_sync_string(input.rdmft_orb_opti);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("idmft_kappa");
+        item.annotation = "kappa parameter in i-DMFT";
+        read_sync_double(input.idmft_kappa);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("idmft_beta");
+        item.annotation = "beta parameter in i-DMFT";
+        read_sync_double(input.idmft_beta);
+        this->add_item(item);
+    }
 
 }
 } // namespace ModuleIO
