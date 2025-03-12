@@ -83,6 +83,8 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     // use dft type to update occ_number
     double update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver);
 
+    void print_info_idmft();
+
 
 
 

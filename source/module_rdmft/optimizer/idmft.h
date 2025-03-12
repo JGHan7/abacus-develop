@@ -42,6 +42,8 @@ class IDMFT
 
     double max_off_diag_F = 0.0;
 
+    const std::vector< std::vector<double> >& get_energy_level() { return this->diag_Fii; }
+
 
   protected:
 

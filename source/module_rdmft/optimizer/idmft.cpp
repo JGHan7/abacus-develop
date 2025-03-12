@@ -194,9 +194,9 @@ void IDMFT<TK, TR>::opti_occ_num()
 
     this->rdmft_solver->update_elec( &occ_num_pass );
 
-    std::cout << std::scientific << std::setprecision(6) << std::endl;
-    rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_number", 10);
-    std::cout << std::defaultfloat;
+    // std::cout << std::scientific << std::setprecision(6) << std::endl;
+    // rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_number", 10);
+    // std::cout << std::defaultfloat;
 
 }
 

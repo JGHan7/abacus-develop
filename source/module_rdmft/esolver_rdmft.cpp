@@ -240,23 +240,28 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
-                        << "\ndiff_E: " << diff_etotal 
-                        // << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
-                        // << "\nEcum_entropy: " << this->rdmft_solver.Ecum_entropy 
+                        << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
+                        << "\nEcum_entropy: " << this->rdmft_solver.Ecum_entropy 
+                        << "\n\ndiff_E: " << diff_etotal 
                         << "\n******" << std::endl << std::defaultfloat;
 
             this->idmft.opti_occ_num();
+
+            // temporary
+            this->print_info_idmft();
 
             if( std::abs(diff_etotal) < iter_diag_ethr ) { break; }
         }
     }
 
-    std::cout << std::scientific << std::setprecision(1) << std::endl;
-    rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
-    std::cout << std::defaultfloat;
+    this->print_info_idmft();
+
+    // std::cout << std::scientific << std::setprecision(1) << std::endl;
+    // rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
+    // std::cout << std::defaultfloat;
 
     std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;
-    std::cout << "\n\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n" << std::endl;
+    std::cout << "\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n\n\n" << std::endl;
 }
 
 
@@ -361,7 +366,20 @@ double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 }
 
 
-
+template <typename TK, typename TR>
+void ESolver_RDMFT<TK, TR>::print_info_idmft()
+{
+    for(int ik=0; ik < rdmft_solver.nk_total; ++ik)
+    {
+        std::cout << "\n\nik: " << ik << std::endl; // << std::fixed << std::setprecision(10);
+        std::cout << "---------------------------------------\nnbands      " << "occ_number      " << "energy level(Rydberg)" << std::endl; 
+        for(int ib=0; ib < rdmft_solver.nbands_total; ++ib)
+        {
+            std::cout << ib << "           " << rdmft_solver.occ_number(ik, ib) << "        " << this->idmft.get_energy_level()[ik][ib] << std::endl;
+        }
+        std::cout << "---------------------------------------\n" << std::endl;
+    }
+}
 
 
 
