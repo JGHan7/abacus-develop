@@ -34,7 +34,7 @@ class IDMFT
     //! the occupation number is obtained from the eigenvalues ​​of the Fock-like matrix and the Fermi-Dirac distribution
     void opti_occ_num();
 
-    void solve_zero_occ_num();
+    // void solve_zero_occ_num();
 
     const Parallel_2D* para_Fij = nullptr;
 
@@ -97,9 +97,9 @@ class IDMFT
 
     std::vector<double> mu;
 
-    // // rotate the Fock to the natural orbital representation of step 1
-    // void rotate_Fock();
-    // bool if_rotate_Fock = true;
+    // rotate the Fock to the natural orbital representation of step 1
+    void rotate_Fock();
+    bool if_rotate_Fock = true;
 
 };
 

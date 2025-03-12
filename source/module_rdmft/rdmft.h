@@ -85,6 +85,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     //! E_RDMFT[4] stores ETV, Ehartree, Exc, Etotal
     double E_RDMFT[4] = {0.0};
+    double Ecum_entropy = 0.0;
     double Etotal = 0.0;
     // std::vector<double> E_RDMFT(4);
 
@@ -156,8 +157,6 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     void update_charge();
 
     void cal_Ecum();
-
-    double Ecum_entropy = 0.0;
 
   private:
 

@@ -233,14 +233,19 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
-        this->idmft.solve_zero_occ_num();
+        // this->idmft.solve_zero_occ_num();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {
             double diff_etotal = this->idmft.optimize_orb();
-            this->idmft.opti_occ_num();
 
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
-            std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******" << std::endl << std::defaultfloat;
+            std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
+                        << "\ndiff_E: " << diff_etotal 
+                        // << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
+                        // << "\nEcum_entropy: " << this->rdmft_solver.Ecum_entropy 
+                        << "\n******" << std::endl << std::defaultfloat;
+
+            this->idmft.opti_occ_num();
 
             if( std::abs(diff_etotal) < iter_diag_ethr ) { break; }
         }

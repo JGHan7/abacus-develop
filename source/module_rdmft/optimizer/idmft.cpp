@@ -57,14 +57,14 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     this->naos_rep_wfc1.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
     this->Fock_like_mat.resize(nk_total);
     this->diag_Fii.resize(nk_total);
-    // this->rotation_mat.resize(nk_total);
+    this->rotation_mat.resize(nk_total);
     for(int ik=0; ik<nk_total; ++ik)
     {
         this->diag_Fii[ik].resize(nbands, 0.0);
         this->Fock_like_mat[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
 
-        // // or write in before_opti(), if you update the fixed NOs representation after each ONs optimization
-        // rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
+        // or write in before_opti(), if you update the fixed NOs representation after each ONs optimization
+        rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
     }
     this->nos_rep_wfc = this->Fock_like_mat;
     
@@ -74,9 +74,9 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
         this->occ_number[is].resize(nk_nospin*nbands);
     }
 
-    // // temp
-    // // this->if_rotate_Fock = false;
-    // this->if_rotate_Fock = PARAM.inp.rotate_fock;
+    // temp
+    // this->if_rotate_Fock = false;
+    this->if_rotate_Fock = PARAM.inp.rotate_fock;
 
     this->sys_nelec_spin.resize(PARAM.inp.nspin);
     this->mu.resize(PARAM.inp.nspin, 0.0);
@@ -110,20 +110,6 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
 
 
 template <typename TK, typename TR>
-void IDMFT<TK, TR>::get_Fock()
-{
-    for(int ik=0; ik<Fock_like_mat.size(); ++ik)
-    {
-        std::fill(this->Fock_like_mat[ik].begin(), this->Fock_like_mat[ik].end(), 0.0);
-        for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-        {
-            this->Fock_like_mat[ik][iloc] = (this->rdmft_solver->Hij_no_exx[ik][iloc] + this->rdmft_solver->Hij_exx[ik][iloc]) * wk_nospin[ik];
-        }
-    }
-}
-
-
-template <typename TK, typename TR>
 double IDMFT<TK, TR>::optimize_orb()
 {
     this->etotal_old = this->etotal;
@@ -140,8 +126,39 @@ double IDMFT<TK, TR>::optimize_orb()
                                     this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
 
         // get new_wfc in NAOs
-        rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->rdmft_solver->wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        // rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->rdmft_solver->wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+
+        if( !this->if_get_wfc1 )
+        {
+            // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
+            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->rdmft_solver->wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        }
+        else
+        {
+            // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
+            // right?
+            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+        }
+
+        // test, rotation = egienvector?
+        this->rotation_mat[ik] = this->nos_rep_wfc[ik];
     }
+
+    // update from 1-step_wfc?
+    if( !this->if_get_wfc1 && this->if_rotate_Fock )
+    {
+        // rotate the Fock-like matrix to the first step NOs representation,
+        // then new_wfc = nos_rep_wfc * ( nos_rep_wfc1 * NAOs_rep_wfc0) for each iteration
+
+        // get NAOs_rep_wfc1 = nos_rep_wfc1 * NAOs_rep_wfc0
+        TK* p_wfc = &this->rdmft_solver->wfc(0, 0, 0);
+        TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
+        for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_wfc[i]; }
+
+
+        this->if_get_wfc1 = true;
+    }
+
 
     this->rdmft_solver->update_elec( nullptr, &(this->new_wfc) );
     this->etotal = this->rdmft_solver->cal_Energy();
@@ -185,6 +202,71 @@ void IDMFT<TK, TR>::opti_occ_num()
 
 
 template <typename TK, typename TR>
+void IDMFT<TK, TR>::get_Fock()
+{
+    for(int ik=0; ik<Fock_like_mat.size(); ++ik)
+    {
+        std::fill(this->Fock_like_mat[ik].begin(), this->Fock_like_mat[ik].end(), 0.0);
+        for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+        {
+            this->Fock_like_mat[ik][iloc] = (this->rdmft_solver->Hij_no_exx[ik][iloc] + this->rdmft_solver->Hij_exx[ik][iloc]) * wk_nospin[ik];
+        }
+    }
+
+    
+}
+
+
+template <typename TK, typename TR>
+void IDMFT<TK, TR>::rotate_Fock()
+{
+
+    std::vector<TK> iden_mat(this->para_Fij->get_local_size(), 0.0);
+    std::vector<TK> G_Gdagger(this->para_Fij->get_local_size(), 0.0);
+    std::vector<TK> Gdagger_G(this->para_Fij->get_local_size(), 0.0);
+    rdmft::get_identi_mat(this->para_Fij, iden_mat);
+
+
+    // rotate the Fock-like matrix to the first step NOs representation
+    // known F = F^dagger. F_1-NOs = R_t-1 * F_t-NOs * (R_t-1)^dagger
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+
+        std::vector<TK> mat_temp(this->Fock_like_mat[ik].size(), 0.0);
+
+
+        // test Fji fortran, G in cpp, the right one?
+        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->Fock_like_mat[ik].data(),
+                                    mat_temp.data(), nbands, nbands, nbands, 'N', 'N' );
+        rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
+                                    this->Fock_like_mat[ik].data(), nbands, nbands, nbands, 'N', 'C' );
+
+
+        // test: verify the unitarity of the rotation matrix
+        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->rotation_mat[ik].data(),
+                                    G_Gdagger.data(), nbands, nbands, nbands, 'N', 'C' );
+        rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->rotation_mat[ik].data(),
+                                    Gdagger_G.data(), nbands, nbands, nbands, 'C', 'N' );
+        for(int iloc=0; iloc<G_Gdagger.size(); ++iloc)
+        {
+            TK ver1 = G_Gdagger[iloc] - iden_mat[iloc];
+            TK ver2 = iden_mat[iloc] - Gdagger_G[iloc];
+            if( std::abs(ver1) > 1e-13 )
+            {
+                std::cout << "\n******\n" << "false: the unitarity of the rotation matrix. G_Gdagger, ik = " << ik  << ", diff = " << ver1 << "\n******\n" << std::endl;
+            }
+            if( std::abs(ver2) > 1e-13 )
+            {
+                std::cout << "\n******\n" << "false: the unitarity of the rotation matrix. Gdagger_G, ik = " << ik  << ", diff = " << ver2 << "\n******\n" << std::endl;
+            }
+        }
+    }
+}
+
+
+
+
+template <typename TK, typename TR>
 void IDMFT<TK, TR>::solving_mu()
 {
     for(int is=0; is<PARAM.inp.nspin; ++is)
@@ -203,15 +285,16 @@ void IDMFT<TK, TR>::solving_mu()
             error_new = this->cal_occ_num(is) - this->sys_nelec_spin[is];
 
             // assume kappa is greater than 0
+            // double sign = the sign of kappa
             if( error_new < 0 )
             {
                 low_mu = this->mu[is];
-                this->mu[is] += 1.0;
+                this->mu[is] += 1.0; // *sign(kappa)
             }
             else if( error_new > 0 )
             {
                 high_mu = this->mu[is];
-                this->mu[is] -= 1.0;
+                this->mu[is] -= 1.0; // *sign(kappa)
             }
 
         }
@@ -265,24 +348,25 @@ double IDMFT<TK, TR>::cal_occ_num(const int is)
 }
 
 
-template <typename TK, typename TR>
-void IDMFT<TK, TR>::solve_zero_occ_num()
-{
-    ModuleBase::matrix& temp_occ_num = this->rdmft_solver->occ_number;
-    for(int ik=0; ik<temp_occ_num.nr; ++ik)
-    {
-        int zero_num = 0;
-        for(int ib=0; ib<temp_occ_num.nc; ++ib)
-        {
-            if( std::abs(temp_occ_num(ik, ib)) < 1e-14 )
-            {
-                ++zero_num;
-                temp_occ_num(ik, ib) = 1e-14;
-            }
-        }
-        temp_occ_num(ik, 0) -= zero_num * 1e-14;
-    }
-}
+// template <typename TK, typename TR>
+// void IDMFT<TK, TR>::solve_zero_occ_num()
+// {
+//     ModuleBase::matrix temp_occ_num = this->rdmft_solver->occ_number;
+//     for(int ik=0; ik<temp_occ_num.nr; ++ik)
+//     {
+//         int zero_num = 0;
+//         for(int ib=0; ib<temp_occ_num.nc; ++ib)
+//         {
+//             if( std::abs(temp_occ_num(ik, ib)) < 1e-16 )
+//             {
+//                 ++zero_num;
+//                 temp_occ_num(ik, ib) = 1e-16;
+//             }
+//         }
+//         temp_occ_num(ik, 0) -= zero_num * 1e-16;
+//     }
+//     this->rdmft_solver->update_elec( &temp_occ_num );
+// }
 
 
 
