@@ -213,7 +213,10 @@ void IDMFT<TK, TR>::get_Fock()
         }
     }
 
-    
+    if(this->if_rotate_Fock)
+    {
+        this->rotate_Fock();
+    }
 }
 
 
