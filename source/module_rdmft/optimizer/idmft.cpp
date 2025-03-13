@@ -45,7 +45,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     this->nk_nospin = this->nk_total / PARAM.inp.nspin;
     this->kv = &kv_in;
     this->nbands = PARAM.inp.nbands;
-    this->wk_nospin = this->kv->wk;
+    // this->wk_nospin = this->kv->wk;
     int nkstot_full = this->kv->get_nkstot_full();
 
     this->para_Fij = &para_Fij_in;
@@ -78,14 +78,23 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     // this->if_rotate_Fock = false;
     this->if_rotate_Fock = PARAM.inp.rotate_fock;
 
+    // get the number of symmetric k-points
+    this->num_symm_k.resize(this->kv->wk.size());
+    for(int iks; iks<this->num_symm_k.size(); ++iks)
+    {
+        this->num_symm_k[iks] = this->kv->wk[iks] * nkstot_full;
+    }
+
+    // get the total number of electrons
     this->sys_nelec_spin.resize(PARAM.inp.nspin);
     this->mu.resize(PARAM.inp.nspin, 0.0);
     if( PARAM.inp.nspin == 1 )
     {
         // remove the weight of spin
-        for(int ik; ik<this->wk_nospin.size(); ++ik)
+        for(int iks; iks<this->kv->wk.size(); ++iks)
         {
-            this->wk_nospin[ik] /= 2.0;
+            // this->wk_nospin[iks] /= 2.0;
+            this->num_symm_k[iks] /= 2.0;
         }
 
         this->sys_nelec_spin[0] = (PARAM.inp.nelec / 2.0) * nkstot_full;
@@ -97,13 +106,6 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
         this->sys_nelec_spin[1] = ((PARAM.inp.nelec - PARAM.inp.nupdown) / 2.0) * nkstot_full;
         std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
         std::cout << "\n******\n" << "this->sys_nelec_spin[1]: " << this->sys_nelec_spin[1] << "\n******\n" << std::endl;
-    }
-
-    // get the number of symmetric k-points
-    this->num_symm_k.resize(this->wk_nospin.size());
-    for(int iks; iks<this->num_symm_k.size(); ++iks)
-    {
-        this->num_symm_k[iks] = this->wk_nospin[iks] * nkstot_full;
     }
 
 }
@@ -140,8 +142,11 @@ double IDMFT<TK, TR>::optimize_orb()
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
 
-        // test, rotation = egienvector?
-        this->rotation_mat[ik] = this->nos_rep_wfc[ik];
+        if( this->if_rotate_Fock )
+        {
+            // test, rotation = egienvector?
+            this->rotation_mat[ik] = this->nos_rep_wfc[ik];
+        }
     }
 
     // update from 1-step_wfc?
@@ -209,7 +214,7 @@ void IDMFT<TK, TR>::get_Fock()
         std::fill(this->Fock_like_mat[ik].begin(), this->Fock_like_mat[ik].end(), 0.0);
         for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
         {
-            this->Fock_like_mat[ik][iloc] = (this->rdmft_solver->Hij_no_exx[ik][iloc] + this->rdmft_solver->Hij_exx[ik][iloc]) * wk_nospin[ik];
+            this->Fock_like_mat[ik][iloc] = (this->rdmft_solver->Hij_no_exx[ik][iloc] + this->rdmft_solver->Hij_exx[ik][iloc]); // * wk_nospin[ik] ,no need to multiply k-point weight and spin weight
         }
     }
 

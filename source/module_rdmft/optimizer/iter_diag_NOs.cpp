@@ -113,8 +113,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
 {
     this->etotal_old = this->etotal;
 
-    this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
-    // this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    // this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
 
     this->get_Fock();
 
@@ -261,8 +261,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
 template<typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver_in, const bool conver_initial_value)
 {
-    this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
-    // this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    // this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
 
     // get start_Fock = symm_lambda
     std::vector< std::vector<TK> > symm_lambda = lambda;
@@ -323,8 +323,8 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver_in, const
 
 
 template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg, 
-                                        const ModuleBase::matrix& wk_fun_occNum, 
+void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& occ_num, 
+                                        const ModuleBase::matrix& fun_occNum, 
                                         const std::vector< std::vector<TK> >& H_no_exx, 
                                         const std::vector< std::vector<TK> >& H_exx)
 {
@@ -348,8 +348,8 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
     //                                 H_exx[ik].data(), nbands_total, nbands_total, nbands_total, 'T', 'N');
     // }
 
-    // rdmft::printMatrix_pointer(wg.nr, wg.nc, wg.c, "occ_number used in lambda", 10);
-    // rdmft::printMatrix_pointer(wg.nr, wg.nc, wk_fun_occNum.c, "fun_occ_number used in lambda", 10);
+    // rdmft::printMatrix_pointer(occ_num.nr, occ_num.nc, occ_num.c, "occ_number used in lambda", 10);
+    // rdmft::printMatrix_pointer(occ_num.nr, occ_num.nc, fun_occNum.c, "fun_occ_number used in lambda", 10);
 
     // times occNum
     for(int ik=0; ik<Fock_like_mat.size(); ++ik)
@@ -359,15 +359,15 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
         int nrow = para_Fij->get_row_size();
         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
         {
-            // use wg or occ_number???
-            const double wg_local = wg(ik, para_Fij->local2global_col(ic));
-            const double wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_col(ic));
+            // use wg or occ_number??? occ_num!
+            const double occ_num_local = occ_num(ik, para_Fij->local2global_col(ic));
+            const double fun_occNum_local = fun_occNum(ik, para_Fij->local2global_col(ic));
 
             for(int ir=0; ir<nrow; ++ir)
             {
-                this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ir + ic*nrow]*wk_fun_local;
-                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local + H_exx[ik][ir + ic*nrow]*wg_local;
-                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local;
+                this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*occ_num_local + H_exx[ik][ir + ic*nrow]*fun_occNum_local;
+                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*occ_num_local + H_exx[ik][ir + ic*nrow]*occ_num_local;
+                // this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*occ_num_local;
             }
         }
 
@@ -376,13 +376,13 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
         // for(int ir=0; ir<nrow; ++ir)
         // {
         //     // use wg or occ_number???
-        //     const double wg_local = wg(ik, para_Fij->local2global_row(ir));
-        //     const double wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_row(ir));
+        //     const double occ_num_local = occ_num(ik, para_Fij->local2global_row(ir));
+        //     const double fun_occNum_local = fun_occNum(ik, para_Fij->local2global_row(ir));
 
         //     for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
         //     {
-        //         this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local 
-        //                                         + H_exx[ik][ir + ic*nrow]*wk_fun_local;
+        //         this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*occ_num_local 
+        //                                         + H_exx[ik][ir + ic*nrow]*fun_occNum_local;
         //     }
         // }
 
@@ -415,13 +415,13 @@ void IterDiag_NOs<TK, TR>::get_lambda(const ModuleBase::matrix& wg,
     //     for(int ir=0; ir<para_Fij->get_row_size(); ++ir)
     //     {
     //         // use wg or occ_number???
-    //         const double wg_local = wg(ik, para_Fij->local2global_row(ir));
-    //         const double wk_fun_local = wk_fun_occNum(ik, para_Fij->local2global_row(ir));
+    //         const double occ_num_local = wg(ik, para_Fij->local2global_row(ir));
+    //         const double fun_occNum_local = wk_fun_occNum(ik, para_Fij->local2global_row(ir));
 
     //         for(int ic=0; ic<ncol; ++ic)
     //         {
-    //             this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*wg_local 
-    //                                             + H_exx[ik][ir + ic*nrow]*wk_fun_local;
+    //             this->lambda[ik][ir + ic*nrow] = H_no_exx[ik][ir + ic*nrow]*occ_num_local 
+    //                                             + H_exx[ik][ir + ic*nrow]*fun_occNum_local;
     //         }
     //     }
     // }
