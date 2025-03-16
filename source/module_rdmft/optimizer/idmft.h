@@ -28,11 +28,11 @@ class IDMFT
 
     // void before_opti(int* scale_factor = nullptr);
 
-    //! optimizing natural orbitals
-    double optimize_orb();
+    //! optimizing natural orbitals and occupation numbers
+    double optimize();
 
     //! the occupation number is obtained from the eigenvalues ​​of the Fock-like matrix and the Fermi-Dirac distribution
-    void opti_occ_num();
+    void opti_occ_num(ModuleBase::matrix& occ_num_pass);
 
     // void solve_zero_occ_num();
 
@@ -55,7 +55,7 @@ class IDMFT
 
     int nbands = 0;
 
-    std::vector<double> wk_nospin;
+    // std::vector<double> wk_nospin;
 
     //! the number of symmetric k-points
     std::vector<double> num_symm_k;

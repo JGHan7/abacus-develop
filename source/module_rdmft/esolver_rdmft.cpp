@@ -236,16 +236,18 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         // this->idmft.solve_zero_occ_num();
         for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
         {
-            double diff_etotal = this->idmft.optimize_orb();
+            double diff_etotal = this->idmft.optimize();
 
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
                         << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
-                        << "\nEcum_entropy: " << this->rdmft_solver.Ecum_entropy 
+                        << "\nEcum_entropy: " << this->rdmft_solver.Ecum_entropy
+                        << "\nentropy: " << this->rdmft_solver.entropy
+                        << "\nfermi_entropy: " << this->rdmft_solver.fermi_entropy
                         << "\n\ndiff_E: " << diff_etotal 
                         << "\n******" << std::endl << std::defaultfloat;
 
-            this->idmft.opti_occ_num();
+            // this->idmft.opti_occ_num();
 
             // temporary
             this->print_info_idmft();

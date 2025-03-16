@@ -56,17 +56,18 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
     this->naos_rep_wfc1.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
     this->Fock_like_mat.resize(nk_total);
+    this->nos_rep_wfc.resize(nk_total);
     this->diag_Fii.resize(nk_total);
     this->rotation_mat.resize(nk_total);
     for(int ik=0; ik<nk_total; ++ik)
     {
         this->diag_Fii[ik].resize(nbands, 0.0);
         this->Fock_like_mat[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+        this->nos_rep_wfc[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
 
         // or write in before_opti(), if you update the fixed NOs representation after each ONs optimization
         rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
     }
-    this->nos_rep_wfc = this->Fock_like_mat;
     
     this->occ_number.resize(PARAM.inp.nspin);
     for(int is=0; is<PARAM.inp.nspin; ++is)
@@ -106,13 +107,15 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
         this->sys_nelec_spin[1] = ((PARAM.inp.nelec - PARAM.inp.nupdown) / 2.0) * nkstot_full;
         std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
         std::cout << "\n******\n" << "this->sys_nelec_spin[1]: " << this->sys_nelec_spin[1] << "\n******\n" << std::endl;
+        // std::cout << "\n******\n" << "PARAM.inp.nelec: " << PARAM.inp.nelec << "\n******\n" << std::endl;
+        // std::cout << "\n******\n" << "PARAM.inp.nupdown: " << PARAM.inp.nupdown << "\n******\n" << std::endl;
     }
 
 }
 
 
 template <typename TK, typename TR>
-double IDMFT<TK, TR>::optimize_orb()
+double IDMFT<TK, TR>::optimize()
 {
     this->etotal_old = this->etotal;
 
@@ -128,20 +131,16 @@ double IDMFT<TK, TR>::optimize_orb()
                                     this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
 
         // get new_wfc in NAOs
-        // rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->rdmft_solver->wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
-
         if( !this->if_get_wfc1 )
         {
-            // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->rdmft_solver->wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
         else
         {
-            // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
-            // right?
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
 
+        // update the rotation matrix
         if( this->if_rotate_Fock )
         {
             // test, rotation = egienvector?
@@ -160,12 +159,15 @@ double IDMFT<TK, TR>::optimize_orb()
         TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
         for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_wfc[i]; }
 
-
         this->if_get_wfc1 = true;
     }
 
+    // optimize the occ_number
+    ModuleBase::matrix occ_num_pass(nk_nospin*PARAM.inp.nspin, nbands);
+    this->opti_occ_num(occ_num_pass);
 
-    this->rdmft_solver->update_elec( nullptr, &(this->new_wfc) );
+    // update the occupation number and wfc
+    this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
     this->etotal = this->rdmft_solver->cal_Energy();
     this->new_wfc.zero_out();
 
@@ -177,11 +179,11 @@ double IDMFT<TK, TR>::optimize_orb()
 
 
 template <typename TK, typename TR>
-void IDMFT<TK, TR>::opti_occ_num()
+void IDMFT<TK, TR>::opti_occ_num(ModuleBase::matrix& occ_num_pass)
 {
     this->solving_mu();
 
-    ModuleBase::matrix occ_num_pass(nk_nospin*PARAM.inp.nspin, nbands);
+    // ModuleBase::matrix occ_num_pass(nk_nospin*PARAM.inp.nspin, nbands);
     for(int ik=0; ik<occ_num_pass.nr; ++ik)
     {
         for(int ib=0; ib<occ_num_pass.nc; ++ib)
@@ -197,8 +199,7 @@ void IDMFT<TK, TR>::opti_occ_num()
         }
     }
 
-    this->rdmft_solver->update_elec( &occ_num_pass );
-
+    // this->rdmft_solver->update_elec( &occ_num_pass );
     // std::cout << std::scientific << std::setprecision(6) << std::endl;
     // rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_number", 10);
     // std::cout << std::defaultfloat;
@@ -283,26 +284,28 @@ void IDMFT<TK, TR>::solving_mu()
         double high_mu = 0.0;
         double error_old = 1.0;
         double error_new = 1.0;
+
         // use mu from the previous step as the initial value
         // find low_mu and high_mu
         int times = 0;
+        double sign_kappa = 1.0;
+        if( PARAM.inp.idmft_kappa < 0 ) { sign_kappa = -1.0; }
+
         while( error_old * error_new > 0 || times <= 1 )
         {
             ++times;
             error_old = error_new;
             error_new = this->cal_occ_num(is) - this->sys_nelec_spin[is];
 
-            // assume kappa is greater than 0
-            // double sign = the sign of kappa
             if( error_new < 0 )
             {
                 low_mu = this->mu[is];
-                this->mu[is] += 1.0; // *sign(kappa)
+                this->mu[is] += 1.0 * sign_kappa;
             }
             else if( error_new > 0 )
             {
                 high_mu = this->mu[is];
-                this->mu[is] -= 1.0; // *sign(kappa)
+                this->mu[is] -= 1.0 * sign_kappa;
             }
 
         }
@@ -326,10 +329,11 @@ void IDMFT<TK, TR>::solving_mu()
             }
         }
 
-        if( solve_mu_times == 200 )
+        if( solve_mu_times >= 200 )
         {
             std::cout << "\n" << "solve_mu_times is too big: " << solve_mu_times << "\n" << std::endl;
             std::cout << "\n" << "electron number is not conserved !!!!!!!!!!! " << "\n" << std::endl;
+            assert( solve_mu_times <= 200 );
         }
 
     }

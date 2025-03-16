@@ -508,7 +508,9 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
 template <typename TK, typename TR>
 void RDMFT<TK, TR>::cal_Ecum()
 {
-    double entropy = 0.0;
+    // double entropy = 0.0;
+    this->entropy = 0.0;
+    this->fermi_entropy = 0.0;
     for(int ik=0; ik < this->occ_number.nr; ++ik)
     {
         for(int inb=0; inb < this->occ_number.nc; ++inb)
@@ -516,12 +518,13 @@ void RDMFT<TK, TR>::cal_Ecum()
             double temp_num = this->occ_number(ik, inb);
             if( temp_num > 1e-20 && temp_num < 1.0 )
             {
-                entropy -= ( temp_num * std::log(temp_num) + (1-temp_num) * std::log(1-temp_num) );
+                this->entropy -= ( temp_num * std::log(temp_num) + (1-temp_num) * std::log(1-temp_num) );
+                this->fermi_entropy -= temp_num * std::log(temp_num);
             }
         }
     }
 
-    this->Ecum_entropy = -(PARAM.inp.idmft_kappa * entropy) - PARAM.inp.idmft_beta;
+    this->Ecum_entropy = -(PARAM.inp.idmft_kappa * this->entropy) - PARAM.inp.idmft_beta;
 }
 
 
