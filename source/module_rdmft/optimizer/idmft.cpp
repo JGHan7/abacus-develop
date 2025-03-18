@@ -311,12 +311,18 @@ void IDMFT<TK, TR>::solving_mu()
         }
 
         double solve_mu_times = 0;
+        double total_elec_num = 0.0;
+        double occ_num_error = 0.0;
         // use dichotomy
         while( solve_mu_times < 200 )
         {
             ++solve_mu_times;
             this->mu[is] = (low_mu + high_mu) / 2.0;
-            double occ_num_error = this->cal_occ_num(is) - this->sys_nelec_spin[is];
+
+            // occ_num_error = this->cal_occ_num(is) - this->sys_nelec_spin[is];
+            total_elec_num = this->cal_occ_num(is);
+            occ_num_error = total_elec_num - this->sys_nelec_spin[is];
+
             if( std::abs(occ_num_error) < PARAM.inp.tot_nelec_thr ) { break; }
             
             if( occ_num_error < 0 )
@@ -335,6 +341,10 @@ void IDMFT<TK, TR>::solving_mu()
             std::cout << "\n" << "electron number is not conserved !!!!!!!!!!! " << "\n" << std::endl;
             assert( solve_mu_times <= 200 );
         }
+
+        std::cout << "\n" << "mu: " << this->mu[is] << std::endl;
+        std::cout << "\n" << "total_elec_num: " << total_elec_num << std::endl;
+        std::cout << "\n" << "occ_num_error: " << occ_num_error << "\n" << std::endl;
 
     }
 }

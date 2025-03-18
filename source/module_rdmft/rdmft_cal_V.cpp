@@ -270,6 +270,7 @@ void RDMFT<TK, TR>::cal_V_XC()
         if (GlobalC::exx_info.info_ri.real_number)
         {
             // transfer the DM_XC to appropriate format
+            // and the spin weight when nspin=1 is also removed here (introduced by wk)
             std::vector<std::map<int,std::map<std::pair<int,std::array<int,3>>,RI::Tensor<double>>>> 
                 Ds_XC_d = std::is_same<TK, double>::value //gamma_only_local
                 ? RI_2D_Comm::split_m2D_ktoR<double>(this->kv, DM_XC_pointer, *ParaV, nspin)
@@ -298,6 +299,7 @@ void RDMFT<TK, TR>::cal_V_XC()
         else
         {
             // transfer the DM_XC to appropriate format
+            // and the spin weight when nspin=1 is also removed here (introduced by wk)
             std::vector<std::map<int,std::map<std::pair<int,std::array<int,3>>,RI::Tensor<std::complex<double>>>>> 
                 Ds_XC_c = std::is_same<TK, double>::value //gamma_only_local
                 ? RI_2D_Comm::split_m2D_ktoR<std::complex<double>>(this->kv, DM_XC_pointer, *ParaV, nspin)

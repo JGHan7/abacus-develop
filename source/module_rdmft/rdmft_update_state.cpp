@@ -98,6 +98,7 @@ void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const p
         this->pelec->pot->update_from_charge(charge, ucell);
     }
 
+    // this->cal_V_TV(); // test
     this->cal_V_hartree();
     this->cal_V_XC();
     this->cal_Hk_Hpsi();
