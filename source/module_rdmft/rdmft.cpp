@@ -90,8 +90,11 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
 
     nspin = PARAM.inp.nspin;
     nbands_total = PARAM.inp.nbands;
-    nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? this->kv.get_nkstot_full(): this->kv.get_nks();
-    nk_total *= nspin;
+    nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? this->kv.get_nkstot_full(): this->kv.get_nks();  // here the spin weight is taken into account
+    
+    // nk_total *= nspin;
+    // std::cout << "\n\n nspin:"<< nspin << "\n this->kv.get_nks():" << this->kv.get_nks() << std::endl;
+
     only_exx_type = ( XC_func_rdmft == "hf" || XC_func_rdmft == "muller" || XC_func_rdmft == "power" );
 
     if(nspin == 4) { std::cout << "\n\n rdmft does not support nspin=4 \n\n" << std::endl; }
@@ -522,6 +525,12 @@ void RDMFT<TK, TR>::cal_Ecum()
                 this->fermi_entropy -= temp_num * std::log(temp_num);
             }
         }
+    }
+
+    if( PARAM.inp.nspin == 1 )
+    {
+        this->entropy *= 2;
+        this->fermi_entropy *= 2;
     }
 
     this->Ecum_entropy = -(PARAM.inp.idmft_kappa * this->entropy) - PARAM.inp.idmft_beta;
