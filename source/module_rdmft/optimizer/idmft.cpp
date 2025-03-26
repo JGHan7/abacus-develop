@@ -59,6 +59,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     this->nos_rep_wfc.resize(nk_total);
     this->diag_Fii.resize(nk_total);
     this->rotation_mat.resize(nk_total);
+    this->DM.resize(nk_total, std::vector<TK>(this->ParaV->nloc, 0.0));
     for(int ik=0; ik<nk_total; ++ik)
     {
         this->diag_Fii[ik].resize(nbands, 0.0);
@@ -170,6 +171,25 @@ double IDMFT<TK, TR>::optimize()
     this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
     this->etotal = this->rdmft_solver->cal_Energy();
     this->new_wfc.zero_out();
+
+    // cal new DM and diff_DM
+    std::vector< std::vector<TK> > DM_new(nk_total, std::vector<TK>(this->ParaV->nloc));
+    this->rdmft_solver->cal_DM_XC(this->rdmft_solver->wg, DM_new);
+    this->diff_DM_max = 0.0;
+    for(int ik=0; ik<nk_total; ++ik)
+    {
+        for(int iloc=0; iloc<DM_new[ik].size(); ++iloc)
+        {
+            double diff_DM = std::abs( this->DM[ik][iloc] - DM_new[ik][iloc] );
+            if( diff_DM > this->diff_DM_max )
+            {
+                this->diff_DM_max = diff_DM;
+            }
+
+            this->DM[ik][iloc] = DM_new[ik][iloc];
+        }
+    }
+    rdmft::reduce_all_max(this->diff_DM_max);
 
     this->diff_Etotal = this->etotal - this->etotal_old;
 

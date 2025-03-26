@@ -22,12 +22,12 @@ namespace rdmft
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::cal_DM_XC(std::vector< std::vector<TK> >& DM_XC)
+void RDMFT<TK, TR>::cal_DM_XC(const ModuleBase::matrix wk_fun_occNum_in, std::vector< std::vector<TK> >& DM_XC)
 {
     // get wk_funEta_wfc = wk*g(eta)*conj(wfc), eta is occNum
     psi::Psi<TK> wk_funEta_wfc(wfc);
     conj_psi(wk_funEta_wfc);
-    occNum_MulPsi(ParaV, wk_fun_occNum, wk_funEta_wfc, 0);
+    occNum_MulPsi(ParaV, wk_fun_occNum_in, wk_funEta_wfc, 0);
 
     // get the special DM_XC used in constructing V_exx_XC
     for(int ik=0; ik<wfc.get_nk(); ++ik)
@@ -258,7 +258,7 @@ void RDMFT<TK, TR>::cal_V_XC()
         HR_exx_XC->set_zero();
 
         std::vector< std::vector<TK> > DM_XC(nk_total, std::vector<TK>(ParaV->nloc));
-        cal_DM_XC(DM_XC);
+        cal_DM_XC(this->wk_fun_occNum, DM_XC);
         // get DM_XC of all k points
         if( exx_spacegroup_symmetry )
         {

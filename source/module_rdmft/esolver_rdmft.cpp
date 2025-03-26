@@ -244,7 +244,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                         << "\nEcum_entropy: " << this->rdmft_solver.Ecum_entropy
                         << "\nidmft_entropy: " << this->rdmft_solver.entropy
                         << "\nfermi_entropy: " << this->rdmft_solver.fermi_entropy
-                        << "\n\ndiff_E: " << diff_etotal 
+                        << "\n\ndiff_E: " << diff_etotal
+                        << "\ndiff_DM_max: " << this->idmft.get_diff_DM_max()
                         << "\n******" << std::endl << std::defaultfloat;
 
             // this->idmft.opti_occ_num();
@@ -252,7 +253,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             // temporary
             this->print_info_idmft();
 
-            if( std::abs(diff_etotal) < iter_diag_ethr ) { break; }
+            if( std::abs(diff_etotal) < iter_diag_ethr && this->idmft.get_diff_DM_max() < PARAM.inp.scf_thr  )
+            {
+                break;
+            }
         }
     }
 

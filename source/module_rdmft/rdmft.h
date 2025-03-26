@@ -120,6 +120,9 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     double cal_Energy(const int cal_type = 1);
 
+    //! calculate the special density matrix DM_XC(nk*nbasis_local*nbasis_local)
+    void cal_DM_XC(const ModuleBase::matrix wk_fun_occNum_in, std::vector< std::vector<TK> >& DM_XC);
+
     // //! update occ_number for optimization algorithms that depend on Hamilton
     // void update_wg(const ModuleBase::matrix& wg_in);
 
@@ -144,9 +147,6 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
 
   protected:
-
-    //! calculate the special density matrix DM_XC(nk*nbasis_local*nbasis_local)
-    void cal_DM_XC(std::vector< std::vector<TK> >& DM_XC);
 
     void cal_V_TV();
 

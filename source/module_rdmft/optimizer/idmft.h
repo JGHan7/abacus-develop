@@ -44,6 +44,7 @@ class IDMFT
 
     const std::vector< std::vector<double> >& get_energy_level() { return this->diag_Fii; }
 
+    double get_diff_DM_max() { return this->diff_DM_max; }
 
   protected:
 
@@ -65,6 +66,10 @@ class IDMFT
     RDMFT<TK, TR>* rdmft_solver = nullptr;
 
     double diff_Etotal = 0.0;
+
+    double diff_DM_max = 0.0;
+    
+    std::vector< std::vector<TK> > DM;
 
   private:
 
