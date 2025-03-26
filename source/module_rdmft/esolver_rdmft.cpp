@@ -242,8 +242,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
                         << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
                         << "\nEcum_entropy: " << this->rdmft_solver.Ecum_entropy
-                        << "\nidmft_entropy: " << this->rdmft_solver.entropy
-                        << "\nfermi_entropy: " << this->rdmft_solver.fermi_entropy
+                        << "\nidmft_entropy: " << this->rdmft_solver.idmft_entropy
                         << "\n\ndiff_E: " << diff_etotal
                         << "\ndiff_DM_max: " << this->idmft.get_diff_DM_max()
                         << "\n******" << std::endl << std::defaultfloat;

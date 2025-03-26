@@ -88,8 +88,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     double Ecum_entropy = 0.0;
     double Etotal = 0.0;
     
-    double entropy = 0.0;
-    double fermi_entropy = 0.0;    // temporary
+    double idmft_entropy = 0.0;
 
     // std::vector<double> E_RDMFT(4);
 
