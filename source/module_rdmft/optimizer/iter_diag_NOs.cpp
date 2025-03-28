@@ -113,8 +113,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
 {
     this->etotal_old = this->etotal;
 
-    // this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
-    this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    // this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
 
     this->get_Fock();
 
@@ -261,8 +261,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
 template<typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver_in, const bool conver_initial_value)
 {
-    // this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
-    this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
+    // this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
 
     // get start_Fock = symm_lambda
     std::vector< std::vector<TK> > symm_lambda = lambda;

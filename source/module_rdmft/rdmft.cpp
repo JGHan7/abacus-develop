@@ -425,10 +425,11 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
         Parallel_Reduce::reduce_all(E_RDMFT[0]);
         Parallel_Reduce::reduce_all(E_RDMFT[1]);
 
+        this->Etotal = E_RDMFT[0] + E_RDMFT[1] + E_RDMFT[2] + E_Ewald; // test
+
         // when not optimizing the occupancy number, use it when benchmarking with DFT results
         // this->Etotal = E_RDMFT[0] + E_RDMFT[1] + E_RDMFT[2] + E_Ewald + E_entropy + E_descf;
-
-        this->Etotal = E_RDMFT[0] + E_RDMFT[1] + E_RDMFT[2] + E_Ewald; // test
+        if( PARAM.inp.dft_opti ) { this->Etotal += E_entropy; }
 
         // temp
         E_RDMFT[3] = E_RDMFT[0] + E_RDMFT[1] + E_RDMFT[2];

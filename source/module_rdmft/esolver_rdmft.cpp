@@ -34,7 +34,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     this->maxniter_orb = PARAM.inp.scf_nmax;
 
     // initialize rdmft
-    if( PARAM.inp.rdmft_orb_opti == "iterDiag" || PARAM.inp.rdmft_orb_opti == "idmft" )
+    if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "idmft" )
     {
         rdmft_solver.init(this->GG,
                             this->GK,
@@ -63,7 +63,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
                             false);
     }
 
-    if( PARAM.inp.rdmft_orb_opti == "iterDiag" )
+    if( PARAM.inp.rdmft_orb_opti == "iter_diag" )
     {
         this->iter_diag_orb.init(rdmft_solver.nk_total, this->kv.get_nkstot_full(), rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
         this->ls_opti_occ_num.init(this->kv, &this->rdmft_solver);
@@ -150,7 +150,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     std::cout << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
     this->rdmft_solver.cal_Energy();
 
-    if( PARAM.inp.rdmft_orb_opti == "iterDiag" )
+    if( PARAM.inp.rdmft_orb_opti == "iter_diag" )
     {
         this->get_start_guess();
 
@@ -351,38 +351,38 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
 template <typename TK, typename TR>
 double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 {
-    // elecstate::ElecState* pelec_ = this->pelec;
-    // K_Vectors& kv_ = this->kv;
+    elecstate::ElecState* pelec_ = this->pelec;
+    K_Vectors& kv_ = this->kv;
  
-    // std::vector< std::vector<double> > ekb_rdmft(rdmft_solver_in.nk_total, std::vector<double>(PARAM.inp.nbands, 0.0));
+    std::vector< std::vector<double> > ekb_rdmft(rdmft_solver_in.nk_total, std::vector<double>(PARAM.inp.nbands, 0.0));
 
-    // for(int ik=0; ik<ekb_rdmft.size(); ++ik)
-    // {
-    //     std::vector<TK> Hij_rdmft = rdmft_solver_in.Hij_no_exx[ik];  // should times wk?
-    //     if(GlobalC::exx_info.info_global.cal_exx)
-    //     {
-    //         for(int iloc=0; iloc<Hij_rdmft.size(); ++iloc) Hij_rdmft[iloc] += rdmft_solver_in.Hij_exx[ik][iloc];
-    //     }
+    for(int ik=0; ik<ekb_rdmft.size(); ++ik)
+    {
+        std::vector<TK> Hij_rdmft = rdmft_solver_in.Hij_no_exx[ik];  // should times wk?
+        if(GlobalC::exx_info.info_global.cal_exx)
+        {
+            for(int iloc=0; iloc<Hij_rdmft.size(); ++iloc) Hij_rdmft[iloc] += rdmft_solver_in.Hij_exx[ik][iloc];
+        }
 
-    //     std::vector<TK> temp_egivector(rdmft_solver_in.para_Eij.get_local_size(), 0.0);
-    //     rdmft::pdiag_scalapack( &(rdmft_solver_in.para_Eij), PARAM.inp.nbands, Hij_rdmft.data(), ekb_rdmft[ik].data(), temp_egivector.data(), false );
+        std::vector<TK> temp_egivector(rdmft_solver_in.para_Eij.get_local_size(), 0.0);
+        rdmft::pdiag_scalapack( &(rdmft_solver_in.para_Eij), PARAM.inp.nbands, Hij_rdmft.data(), ekb_rdmft[ik].data(), temp_egivector.data(), false );
 
-    //     for(int ib=0; ib<ekb_rdmft[ik].size(); ++ib) pelec_->ekb(ik, ib) = ekb_rdmft[ik][ib];
-    // }
+        for(int ib=0; ib<ekb_rdmft[ik].size(); ++ib) pelec_->ekb(ik, ib) = ekb_rdmft[ik][ib];
+    }
 
-    // pelec_->calEBand();
-    // pelec_->calculate_weights();
-    // ModuleBase::matrix occ_number_ks = (pelec_->wg);
-    // for(int ik=0; ik < occ_number_ks.nr; ++ik)
-    // {
-    //     for(int inb=0; inb < occ_number_ks.nc; ++inb)
-    //     {
-    //         occ_number_ks(ik, inb) /= kv_.wk[ik];
-    //     }
-    // }
-    // rdmft_solver_in.update_elec(&occ_number_ks);
+    pelec_->calEBand();
+    pelec_->calculate_weights();
+    ModuleBase::matrix occ_number_ks = (pelec_->wg);
+    for(int ik=0; ik < occ_number_ks.nr; ++ik)
+    {
+        for(int inb=0; inb < occ_number_ks.nc; ++inb)
+        {
+            occ_number_ks(ik, inb) /= kv_.wk[ik];
+        }
+    }
+    rdmft_solver_in.update_elec(&occ_number_ks);
 
-    // return 1.0;
+    return 1.0;
 
 }
 
@@ -390,15 +390,22 @@ double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::print_info_idmft()
 {
-    for(int ik=0; ik < rdmft_solver.nk_total; ++ik)
+    if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
-        std::cout << "\n\nik: " << ik << std::endl; // << std::fixed << std::setprecision(10);
-        std::cout << "---------------------------------------\nnbands      " << "occ_number      " << "energy level(Rydberg)" << std::endl; 
-        for(int ib=0; ib < rdmft_solver.nbands_total; ++ib)
+        for(int ik=0; ik < rdmft_solver.nk_total; ++ik)
         {
-            std::cout << ib << "           " << rdmft_solver.occ_number(ik, ib) << "        " << this->idmft.get_energy_level()[ik][ib] << std::endl;
+            std::cout << "\n\nik: " << ik << std::endl; // << std::fixed << std::setprecision(10);
+            std::cout << "---------------------------------------\nnbands      " << "occ_number      " << "energy level(Rydberg)" << std::endl; 
+            for(int ib=0; ib < rdmft_solver.nbands_total; ++ib)
+            {
+                std::cout << ib << "           " << rdmft_solver.occ_number(ik, ib) << "        " << this->idmft.get_energy_level()[ik][ib] << std::endl;
+            }
+            std::cout << "---------------------------------------\n" << std::endl;
         }
-        std::cout << "---------------------------------------\n" << std::endl;
+    }
+    else
+    {
+        ;
     }
 }
 
