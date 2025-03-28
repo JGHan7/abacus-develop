@@ -254,7 +254,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         }
     }
 
-    this->print_info_idmft();
+    // this->print_info_idmft();
 
     // std::cout << std::scientific << std::setprecision(1) << std::endl;
     // rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
