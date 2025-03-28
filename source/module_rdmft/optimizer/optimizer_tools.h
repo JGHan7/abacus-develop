@@ -7,7 +7,7 @@
 
 #include "module_base/blas_connector.h"
 #include "module_base/scalapack_connector.h"
-#include "module_basis/module_ao/parallel_2d.h"
+#include "module_base/parallel_2d.h"
 #include "module_basis/module_ao/parallel_orbitals.h"
 #include "module_parameter/parameter.h"
 #include "module_base/constants.h"

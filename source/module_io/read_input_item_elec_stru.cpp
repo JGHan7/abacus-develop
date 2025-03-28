@@ -122,9 +122,23 @@ void ReadInput::item_elec_stru()
                 }
                 else if (ks_solver == "cusolver" || ks_solver == "cusolvermp")
                 {
+                    std::string warningstr;
 #ifndef __MPI
                     ModuleBase::WARNING_QUIT("ReadInput", "Cusolver can not be used for series version.");
 #endif
+#ifndef __CUDA
+                    warningstr = "ks_solver is set to " + ks_solver + " but ABACUS is built with CPU only!\n"
+                    + " Please rebuild ABACUS with GPU support or change the ks_solver.";  
+                    ModuleBase::WARNING_QUIT("ReadInput", warningstr);
+#endif
+                    if( ks_solver == "cusolvermp")
+                    {
+#ifndef __CUSOLVERMP
+                    warningstr = "ks_solver is set to cusolvermp, but ABACUS is not built with cusolvermp support\n"
+                    " Please rebuild ABACUS with cusolvermp support or change the ks_solver.";
+                    ModuleBase::WARNING_QUIT("ReadInput", warningstr);
+#endif              
+                    }
                 }
                 else if (ks_solver == "pexsi")
                 {
@@ -248,6 +262,7 @@ void ReadInput::item_elec_stru()
             }
         };
         sync_double(input.nupdown);
+        add_bool_bcast(sys.two_fermi);
         this->add_item(item);
     }
     {
@@ -315,6 +330,12 @@ void ReadInput::item_elec_stru()
         this->add_item(item);
     }
     {
+        Input_Item item("diago_smooth_ethr");
+        item.annotation = "smooth ethr for iter methods";
+        read_sync_bool(input.diago_smooth_ethr);
+        this->add_item(item);
+    }
+    {
         Input_Item item("pw_diag_ndim");
         item.annotation = "dimension of workspace for Davidson diagonalization";
         read_sync_int(input.pw_diag_ndim);
@@ -330,6 +351,18 @@ void ReadInput::item_elec_stru()
         Input_Item item("smearing_method");
         item.annotation = "type of smearing_method: gauss; fd; fixed; mp; mp2; mv";
         read_sync_string(input.smearing_method);
+        item.check_value = [](const Input_Item& item, const Parameter& para) {
+            const std::vector<std::string> methods = {"gauss", "gaussian", 
+                                                      "fd", "fermi-dirac",
+                                                      "fixed",
+                                                      "mp", "mp2", "mp3"
+                                                      "marzari-vanderbilt", "cold", "mv"};
+            if (std::find(methods.begin(), methods.end(), para.input.smearing_method) == methods.end())
+            {
+                const std::string warningstr = nofound_str(methods, "smearing_method");
+                ModuleBase::WARNING_QUIT("ReadInput", warningstr);
+            }
+        };
         this->add_item(item);
     }
     {
@@ -575,6 +608,12 @@ void ReadInput::item_elec_stru()
                 para.input.scf_os_ndim = para.input.mixing_ndim;
             }
         };
+        this->add_item(item);
+    }
+    {
+        Input_Item item("sc_os_ndim");
+        item.annotation = "number of old iterations used for oscillation detection, for Spin-Constrained DFT";
+        read_sync_int(input.sc_os_ndim);
         this->add_item(item);
     }
     {

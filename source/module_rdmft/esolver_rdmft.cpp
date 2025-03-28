@@ -8,6 +8,7 @@
 #include "module_rdmft/rdmft_tools.h"
 #include "module_rdmft/optimizer/optimizer_tools.h" // temporary
 #include <cmath> // temporary
+#include "module_elecstate/elecstate_tools.h" // temporary
 
 namespace rdmft
 {
@@ -40,6 +41,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
                             this->GK,
                             this->pv,
                             ucell,
+                            this->gd,
                             this->kv,
                             *(this->pelec),
                             this->orb_,
@@ -54,6 +56,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
                             this->GK,
                             this->pv,
                             ucell,
+                            this->gd,
                             this->kv,
                             *(this->pelec),
                             this->orb_,
@@ -105,7 +108,7 @@ template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 {
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_scf(ucell, istep);
-    rdmft_solver.update_ion(ucell, *(this->pw_rho), this->ppcell.vloc, this->sf.strucFac);
+    rdmft_solver.update_ion(ucell, *(this->pw_rho), this->locpp.vloc, this->sf.strucFac);
 
     // before the iterative electronic step, get initial value by one KS step
     if(GlobalC::exx_info.info_global.cal_exx)
@@ -327,7 +330,6 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
 template <typename TK, typename TR>
 double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 {
-    elecstate::ElecState* pelec_ = this->pelec;
     K_Vectors& kv_ = this->kv;
  
     std::vector< std::vector<double> > ekb_rdmft(rdmft_solver_in.nk_total, std::vector<double>(PARAM.inp.nbands, 0.0));
@@ -343,12 +345,19 @@ double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
         std::vector<TK> temp_egivector(rdmft_solver_in.para_Eij.get_local_size(), 0.0);
         rdmft::pdiag_scalapack( &(rdmft_solver_in.para_Eij), PARAM.inp.nbands, Hij_rdmft.data(), ekb_rdmft[ik].data(), temp_egivector.data(), false );
 
-        for(int ib=0; ib<ekb_rdmft[ik].size(); ++ib) pelec_->ekb(ik, ib) = ekb_rdmft[ik][ib];
+        for(int ib=0; ib<ekb_rdmft[ik].size(); ++ib) this->pelec->ekb(ik, ib) = ekb_rdmft[ik][ib];
     }
 
-    pelec_->calEBand();
-    pelec_->calculate_weights();
-    ModuleBase::matrix occ_number_ks = (pelec_->wg);
+    elecstate::calEBand(this->pelec->ekb,this->pelec->wg,this->pelec->f_en);
+    elecstate::calculate_weights(this->pelec->ekb,
+                                    this->pelec->wg,
+                                    this->pelec->klist,
+                                    this->pelec->eferm,
+                                    this->pelec->f_en,
+                                    this->pelec->nelec_spin,
+                                    this->pelec->skip_weights);
+
+    ModuleBase::matrix occ_number_ks = (this->pelec->wg);
     for(int ik=0; ik < occ_number_ks.nr; ++ik)
     {
         for(int inb=0; inb < occ_number_ks.nc; ++inb)

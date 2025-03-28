@@ -20,20 +20,6 @@ Magnetism::~Magnetism()
     delete[] this->start_magnetization;
 }
 
-namespace ModuleIO
-{
-void print_force(std::ofstream& ofs_running,
-                 const UnitCell& cell,
-                 const std::string& name,
-                 const ModuleBase::matrix& force,
-                 bool ry = true)
-{
-}
-void print_stress(const std::string& name, const ModuleBase::matrix& scs, const bool screen, const bool ry)
-{
-}
-} // namespace ModuleIO
-
 class Setcell
 {
   public:
@@ -43,11 +29,9 @@ class Setcell
 
         ucell.atoms = new Atom[ucell.ntype];
         ucell.set_atom_flag = true;
-
-        delete[] ucell.atom_label;
-        delete[] ucell.atom_mass;
-        ucell.atom_mass = new double[ucell.ntype];
-        ucell.atom_label = new std::string[ucell.ntype];
+        
+        ucell.atom_mass.resize(ucell.ntype);
+        ucell.atom_label.resize(ucell.ntype);
         ucell.atom_mass[0] = 39.948;
         ucell.atom_label[0] = "Ar";
 

@@ -8,9 +8,9 @@
 #include "module_base/tool_title.h"
 #include "module_base/timer.h"
 #include "module_hamilt_general/module_xc/xc_functional.h"
-#include "module_elecstate/potentials/H_Hartree_pw.h"
-#include "module_elecstate/potentials/pot_local.h"
-#include "module_elecstate/potentials/pot_xc.h"
+#include "module_elecstate/module_pot/H_Hartree_pw.h"
+#include "module_elecstate/module_pot/pot_local.h"
+#include "module_elecstate/module_pot/pot_xc.h"
 #include "module_hamilt_pw/hamilt_pwdft/structure_factor.h"
 
 #include <iostream>
@@ -192,8 +192,7 @@ template class Veff_rdmft<std::complex<double>, std::complex<double>>;
 // this part of the code is copying from class Veff
 // initialize_HR()
 template <typename TK, typename TR>
-void Veff_rdmft<TK, TR>::initialize_HR(const UnitCell* ucell_in,
-                                       Grid_Driver* GridD)
+void Veff_rdmft<TK, TR>::initialize_HR(const UnitCell* ucell_in, const Grid_Driver* GridD)
 {
     ModuleBase::TITLE("Veff", "initialize_HR");
     ModuleBase::timer::tick("Veff", "initialize_HR");
@@ -246,8 +245,6 @@ void Veff_rdmft<TK, TR>::contributeHR()
 {
     ModuleBase::TITLE("Veff", "contributeHR");
     ModuleBase::timer::tick("Veff", "contributeHR");
-
-    this->GK->reset_spin(this->current_spin);
 
     double* vr_eff_rdmft = nullptr;
 

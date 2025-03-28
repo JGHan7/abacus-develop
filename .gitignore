@@ -17,10 +17,10 @@ STRU_READIN_ADJUST.cif
 build
 dist
 .idea
-toolchain.tar.gz
 time.json
 *.pyc
 __pycache__
 abacus.json
 *.npy
-examples/lr-tddft/gaussianGuan_lcao_Si2
+toolchain/install/
+toolchain/abacus_env.sh

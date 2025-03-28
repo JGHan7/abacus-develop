@@ -55,7 +55,7 @@ class Gint {
      * @brief calculate the neighbor atoms of each atom in this processor
      * size of BaseMatrix with be the non-parallel version
      */
-    void initialize_pvpR(const UnitCell& unitcell, Grid_Driver* gd, const int& nspin);
+    void initialize_pvpR(const UnitCell& unitcell, const Grid_Driver* gd, const int& nspin);
 
     /**
      * @brief resize DMRGint to nspin and reallocate the memory
@@ -140,6 +140,7 @@ class Gint {
     //! psir_ylm: dim is [bxyz][LD_pool]
     //! psir_vlbr3: dim is [bxyz][LD_pool]
     //! hR: HContainer for storing the <phi_0|V|phi_R> matrix elements
+    //! cal_meshball_vlocal is thread-safe!
     void cal_meshball_vlocal(
         const int na_grid,
         const int LD_pool,

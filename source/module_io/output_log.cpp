@@ -7,7 +7,7 @@
 
 namespace ModuleIO
 {
-void output_convergence_after_scf(bool& convergence, double& energy, std::ofstream& ofs_running)
+void output_convergence_after_scf(const bool &convergence, double& energy, std::ofstream& ofs_running)
 {
     if (convergence)
     {
@@ -43,7 +43,7 @@ void output_after_relax(bool conv_ion, bool conv_esolver, std::ofstream& ofs_run
     }
 }
 
-void output_efermi(bool& convergence, double& efermi, std::ofstream& ofs_running)
+void output_efermi(const bool &convergence, double& efermi, std::ofstream& ofs_running)
 {
     if (convergence && PARAM.inp.out_level != "m")
     {
@@ -242,7 +242,9 @@ void print_force(std::ofstream& ofs_running,
         }
     }
 
-    FmtTable fmt(titles, atom_label.size(), {"%10s", "%20.10f", "%20.10f", "%20.10f"});
+    FmtTable fmt(/*titles=*/titles, 
+                 /*nrows=*/atom_label.size(), 
+                 /*formats=*/{"%10s", "%20.10f", "%20.10f", "%20.10f"}, 0);
     fmt << atom_label << force_x << force_y << force_z;
     table = fmt.str();
     ofs_running << table << std::endl;
@@ -283,7 +285,9 @@ void print_stress(const std::string& name, const ModuleBase::matrix& scs, const 
 
     double pressure = (scs(0, 0) + scs(1, 1) + scs(2, 2)) / 3.0 * unit_transform;
 
-    FmtTable fmt(titles, 3, {"%20.10f", "%20.10f", "%20.10f"});
+    FmtTable fmt(/*titles=*/titles, 
+                 /*nrows=*/3, 
+                 /*formats=*/{"%20.10f", "%20.10f", "%20.10f"}, 0);
     fmt << stress_x << stress_y << stress_z;
     table = fmt.str();
     GlobalV::ofs_running << table;

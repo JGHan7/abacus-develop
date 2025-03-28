@@ -60,6 +60,7 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
                             Gint_k& GK_in, 
                             Parallel_Orbitals& ParaV_in, 
                             UnitCell& ucell_in,
+                            const Grid_Driver& gd_in,
                             K_Vectors& kv_in, 
                             elecstate::ElecState& pelec_in, 
                             LCAO_Orbitals& orb_in, 
@@ -67,8 +68,6 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
                             std::string XC_func_rdmft_in, 
                             double alpha_power_in,
                             bool if_iter_diag)
-// template <typename TK, typename TR>
-// void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag)
 {
     GG = &GG_in;
     GK = &GK_in;
@@ -78,6 +77,7 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
     charge = pelec_in.charge;
     pelec = &pelec_in;
     orb = &orb_in;
+    gd = &gd_in;
     two_center_bundle = &two_center_bundle_in;
 
     // ParaV = &this->pv;
@@ -193,12 +193,12 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
         if (GlobalC::exx_info.info_ri.real_number)
         {
             Vxc_fromRI_d = new Exx_LRI<double>(GlobalC::exx_info.info_ri);
-            Vxc_fromRI_d->init(MPI_COMM_WORLD, *(this->kv), *orb);
+            Vxc_fromRI_d->init(MPI_COMM_WORLD, *ucell,*kv, *orb);
         }
         else
         {
             Vxc_fromRI_c = new Exx_LRI<std::complex<double>>(GlobalC::exx_info.info_ri);
-            Vxc_fromRI_c->init(MPI_COMM_WORLD, *(this->kv), *orb);
+            Vxc_fromRI_c->init(MPI_COMM_WORLD, *ucell,*kv, *orb);
         }
     }
 #endif
@@ -436,7 +436,7 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
     }
     else
     {
-        this->pelec->f_en.deband  = this->pelec->cal_delta_eband();
+        this->pelec->f_en.deband  = this->pelec->cal_delta_eband(*ucell);
         E_descf = this->pelec->f_en.descf = 0.0;
         this->pelec->cal_energies(2);
         Etotal = this->pelec->f_en.etot;

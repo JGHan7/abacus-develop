@@ -17,8 +17,10 @@ if(ENABLE_LCAO)
       esolver_ks_lcao.cpp
       esolver_ks_lcao_tddft.cpp
       lcao_before_scf.cpp
+      lcao_after_scf.cpp
       esolver_gets.cpp
       lcao_others.cpp
+      esolver_dm2rho.cpp
   )
 endif()
 
@@ -26,6 +28,8 @@ add_library(
     esolver
     OBJECT
     ${objects}
+        ../module_hamilt_pw/hamilt_pwdft/module_exx_helper/exx_helper.cpp
+        ../module_hamilt_pw/hamilt_pwdft/module_exx_helper/exx_helper.h
 )
 
 if(ENABLE_COVERAGE)

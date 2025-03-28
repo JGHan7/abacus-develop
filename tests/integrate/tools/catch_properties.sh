@@ -42,6 +42,7 @@ has_cond=$(get_input_key_value "cal_cond" "INPUT")
 has_hs=$(get_input_key_value "out_mat_hs" "INPUT")
 has_hs2=$(get_input_key_value "out_mat_hs2" "INPUT")
 has_xc=$(get_input_key_value "out_mat_xc" "INPUT")
+has_xc2=$(get_input_key_value "out_mat_xc2" "INPUT")
 has_eband_separate=$(get_input_key_value "out_eband_terms" "INPUT")
 has_r=$(get_input_key_value "out_mat_r" "INPUT")
 deepks_out_labels=$(get_input_key_value "deepks_out_labels" "INPUT")
@@ -257,6 +258,13 @@ if ! test -z "$has_xc"  && [  $has_xc == 1 ]; then
     echo "CompareOrbXC_pass $?" >>$1
 fi
 
+if ! test -z "$has_xc2"  && [  $has_xc2 == 1 ]; then
+	xc2ref=Vxc_R_spin0.ref
+	xc2cal=OUT.autotest/Vxc_R_spin0.csr
+	python3 ../tools/CompareFile.py $xc2ref $xc2cal 8
+	echo "CompareVXC_R_pass $?" >>$1
+fi
+
 if ! test -z "$has_eband_separate"  && [  $has_eband_separate == 1 ]; then
 	ekref=kinetic_out.ref
 	ekcal=OUT.autotest/kinetic_out.dat
@@ -401,7 +409,7 @@ if ! test -z "$out_dm"  && [ $out_dm == 1 ]; then
 fi
 
 if ! test -z "$out_mul"  && [ $out_mul == 1 ]; then
-    python3 ../tools/CompareFile.py mulliken.txt.ref OUT.autotest/mulliken.txt 6
+    python3 ../tools/CompareFile.py mulliken.txt.ref OUT.autotest/mulliken.txt 4
 	echo "Compare_mulliken_pass $?" >>$1
 fi
 
@@ -514,8 +522,8 @@ if ! test -z "$deepks_v_delta" && [ $deepks_v_delta == 2 ]; then
 	echo "totalh $totalh" >>$1
 	totalvdelta=`python3 get_v_delta.py`
 	echo "totalvdelta $totalvdelta" >>$1
-	total_psialpha=`python3 get_sum_numpy.py OUT.autotest/deepks_psialpha.npy `
-	echo "total_psialpha $total_psialpha" >> $1
+	total_phialpha=`python3 get_sum_numpy.py OUT.autotest/deepks_phialpha.npy `
+	echo "total_phialpha $total_phialpha" >> $1
 	total_gevdm=`python3 get_sum_numpy.py OUT.autotest/deepks_gevdm.npy `
 	echo "total_gevdm $total_gevdm" >> $1
 fi

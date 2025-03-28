@@ -23,10 +23,10 @@ namespace rdmft
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
-                                ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in)
-// template <typename TK, typename TR>
-// void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
+void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, 
+                               ModulePW::PW_Basis& rho_basis_in,
+                               ModuleBase::matrix& vloc_in, 
+                               ModuleBase::ComplexMatrix& sf_in)
 {
     ucell = &ucell_in;
     rho_basis = &rho_basis_in;
@@ -40,11 +40,11 @@ void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis
     {
         if (GlobalC::exx_info.info_ri.real_number)
         {
-            Vxc_fromRI_d->cal_exx_ions();
+            Vxc_fromRI_d->cal_exx_ions(ucell_in);
         }
         else
         {
-            Vxc_fromRI_c->cal_exx_ions();
+            Vxc_fromRI_c->cal_exx_ions(ucell_in);
         }
     }
 #endif
@@ -54,7 +54,9 @@ void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const psi::Psi<TK>* wfc_in, const Charge* charge_in)
+void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in,
+                                const psi::Psi<TK>* wfc_in,
+                                const Charge* charge_in)
 {
     if( occ_number_in != nullptr )
     {
@@ -88,7 +90,7 @@ void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const p
     if( this->cal_E_type != 1 )
     {
         // the second cal_E_type need the complete pot to get effctive_V to calEband and so on.
-        this->pelec->pot->update_from_charge(charge, ucell);
+        this->pelec->pot->update_from_charge(charge, this->ucell);
     }
 
     // this->cal_V_TV(); // test
@@ -106,8 +108,8 @@ void RDMFT<TK, TR>::update_charge()
     {
         // calculate DMK and DMR
         elecstate::DensityMatrix<TK, double> DM_gamma_only(ParaV, nspin);
-        elecstate::cal_dm_psi(ParaV, wg, this->wfc, DM_gamma_only);
-        DM_gamma_only.init_DMR(&GlobalC::GridD, &GlobalC::ucell);
+        elecstate::cal_dm_psi(ParaV, wg, wfc, DM_gamma_only);
+        DM_gamma_only.init_DMR(this->gd, this->ucell);
         DM_gamma_only.cal_DMR();
 
         for (int is = 0; is < nspin; is++)
@@ -119,7 +121,7 @@ void RDMFT<TK, TR>::update_charge()
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
         this->GG->cal_gint(&inout);
 
-        if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
+        if (XC_Functional::get_ked_flag())
         {
             // for (int is = 0; is < nspin; is++)
             // {
@@ -136,7 +138,7 @@ void RDMFT<TK, TR>::update_charge()
     {
         // calculate DMK and DMR
         elecstate::DensityMatrix<TK, double> DM(ParaV, nspin, this->kv->kvec_d, nk_total);
-        elecstate::cal_dm_psi(ParaV, wg, this->wfc, DM);
+        elecstate::cal_dm_psi(ParaV, wg, wfc, DM);
 
 //         psi::Psi<TK> wg_wfc(wfc);
 //         conj_psi(wg_wfc);
@@ -156,7 +158,7 @@ void RDMFT<TK, TR>::update_charge()
 // #endif            
 //         }
 
-        DM.init_DMR(&GlobalC::GridD, &GlobalC::ucell);
+        DM.init_DMR(this->gd, this->ucell);
         DM.cal_DMR();
 
         for (int is = 0; is < nspin; is++)
@@ -168,7 +170,7 @@ void RDMFT<TK, TR>::update_charge()
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
         this->GK->cal_gint(&inout);
 
-        if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
+        if (XC_Functional::get_ked_flag())
         {
             // for (int is = 0; is < nspin; is++)
             // {
@@ -183,22 +185,10 @@ void RDMFT<TK, TR>::update_charge()
     }
 
     // charge density symmetrization
-    // this->pelec->calculate_weights();
-    // this->pelec->calEBand();
     Symmetry_rho srho;
     for (int is = 0; is < nspin; is++)
     {
-        srho.begin(is, *(this->charge), rho_basis, GlobalC::ucell.symm);
-    }
-
-    // what this? it seems that it needs to be updated at each iteration
-    if (PARAM.inp.vl_in_h)
-    {
-        // update Gint_K
-        if (!PARAM.globalv.gamma_only_local)
-        {
-            this->GK->renew();
-        }
+        srho.begin(is, *(this->charge), rho_basis, this->ucell->symm);
     }
 }
 

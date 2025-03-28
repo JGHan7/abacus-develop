@@ -10,7 +10,7 @@
 #include "module_psi/psi.h"
 #include "module_base/matrix.h"
 
-#include "module_basis/module_ao/parallel_2d.h"
+#include "module_base/parallel_2d.h"
 #include "module_basis/module_ao/parallel_orbitals.h"
 #include "module_cell/unitcell.h"
 #include "module_hamilt_lcao/module_gint/gint_gamma.h"
@@ -57,7 +57,7 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     elecstate::ElecState* pelec = nullptr;
 
     //! update after ion step
-    const K_Vectors* kv = nullptr; 
+    const K_Vectors* kv = nullptr;
 
     int nk_total = 0;
     int nbands_total = 0;
@@ -93,8 +93,18 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // std::vector<double> E_RDMFT(4);
 
     //! initialization of rdmft calculation
-    void init(Gint_Gamma& GG_in, Gint_k& GK_in, Parallel_Orbitals& ParaV_in, UnitCell& ucell_in, K_Vectors& kv_in,
-                elecstate::ElecState& pelec_in, LCAO_Orbitals& orb_in, TwoCenterBundle& two_center_bundle_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag = true);
+    void init(Gint_Gamma& GG_in,
+              Gint_k& GK_in,
+              Parallel_Orbitals& ParaV_in,
+              UnitCell& ucell_in,
+              const Grid_Driver& gd_in,
+              K_Vectors& kv_in,
+              elecstate::ElecState& pelec_in,
+              LCAO_Orbitals& orb_in,
+              TwoCenterBundle& two_center_bundle_in,
+              std::string XC_func_rdmft_in,
+              double alpha_power_in,
+              bool if_iter_diag = true);
 
     //! update in ion-step and get V_TV
     void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
@@ -215,7 +225,8 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     Charge* charge = nullptr;
 
     // update after ion step
-    const UnitCell* ucell = nullptr;
+    UnitCell* ucell = nullptr;
+    const Grid_Driver* gd = nullptr;
     const ModulePW::PW_Basis* rho_basis = nullptr;
     const ModuleBase::matrix* vloc = nullptr;
     const ModuleBase::ComplexMatrix* sf = nullptr;

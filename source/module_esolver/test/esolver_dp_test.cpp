@@ -20,19 +20,6 @@
  *   - ESolver_DP::post_process()
  *   - ESolver_DP::type_map()
  */
-namespace ModuleIO
-{
-void print_force(std::ofstream& ofs_running,
-                 const UnitCell& cell,
-                 const std::string& name,
-                 const ModuleBase::matrix& force,
-                 bool ry = true)
-{
-}
-void print_stress(const std::string& name, const ModuleBase::matrix& scs, const bool screen, const bool ry)
-{
-}
-} // namespace ModuleIO
 
 class ESolverDPTest : public ::testing::Test
 {
@@ -55,7 +42,7 @@ class ESolverDPTest : public ::testing::Test
         ucell.atoms[0].taud.resize(1, ModuleBase::Vector3<double>(0.0, 0.0, 0.0));
         ucell.atoms[1].taud.resize(1, ModuleBase::Vector3<double>(0.0, 0.0, 0.0));
 
-        ucell.atom_label = new std::string[2];
+        ucell.atom_label.resize(ucell.ntype);
         ucell.atom_label[0] = "Cu";
         ucell.atom_label[1] = "Al";
         esolver->before_all_runners(ucell, inp);
@@ -65,10 +52,7 @@ class ESolverDPTest : public ::testing::Test
     {
         // Clean up after each test
         delete esolver;
-        delete[] ucell.iat2it;
-        delete[] ucell.iat2ia;
         delete[] ucell.atoms;
-        delete[] ucell.atom_label;
     }
 
     ModuleESolver::ESolver_DP* esolver;
@@ -86,7 +70,6 @@ TEST_F(ESolverDPTest, InitCase1)
         for (int j = 0; j < 3; ++j)
         {
             EXPECT_DOUBLE_EQ(esolver->dp_virial(i, j), 0.0);
-            EXPECT_DOUBLE_EQ(esolver->cell[3 * i + j], 0.0);
         }
     }
     for (int i = 0; i < ucell.nat; ++i)
@@ -94,7 +77,6 @@ TEST_F(ESolverDPTest, InitCase1)
         for (int j = 0; j < 3; ++j)
         {
             EXPECT_DOUBLE_EQ(esolver->dp_force(i, j), 0.0);
-            EXPECT_DOUBLE_EQ(esolver->coord[3 * i + j], 0.0);
         }
     }
     EXPECT_EQ(esolver->atype[0], 0);
@@ -183,8 +165,9 @@ TEST_F(ESolverDPTest, Postprocess)
     esolver->after_all_runners(ucell);
     GlobalV::ofs_running.close();
 
-    std::string expected_output = "\n\n --------------------------------------------\n !FINAL_ETOT_IS 133.3358404 eV\n "
-                                  "--------------------------------------------\n\n\n";
+    std::string expected_output
+        = "\n\n --------------------------------------------\n !FINAL_ETOT_IS 133.3358404000000235 eV\n "
+          "--------------------------------------------\n\n\n";
     std::ifstream ifs("log");
     std::string output((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     ifs.close();

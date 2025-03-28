@@ -32,6 +32,10 @@ void ReadInput::item_exx()
                 {
                     para.input.exx_hybrid_alpha = "1";
                 }
+                else if (dft_functional_lower == "b3lyp")
+                {
+                    para.input.exx_hybrid_alpha = "0.2";
+                }
                 else
                 { // no exx in scf, but will change to non-zero in
                     // postprocess like rpa
@@ -339,16 +343,9 @@ void ReadInput::item_dftu()
             const Input_para& input = para.input;
             if (input.dft_plus_u != 0)
             {
-                if (input.basis_type != "lcao")
+                if (input.basis_type == "pw" && input.nspin != 4)
                 {
-                    ModuleBase::WARNING_QUIT("ReadInput", "WRONG ARGUMENTS OF basis_type, only lcao is support");
-                }
-                if (input.ks_solver != "genelpa" && input.ks_solver != "scalapack_gvx" && input.ks_solver != "default")
-                {
-                    std::cout << " You'are using " << input.ks_solver << std::endl;
-                    ModuleBase::WARNING_QUIT("ReadInput",
-                                             "WRONG ARGUMENTS OF ks_solver in DFT+U routine, only "
-                                             "genelpa and scalapack_gvx are supported ");
+                    ModuleBase::WARNING_QUIT("ReadInput", "WRONG ARGUMENTS, only nspin2 with PW base is not supported now");
                 }
             }
         };
@@ -405,6 +402,7 @@ void ReadInput::item_dftu()
             }
         };
         sync_double(input.uramping_eV);
+        add_double_bcast(sys.uramping);
         this->add_item(item);
     }
     {
