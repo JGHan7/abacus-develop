@@ -22,7 +22,7 @@ class LineSearch
     LineSearch();
     ~LineSearch();
 
-    void init(RDMFT<TK, TR>* rdmft_in);
+    void init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in);
 
     //! use an approximate line search method to find a suitable step size
     double do_line_search(const bool start_guess = false);

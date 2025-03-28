@@ -22,23 +22,16 @@ namespace rdmft
 
 
 
-// template <typename TK, typename TR>
-// void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
-//                                 ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in)
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
+void RDMFT<TK, TR>::update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
+                                ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in)
+// template <typename TK, typename TR>
+// void RDMFT<TK, TR>::update_ion(const int istep, UnitCell& ucell_in)
 {
-    // ucell = &ucell_in;
-    // rho_basis = &rho_basis_in;
-    // vloc = &vloc_in;
-    // sf = &sf_in; // &(this->sf.strucFac);
-
-    // this->before_scf(istep);
-    ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_scf(ucell_in, istep);
-
     ucell = &ucell_in;
-    rho_basis = this->pw_rho;
-    vloc = &this->ppcell.vloc;
+    rho_basis = &rho_basis_in;
+    vloc = &vloc_in;
+    sf = &sf_in; // &(this->sf.strucFac);
 
     HR_TV->set_zero();
     this->cal_V_TV();
@@ -72,8 +65,8 @@ void RDMFT<TK, TR>::update_elec(const ModuleBase::matrix* occ_number_in, const p
         // {
         //     for(int inb=0; inb < wg.nc; ++inb)
         //     {
-        //         wg(ik, inb) *= this->kv.wk[ik];
-        //         wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+        //         wg(ik, inb) *= this->kv->wk[ik];
+        //         wk_fun_occNum(ik, inb) = this->kv->wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
         //     }
         // }
         this->update_occNumber(*occ_number_in);
@@ -122,9 +115,9 @@ void RDMFT<TK, TR>::update_charge()
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
 
-        this->GG.transfer_DM2DtoGrid(DM_gamma_only.get_DMR_vector());
+        this->GG->transfer_DM2DtoGrid(DM_gamma_only.get_DMR_vector());
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
-        this->GG.cal_gint(&inout);
+        this->GG->cal_gint(&inout);
 
         if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
         {
@@ -133,7 +126,7 @@ void RDMFT<TK, TR>::update_charge()
             //     ModuleBase::GlobalFunc::ZEROS(charge->kin_r[is], charge->nrxx);
             // }
             // Gint_inout inout1(charge->kin_r, Gint_Tools::job_type::tau);
-            // this->GG.cal_gint(&inout1);
+            // this->GG->cal_gint(&inout1);
             this->pelec->cal_tau(wfc);
         }
 
@@ -142,7 +135,7 @@ void RDMFT<TK, TR>::update_charge()
     else
     {
         // calculate DMK and DMR
-        elecstate::DensityMatrix<TK, double> DM(ParaV, nspin, this->kv.kvec_d, nk_total);
+        elecstate::DensityMatrix<TK, double> DM(ParaV, nspin, this->kv->kvec_d, nk_total);
         elecstate::cal_dm_psi(ParaV, wg, this->wfc, DM);
 
 //         psi::Psi<TK> wg_wfc(wfc);
@@ -171,9 +164,9 @@ void RDMFT<TK, TR>::update_charge()
             ModuleBase::GlobalFunc::ZEROS(charge->rho[is], charge->nrxx);
         }
 
-        this->GK.transfer_DM2DtoGrid(DM.get_DMR_vector());
+        this->GK->transfer_DM2DtoGrid(DM.get_DMR_vector());
         Gint_inout inout(charge->rho, Gint_Tools::job_type::rho, nspin);
-        this->GK.cal_gint(&inout);
+        this->GK->cal_gint(&inout);
 
         if (XC_Functional::get_func_type() == 3 || XC_Functional::get_func_type() == 5)
         {
@@ -182,7 +175,7 @@ void RDMFT<TK, TR>::update_charge()
             //     ModuleBase::GlobalFunc::ZEROS(charge->kin_r[is], charge->nrxx);
             // }
             // Gint_inout inout1(charge->kin_r, Gint_Tools::job_type::tau);
-            // this->GK.cal_gint(&inout1);
+            // this->GK->cal_gint(&inout1);
             this->pelec->cal_tau(wfc);
         }
 
@@ -204,7 +197,7 @@ void RDMFT<TK, TR>::update_charge()
         // update Gint_K
         if (!PARAM.globalv.gamma_only_local)
         {
-            this->GK.renew();
+            this->GK->renew();
         }
     }
 }
@@ -219,8 +212,8 @@ void RDMFT<TK, TR>::update_occNumber(const ModuleBase::matrix& occ_number_in)
     {
         for(int inb=0; inb < wg.nc; ++inb)
         {
-            this->wg(ik, inb) *= this->kv.wk[ik];
-            this->wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+            this->wg(ik, inb) *= this->kv->wk[ik];
+            this->wk_fun_occNum(ik, inb) = this->kv->wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
             this->fun_occNum(ik, inb) = occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power); // temporary
         }
     }
@@ -228,24 +221,21 @@ void RDMFT<TK, TR>::update_occNumber(const ModuleBase::matrix& occ_number_in)
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::inital_wfc_occNum()
+void RDMFT<TK, TR>::inital_wfc_occNum(const ModuleBase::matrix& wg_in, const psi::Psi<TK>* wfc_in)
 {
-    ModuleBase::matrix occ_number_ks( this->pelec->wg );
+    ModuleBase::matrix occ_number_ks( wg_in );
     for(int ik=0; ik < occ_number_ks.nr; ++ik)
     {
         for(int inb=0; inb < occ_number_ks.nc; ++inb)
         {
-            occ_number_ks(ik, inb) /= this->kv.wk[ik];
+            occ_number_ks(ik, inb) /= this->kv->wk[ik];
         }
     }
 
     rdmft::printMatrix_pointer(occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number_ks_inital", 10);
     // rdmft::printMatrix_pointer(ParaV->ncol_bands, ParaV->nrow, &(*this->psi)(0, 0, 0), "wfc_ks_inital", 10);
 
-    // TK* pwfc_in = &( this->psi->operator()(0, 0, 0) );
-    // TK* pwfc = &wfc(0, 0, 0);
-    // for(int i=0; i<wfc.size(); ++i) pwfc[i] = pwfc_in[i];
-    this->update_elec(&occ_number_ks, this->psi);
+    this->update_elec(&occ_number_ks, wfc_in);
 
 //     // print Hexx
 // #ifdef __EXX
@@ -266,8 +256,8 @@ void RDMFT<TK, TR>::inital_wfc_occNum()
 //     {
 //         for(int inb=0; inb < wg.nc; ++inb)
 //         {
-//             occ_number(ik, inb) /= this->kv.wk[ik];
-//             wk_fun_occNum(ik, inb) = this->kv.wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
+//             occ_number(ik, inb) /= this->->wk[ik];
+//             wk_fun_occNum(ik, inb) = this->kv->wk[ik] * occNum_func(occ_number(ik, inb), 2, XC_func_rdmft, alpha_power);
 //         }
 //     }
 // }

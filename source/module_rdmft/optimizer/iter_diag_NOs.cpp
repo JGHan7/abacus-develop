@@ -34,7 +34,7 @@ IterDiag_NOs<TK, TR>::~IterDiag_NOs()
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in, RDMFT<TK, TR>* rdmft_solver_in)
+void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in, RDMFT<TK, TR>* rdmft_solver_in)
 {
     this->nk_total = nk_total_in;
     this->nbands_total = PARAM.inp.nbands;
@@ -78,7 +78,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const Parallel_2D& para_F
 
     this->rdmft_solver = rdmft_solver_in;
 
-    int nkstot_full = this->rdmft_solver->get_kv().get_nkstot_full();
+    int nkstot_full = nkstot_full_in;
 
     sys_nelec_spin.resize(PARAM.inp.nspin);
     if( PARAM.inp.nspin == 1 )

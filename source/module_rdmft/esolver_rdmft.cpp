@@ -29,26 +29,44 @@ ESolver_RDMFT<TK, TR>::~ESolver_RDMFT()
 template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para& inp)
 {
-    rdmft_solver.before_all_runners(ucell, inp);
-    this->maxniter = inp.scf_nmax;
+    ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_all_runners(ucell, inp);
     this->maxniter_occ_num = PARAM.inp.maxniter_occ_num;
-    this->maxniter_orb = this->maxniter;
+    this->maxniter_orb = PARAM.inp.scf_nmax;
 
     // initialize rdmft
-    // if( rdmft_orb_opti == "iterDiag" )
-    if( 1 )
+    if( PARAM.inp.rdmft_orb_opti == "iterDiag" || PARAM.inp.rdmft_orb_opti == "idmft" )
     {
-        rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha, true);
+        rdmft_solver.init(this->GG,
+                            this->GK,
+                            this->pv,
+                            ucell,
+                            this->kv,
+                            *(this->pelec),
+                            this->orb_,
+                            this->two_center_bundle_,
+                            PARAM.inp.dft_functional,
+                            PARAM.inp.rdmft_power_alpha,
+                            true);
     }
     else
     {
-        rdmft_solver.init(ucell, PARAM.inp.dft_functional, PARAM.inp.rdmft_power_alpha);
+        rdmft_solver.init(this->GG,
+                            this->GK,
+                            this->pv,
+                            ucell,
+                            this->kv,
+                            *(this->pelec),
+                            this->orb_,
+                            this->two_center_bundle_,
+                            PARAM.inp.dft_functional,
+                            PARAM.inp.rdmft_power_alpha,
+                            false);
     }
 
     if( PARAM.inp.rdmft_orb_opti == "iterDiag" )
     {
-        this->iter_diag_orb.init(rdmft_solver.nk_total, rdmft_solver.para_Eij, *(rdmft_solver.ParaV), &this->rdmft_solver);
-        this->ls_opti_occ_num.init(&this->rdmft_solver);
+        this->iter_diag_orb.init(rdmft_solver.nk_total, this->kv.get_nkstot_full(), rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
+        this->ls_opti_occ_num.init(this->kv, &this->rdmft_solver);
 
         this->iter_diag_orb.init_orb_by_lambda = PARAM.inp.init_orb_by_lambda;
         this->iter_diag_orb.scale_F = PARAM.inp.scale_fock;
@@ -69,7 +87,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
-        this->idmft.init(rdmft_solver.nk_total, rdmft_solver.get_kv(), rdmft_solver.para_Eij, *(rdmft_solver.ParaV), &this->rdmft_solver);
+        this->idmft.init(rdmft_solver.nk_total, this->kv, rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
     }
 
     // this->ebi.init(rdmft_solver.nk_total);
@@ -110,24 +128,21 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
 template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 {
-    // rdmft_solver.before_scf(istep);
-    rdmft_solver.update_ion(istep, ucell);
+    ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_scf(ucell, istep);
+    rdmft_solver.update_ion(ucell, *(this->pw_rho), this->ppcell.vloc, this->sf.strucFac);
 
     // before the iterative electronic step, get initial value by one KS step
     if(GlobalC::exx_info.info_global.cal_exx)
     {
         // the command to stop the runner is in the exx_iter_finish() function of Exx_LRI_interface.hpp
-        rdmft_solver.runner(ucell, istep);
+        ModuleESolver::ESolver_KS<TK>::runner(ucell, istep);
     }
     else
     {
-        if( !this->conver_initial_value )
-        {
-            rdmft_solver.modify_scf_nmax(1);
-        }
-        rdmft_solver.runner(ucell, istep);
+        this->maxniter = 1;
+        ModuleESolver::ESolver_KS<TK>::runner(ucell, istep);
     }
-    this->rdmft_solver.inital_wfc_occNum();
+    this->rdmft_solver.inital_wfc_occNum(this->pelec->wg, this->psi);
 
 
     // test
@@ -266,7 +281,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     // rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
     // std::cout << std::defaultfloat;
 
-    std::cout << "\n******\n" << "maxniter of rdmft is: " << this->maxniter << "\n******\n" << std::endl;
+    std::cout << "\n******\n" << "maxniter of NOs in rdmft is: " << this->maxniter_orb << "\n******\n" << std::endl;
     std::cout << "\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n\n\n" << std::endl;
 }
 
@@ -336,8 +351,8 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
 template <typename TK, typename TR>
 double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 {
-    // elecstate::ElecState* pelec_ = rdmft_solver.get_pelec();
-    // K_Vectors& kv_ = rdmft_solver.get_kv();
+    // elecstate::ElecState* pelec_ = this->pelec;
+    // K_Vectors& kv_ = this->kv;
  
     // std::vector< std::vector<double> > ekb_rdmft(rdmft_solver_in.nk_total, std::vector<double>(PARAM.inp.nbands, 0.0));
 

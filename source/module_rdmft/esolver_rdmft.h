@@ -20,7 +20,7 @@ namespace rdmft
 
 
 template<typename TK, typename TR>
-class ESolver_RDMFT: public ModuleESolver::ESolver_FP
+class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 {
   public:
     ESolver_RDMFT();
@@ -37,8 +37,6 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_FP
     void cal_stress(UnitCell& ucell, ModuleBase::matrix& stress) override;
 
     double opti_occ_num(bool dft_type = false, bool first_time = false);
-
-	  int maxniter;     // maximum iter steps for scf
 
     int maxniter_occ_num;     // maximum iter steps for ONs
 

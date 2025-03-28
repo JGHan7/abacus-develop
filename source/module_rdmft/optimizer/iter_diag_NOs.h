@@ -21,7 +21,7 @@ class IterDiag_NOs
     IterDiag_NOs();
     ~IterDiag_NOs();
 
-    void init(const int nk_total_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in, RDMFT<TK, TR>* rdmft_solver_in);
+    void init(const int nk_total_in, const int nkstot_full_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in, RDMFT<TK, TR>* rdmft_solver_in);
 
     //! use initial values ​​to form a first guess for iterative diagonalization
     void get_start_guess(RDMFT<TK, TR>& rdmft_solver_in, const bool conver_initial_value = false); // delete conver_initial_value in the future?

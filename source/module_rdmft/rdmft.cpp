@@ -9,6 +9,7 @@
 #include "module_hamilt_pw/hamilt_pwdft/global.h"
 #include "module_base/parallel_reduce.h"
 #include "module_cell/module_symmetry/symmetry.h"
+#include "module_ri/RI_Util.h"
 
 
 #include <iostream>
@@ -54,35 +55,36 @@ RDMFT<TK, TR>::~RDMFT()
     delete V_dft_XC;
 }
 
-// template <typename TK, typename TR>
-// void RDMFT<TK, TR>::init(Gint_Gamma& GG_in, 
-//                             Gint_k& GK_in, 
-//                             Parallel_Orbitals& ParaV_in, 
-//                             UnitCell& ucell_in,
-//                             K_Vectors& kv_in, 
-//                             elecstate::ElecState& pelec_in, 
-//                             LCAO_Orbitals& orb_in, 
-//                             TwoCenterBundle& two_center_bundle_in, 
-//                             std::string XC_func_rdmft_in, 
-//                             double alpha_power_in)
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag)
+void RDMFT<TK, TR>::init(Gint_Gamma& GG_in, 
+                            Gint_k& GK_in, 
+                            Parallel_Orbitals& ParaV_in, 
+                            UnitCell& ucell_in,
+                            K_Vectors& kv_in, 
+                            elecstate::ElecState& pelec_in, 
+                            LCAO_Orbitals& orb_in, 
+                            TwoCenterBundle& two_center_bundle_in, 
+                            std::string XC_func_rdmft_in, 
+                            double alpha_power_in,
+                            bool if_iter_diag)
+// template <typename TK, typename TR>
+// void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag)
 {
-    // GG = &GG_in;
-    // GK = &GK_in;
-    // ParaV = &ParaV_in;
-    // ucell = &ucell_in;
-    // this->kv = &kv_in;
-    // charge = pelec_in.charge;
-    // pelec = &pelec_in;
-    // orb = &orb_in;
-    // two_center_bundle = &two_center_bundle_in;
-
-    ParaV = &this->pv;
+    GG = &GG_in;
+    GK = &GK_in;
+    ParaV = &ParaV_in;
     ucell = &ucell_in;
-    charge = this->pelec->charge;
-    orb = &this->orb_;
-    two_center_bundle = &this->two_center_bundle_;
+    this->kv = &kv_in;
+    charge = pelec_in.charge;
+    pelec = &pelec_in;
+    orb = &orb_in;
+    two_center_bundle = &two_center_bundle_in;
+
+    // ParaV = &this->pv;
+    // ucell = &ucell_in;
+    // charge = this->pelec->charge;
+    // orb = &this->orb_;
+    // two_center_bundle = &this->two_center_bundle_;
 
     XC_func_rdmft = XC_func_rdmft_in;
     alpha_power = alpha_power_in;
@@ -90,10 +92,10 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
 
     nspin = PARAM.inp.nspin;
     nbands_total = PARAM.inp.nbands;
-    nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? this->kv.get_nkstot_full(): this->kv.get_nks();  // here the spin weight is taken into account
+    nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? this->kv->get_nkstot_full(): this->kv->get_nks();  // here the spin weight is taken into account
     
     // nk_total *= nspin;
-    // std::cout << "\n\n nspin:"<< nspin << "\n this->kv.get_nks():" << this->kv.get_nks() << std::endl;
+    // std::cout << "\n\n nspin:"<< nspin << "\n this->kv->get_nks():" << this->kv->get_nks() << std::endl;
 
     only_exx_type = ( XC_func_rdmft == "hf" || XC_func_rdmft == "muller" || XC_func_rdmft == "power" );
 
@@ -182,21 +184,21 @@ void RDMFT<TK, TR>::init(UnitCell& ucell_in, std::string XC_func_rdmft_in, doubl
         exx_spacegroup_symmetry = (PARAM.inp.nspin < 4 && ModuleSymmetry::Symmetry::symm_flag == 1);
         if (exx_spacegroup_symmetry)
         {
-            const std::array<int, 3>& period = RI_Util::get_Born_vonKarmen_period(this->kv);
+            const std::array<int, 3>& period = RI_Util::get_Born_vonKarmen_period( *(this->kv) );
             this->symrot_exx.find_irreducible_sector(ucell->symm, ucell->atoms, ucell->st,
                     RI_Util::get_Born_von_Karmen_cells(period), period, ucell->lat);
-            this->symrot_exx.cal_Ms(this->kv, *ucell, *ParaV);
+            this->symrot_exx.cal_Ms( *(this->kv), *ucell, *ParaV);
         }
 
         if (GlobalC::exx_info.info_ri.real_number)
         {
             Vxc_fromRI_d = new Exx_LRI<double>(GlobalC::exx_info.info_ri);
-            Vxc_fromRI_d->init(MPI_COMM_WORLD, this->kv, *orb);
+            Vxc_fromRI_d->init(MPI_COMM_WORLD, *(this->kv), *orb);
         }
         else
         {
             Vxc_fromRI_c = new Exx_LRI<std::complex<double>>(GlobalC::exx_info.info_ri);
-            Vxc_fromRI_c->init(MPI_COMM_WORLD, this->kv, *orb);
+            Vxc_fromRI_c->init(MPI_COMM_WORLD, *(this->kv), *orb);
         }
     }
 #endif
@@ -361,7 +363,7 @@ void RDMFT<TK, TR>::cal_E_grad_wfc()
 {
     // !this would transfer the value of H_wfc_TV, H_wfc_hartree, H_wfc_XC --> occNum_H_wfc
     // get the gradient of energy with respect to the wfc, i.e., Wk_occNum_HamiltWfc
-    add_psi(ParaV, &this->kv, occ_number, H_wfc_TV, H_wfc_hartree, H_wfc_dft_XC, H_wfc_exx_XC, occNum_HamiltWfc, XC_func_rdmft, alpha_power);
+    add_psi(ParaV, this->kv, occ_number, H_wfc_TV, H_wfc_hartree, H_wfc_dft_XC, H_wfc_exx_XC, occNum_HamiltWfc, XC_func_rdmft, alpha_power);
 }
 
 
@@ -371,7 +373,7 @@ void RDMFT<TK, TR>::cal_E_grad_occ_num()
     // gradient calculation does not take i-DMFT into account !
 
     // get the gradient of energy with respect to the natural occupation numbers, i.e., Wk_occNum_wfcHamiltWfc
-    add_occNum(this->kv, occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
+    add_occNum(*(this->kv), occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
     Parallel_Reduce::reduce_all(occNum_wfcHamiltWfc.c, occNum_wfcHamiltWfc.nr * occNum_wfcHamiltWfc.nc);
     // rdmft::printMatrix_pointer(occNum_wfcHamiltWfc.nr, occNum_wfcHamiltWfc.nc, &occNum_wfcHamiltWfc(0, 0), "E_gradient_occNum");
 }

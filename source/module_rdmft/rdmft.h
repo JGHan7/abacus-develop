@@ -53,11 +53,11 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     Parallel_2D para_Eij;
 
-    // //! obain Ewald and this->pelec->pot
-    // elecstate::ElecState* pelec = nullptr;
+    //! obain Ewald and this->pelec->pot
+    elecstate::ElecState* pelec = nullptr;
 
-    // //! update after ion step
-    // const K_Vectors* kv = nullptr; 
+    //! update after ion step
+    const K_Vectors* kv = nullptr; 
 
     int nk_total = 0;
     int nbands_total = 0;
@@ -92,15 +92,15 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     // std::vector<double> E_RDMFT(4);
 
-    // //! initialization of rdmft calculation
-    // void init(Gint_Gamma& GG_in, Gint_k& GK_in, Parallel_Orbitals& ParaV_in, UnitCell& ucell_in,
-    //                     K_Vectors& kv_in, elecstate::ElecState& pelec_in, LCAO_Orbitals& orb_in, TwoCenterBundle& two_center_bundle_in, std::string XC_func_rdmft_in, double alpha_power_in);
+    //! initialization of rdmft calculation
+    void init(Gint_Gamma& GG_in, Gint_k& GK_in, Parallel_Orbitals& ParaV_in, UnitCell& ucell_in, K_Vectors& kv_in,
+                elecstate::ElecState& pelec_in, LCAO_Orbitals& orb_in, TwoCenterBundle& two_center_bundle_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag = true);
 
-    // //! update in ion-step and get V_TV
-    // void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
-    //                     ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in);
+    //! update in ion-step and get V_TV
+    void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
+                        ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in);
 
-    void init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag = false);
+    // void init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag = false);
 
     void update_ion(const int istep, UnitCell& ucell_in);
 
@@ -127,14 +127,14 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     // delete in the future? save?
     //! get the initial value, can only be called once after one or several KS steps
-    void inital_wfc_occNum();
+    void inital_wfc_occNum(const ModuleBase::matrix& wg_in, const psi::Psi<TK>* wfc_in);
 
     // temporary
-    void modify_scf_nmax(int scf_nmax) { this->maxniter = scf_nmax; };
+    // void modify_scf_nmax(int scf_nmax) { this->maxniter = scf_nmax; };
 
-    // temporary
-    elecstate::ElecState* get_pelec() { return this->pelec; };
-    K_Vectors& get_kv() { return this->kv; };
+    // // temporary
+    // elecstate::ElecState* get_pelec() { return this->pelec; };
+    // K_Vectors& get_kv() { return this->kv; };
 
     //! do all calculation after update occNum&wfc, get Etotal and the gradient of energy with respect to the occNum&wfc
     double run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E_gradient_wfc);
@@ -221,15 +221,15 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     /****** these parameters are passed in from outside, don't need delete ******/
     // GK and GG are used for multi-k grid integration and gamma only algorithms respectively
-    // Gint_k* GK = nullptr;
-    // Gint_Gamma* GG = nullptr;
+    Gint_k* GK = nullptr;
+    Gint_Gamma* GG = nullptr;
     Charge* charge = nullptr;
 
     // update after ion step
     const UnitCell* ucell = nullptr;
     const ModulePW::PW_Basis* rho_basis = nullptr;
     const ModuleBase::matrix* vloc = nullptr;
-    // const ModuleBase::ComplexMatrix* sf = nullptr;
+    const ModuleBase::ComplexMatrix* sf = nullptr;
     const LCAO_Orbitals* orb = nullptr;
     const TwoCenterBundle* two_center_bundle = nullptr;
   
