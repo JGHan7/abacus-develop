@@ -426,7 +426,7 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
         // when not optimizing the occupancy number, use it when benchmarking with DFT results
         // this->Etotal = E_RDMFT[0] + E_RDMFT[1] + E_RDMFT[2] + E_Ewald + E_entropy + E_descf;
 
-        this->Etotal = E_RDMFT[0] + E_RDMFT[1] + E_RDMFT[2] + E_Ewald + E_descf; // test
+        this->Etotal = E_RDMFT[0] + E_RDMFT[1] + E_RDMFT[2] + E_Ewald; // test
 
         // temp
         E_RDMFT[3] = E_RDMFT[0] + E_RDMFT[1] + E_RDMFT[2];
