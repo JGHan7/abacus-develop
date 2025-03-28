@@ -219,7 +219,6 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 }
             }
 
-
             // TODO: optimize occ_number
             // this->rdmft_solver.update_elec(occ_num_temp);
 
