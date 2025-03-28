@@ -90,30 +90,6 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
         this->idmft.init(rdmft_solver.nk_total, this->kv, rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
     }
 
-    // this->ebi.init(rdmft_solver.nk_total);
-    // this->bfgs_rdmft.init(rdmft_solver.nk_total, PARAM.inp.nbands);
-
-    // // convergence parameters
-    // this->dft_optimize = true;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // this->conver_initial_value = true; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    // this->iter_diag_ethr = 1e-8;
-    // this->occ_num_thr = 1e-5; // how much is proper?
-    // this->lambda_thr = 1e-4;
-
-    // this->iter_diag_orb.scale_zeta = 0.01;
-
-    // this->ls_opti_occ_num.ebi.random_inital = true;
-    // this->ls_opti_occ_num.ebi.solve_mu_thr = 1e-10;
-    // this->ls_opti_occ_num.ebi.tot_nelec_thr = 1e-10;
-    // this->ls_opti_occ_num.ls_wolfe_c1 = 0.0001;
-    // this->ls_opti_occ_num.ls_wolfe_c2 = 0.999;
-    // this->ls_opti_occ_num.ls_armijo_c1 = 0.0001;
-    // this->ls_opti_occ_num.ls_armijo_c2 = 0.9;
-    // this->ls_opti_occ_num.ls_condition = "swolfe";
-    // this->ls_opti_occ_num.max_step_size = 1000.0;
-    // this->ls_opti_occ_num.min_step_size = 1e-10;
-
     // convergence parameters
     this->dft_optimize = PARAM.inp.dft_opti;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     this->conver_initial_value = PARAM.inp.conv_inital_value; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -100,10 +100,6 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
                         ModuleBase::matrix& vloc_in, ModuleBase::ComplexMatrix& sf_in);
 
-    // void init(UnitCell& ucell_in, std::string XC_func_rdmft_in, double alpha_power_in, bool if_iter_diag = false);
-
-    void update_ion(const int istep, UnitCell& ucell_in);
-
     //! update in elec-step
     // Or we can use rdmft_solver.wfc/occ_number directly when optimizing, so that the update_elec() function does not require parameters.
     void update_elec(const ModuleBase::matrix* occ_number_in = nullptr, const psi::Psi<TK>* wfc_in = nullptr, const Charge* charge_in = nullptr);
@@ -128,13 +124,6 @@ class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // delete in the future? save?
     //! get the initial value, can only be called once after one or several KS steps
     void inital_wfc_occNum(const ModuleBase::matrix& wg_in, const psi::Psi<TK>* wfc_in);
-
-    // temporary
-    // void modify_scf_nmax(int scf_nmax) { this->maxniter = scf_nmax; };
-
-    // // temporary
-    // elecstate::ElecState* get_pelec() { return this->pelec; };
-    // K_Vectors& get_kv() { return this->kv; };
 
     //! do all calculation after update occNum&wfc, get Etotal and the gradient of energy with respect to the occNum&wfc
     double run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E_gradient_wfc);
