@@ -35,14 +35,14 @@
 #include <vector>
 #include <iomanip>
 
-#include "module_esolver/esolver_ks_lcao.h" // temp
+// #include "module_esolver/esolver_ks_lcao.h" // temp
 
 //! Reduced Density Matrix Functional Theory (RDMFT)
 namespace rdmft
 {
 
 template <typename TK, typename TR>
-class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+class RDMFT
 {
 
   public:

@@ -6,7 +6,8 @@
 #define ESOLVER_RDMFT_H
 
 #include "module_rdmft/rdmft.h"
-#include "module_esolver/esolver_fp.h"
+// #include "module_esolver/esolver_fp.h"
+#include "module_esolver/esolver_ks_lcao.h"
 #include "module_rdmft/optimizer/iter_diag_NOs.h"
 #include "module_rdmft/optimizer/line_search_rdmft.h"
 #include "module_rdmft/optimizer/ebi_constraint.h"
