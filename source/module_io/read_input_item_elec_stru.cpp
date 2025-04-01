@@ -385,6 +385,13 @@ void ReadInput::item_elec_stru()
         Input_Item item("mixing_type");
         item.annotation = "plain; pulay; broyden";
         read_sync_string(input.mixing_mode);
+        // added by jghan, 2025-04-01
+        item.reset_value = [](const Input_Item& item, Parameter& para) {
+            if(para.input.esolver_type == "rdmft")
+            {
+                para.input.mixing_mode = "pulay";
+            }
+        };
         this->add_item(item);
     }
     {

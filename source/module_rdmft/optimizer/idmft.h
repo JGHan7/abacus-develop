@@ -6,6 +6,7 @@
 #define IDMFT_H
 
 #include "module_rdmft/rdmft.h"
+#include "module_rdmft/optimizer/mixing_dmk.h"
 #include <map>
 
 namespace rdmft
@@ -71,22 +72,28 @@ class IDMFT
 
     std::vector< std::vector<TK> > DM;
 
-    void mixing();
+    Mixing_DMk<TK> mixing_dmk;
 
-    bool mixing_Fock = true;
+    std::vector<TK> dmk_in;
 
-    const int mixing_step = 2;
+    std::vector<TK> dmk_out;
 
-    //! the length of mixing_coef = mixing_step
-    //! the index is in ascending order from step 0 to step k
-    // std::vector<double> mixing_coef = {0.6, 0.25, 0.15};
-    std::vector<double> mixing_coef = {0.8, 0.2};
+    // void mixing();
 
-    bool start_mixing = false;
+    // bool mixing_rdmft = true;
 
-    int iter_step = 0;
+    // const int mixing_step = 2;
 
-    std::map<int, std::vector< std::vector<TK> > > Fock_record;
+    // //! the length of mixing_coef = mixing_step
+    // //! the index is in ascending order from step 0 to step k
+    // // std::vector<double> mixing_coef = {0.6, 0.25, 0.15};
+    // std::vector<double> mixing_coef = {0.8, 0.2};
+
+    // bool start_mixing = false;
+
+    // int iter_step = 0;
+
+    // std::map<int, std::vector< std::vector<TK> > > Fock_record;
 
 
   private:

@@ -61,10 +61,10 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
     this->Fock_like_mat = this->lambda;
     this->nos_rep_wfc = this->lambda;
 
-    // this->mixing_Fock = PARAM.inp.mixing_fock;
-    this->mixing_Fock = false;
+    // this->mixing_rdmft = PARAM.inp.mixing_rdmft;
+    this->mixing_rdmft = false;
 
-    if(mixing_Fock)
+    if(mixing_rdmft)
     {
         for(int i=0; i<this->mixing_step; ++i)
         {
@@ -535,12 +535,12 @@ void IterDiag_NOs<TK, TR>::get_Fock()
     // get the max value of std::abs(Fij) in a global sense
     rdmft::reduce_all_max(this->max_off_diag_F);
 
-    if( !this->start_mixing && this->mixing_Fock )
+    if( !this->start_mixing && this->mixing_rdmft )
     {
         if( std::abs(this->diff_Etotal)<1e-4 ) { this->start_mixing = true; }
     }
     
-    if( this->mixing_Fock && this->start_mixing ) // !test!!!!!!!!!!!!!!
+    if( this->mixing_rdmft && this->start_mixing ) // !test!!!!!!!!!!!!!!
     {
         this->mixing();
     }

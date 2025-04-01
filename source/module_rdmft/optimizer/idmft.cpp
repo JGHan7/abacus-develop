@@ -76,14 +76,21 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
         this->occ_number[is].resize(nk_nospin*nbands);
     }
 
-    this->mixing_Fock = PARAM.inp.mixing_fock;
-    if(this->mixing_Fock)
+    if( PARAM.inp.mixing_rdmft )
     {
-        for(int i=0; i<this->mixing_step; ++i)
-        {
-            this->Fock_record[i] = std::vector<std::vector<TK>>(nk_total, std::vector<TK>( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 ));
-        }
+        this->dmk_in.resize(PARAM.sys.nlocal*PARAM.sys.nlocal*this->nk_total, 0.0);
+        this->dmk_out.resize(this->dmk_in.size(), 0.0);
+        this->mixing_dmk.init( PARAM.inp.mixing_mode, PARAM.inp.mixing_beta, PARAM.inp.mixing_ndim, this->dmk_in.size() );
     }
+
+    // this->mixing_rdmft = PARAM.inp.mixing_rdmft;
+    // if(this->mixing_rdmft)
+    // {
+    //     for(int i=0; i<this->mixing_step; ++i)
+    //     {
+    //         this->Fock_record[i] = std::vector<std::vector<TK>>(nk_total, std::vector<TK>( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 ));
+    //     }
+    // }
 
     // temp
     // this->if_rotate_Fock = false;
@@ -248,15 +255,15 @@ void IDMFT<TK, TR>::get_Fock()
         }
     }
 
-    if( !this->start_mixing && this->mixing_Fock )
-    {
-        if( std::abs(this->diff_Etotal)<1e-4 ) { this->start_mixing = true; }
-    }
+    // if( !this->start_mixing && this->mixing_rdmft )
+    // {
+    //     if( std::abs(this->diff_Etotal)<1e-4 ) { this->start_mixing = true; }
+    // }
     
-    if( this->mixing_Fock && this->start_mixing ) // !test!!!!!!!!!!!!!!
-    {
-        this->mixing();
-    }
+    // if( this->mixing_rdmft && this->start_mixing ) // !test!!!!!!!!!!!!!!
+    // {
+    //     this->mixing();
+    // }
 
     if(this->if_rotate_Fock)
     {
@@ -265,46 +272,46 @@ void IDMFT<TK, TR>::get_Fock()
 }
 
 
-template <typename TK, typename TR>
-void IDMFT<TK, TR>::mixing()
-{
-    // store the Fock matrix of the i-step
-    auto pair_Fock = this->Fock_record.find(this->iter_step % this->mixing_step);
-    std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
-    for(int ik=0; ik<this->nk_total; ++ik)
-    {
-        // std::fill(Fock_ith[ik].begin(), Fock_ith[ik].end(), 0.0);
-        for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-        {
-            Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
-        }
-    }
+// template <typename TK, typename TR>
+// void IDMFT<TK, TR>::mixing()
+// {
+//     // store the Fock matrix of the i-step
+//     auto pair_Fock = this->Fock_record.find(this->iter_step % this->mixing_step);
+//     std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
+//     for(int ik=0; ik<this->nk_total; ++ik)
+//     {
+//         // std::fill(Fock_ith[ik].begin(), Fock_ith[ik].end(), 0.0);
+//         for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+//         {
+//             Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
+//         }
+//     }
 
-    // when enough steps of Fock are stored, start mixing
-    if( iter_step >= this->mixing_step-1 )
-    {
-        for(int ik=0; ik<this->nk_total; ++ik)
-        {
-            std::fill(Fock_like_mat[ik].begin(), Fock_like_mat[ik].end(), 0.0);
-            for(int j=0; j<this->mixing_step; ++j)
-            {
-                std::vector< std::vector<TK> > & Fock_jth = this->Fock_record.find( (this->iter_step + j) % this->mixing_step )->second;
-                for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-                {
-                    this->Fock_like_mat[ik][iloc] += Fock_jth[ik][iloc] * this->mixing_coef[(j+this->mixing_step-1) % this->mixing_step];
-                }
+//     // when enough steps of Fock are stored, start mixing
+//     if( iter_step >= this->mixing_step-1 )
+//     {
+//         for(int ik=0; ik<this->nk_total; ++ik)
+//         {
+//             std::fill(Fock_like_mat[ik].begin(), Fock_like_mat[ik].end(), 0.0);
+//             for(int j=0; j<this->mixing_step; ++j)
+//             {
+//                 std::vector< std::vector<TK> > & Fock_jth = this->Fock_record.find( (this->iter_step + j) % this->mixing_step )->second;
+//                 for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+//                 {
+//                     this->Fock_like_mat[ik][iloc] += Fock_jth[ik][iloc] * this->mixing_coef[(j+this->mixing_step-1) % this->mixing_step];
+//                 }
 
-            }
+//             }
 
-            for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-            {
-                Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
-            }
-        }
-    }
+//             for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+//             {
+//                 Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
+//             }
+//         }
+//     }
 
-    ++this->iter_step;
-}
+//     ++this->iter_step;
+// }
 
 
 template <typename TK, typename TR>

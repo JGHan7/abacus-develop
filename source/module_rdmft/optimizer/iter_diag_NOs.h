@@ -61,7 +61,7 @@ class IterDiag_NOs
 
     void mixing();
 
-    bool mixing_Fock = true;
+    bool mixing_rdmft = true;
 
     // const int mixing_step = 3;
 

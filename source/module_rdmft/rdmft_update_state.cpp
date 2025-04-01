@@ -222,6 +222,41 @@ void RDMFT<TK, TR>::inital_wfc_occNum(const ModuleBase::matrix& wg_in, const psi
         }
     }
 
+
+
+    // delete or refactor in future
+    if( PARAM.inp.read_occ_num )
+    {
+        // N2, 20Bohr
+        // std::vector<double> temp_read = { 0.9982842602, 0.9982842602, 0.5000765531, 0.5000765531, 0.5000763913, 0.5000763913,
+        //                                     0.5000763907, 0.5000763907, 0.001075242757, 0.001075242757, 0.0001370336228, 0.0001370336228,
+        //                                     0.0001370336146, 0.0001370336146, 0.0001370336146, 0.0001370336146 };
+        // N2, 4Bohr
+        std::vector<double> temp_read = { 0.9988961427, 0.9976623967, 0.7394315752, 0.637362904, 0.6373629022, 0.4194188385,
+                                            0.4194188365, 0.1481111773, 0.001288217991, 0.0004181449229, 0.0002492928757, 0.0002492928752,
+                                            5.247332691e-05, 3.866343144e-05, 3.866343137e-05, 2.76362491e-07 };
+
+        int nk_nospin = PARAM.inp.nspin == 1 ? this->nk_total : this->nk_total/PARAM.inp.nspin;
+        std::vector< std::vector<double> > read_occ_num(PARAM.inp.nspin, std::vector<double>(nk_nospin*this->nbands_total, 1.220764428e-08));
+        std::copy(temp_read.begin(), temp_read.end(), read_occ_num[0].data());
+
+        for(int ik=0; ik<occ_number_ks.nr; ++ik)
+        {
+            for(int ib=0; ib<occ_number_ks.nc; ++ib)
+            {
+                if( ik < occ_number_ks.nr/PARAM.inp.nspin )
+                {
+                    occ_number_ks(ik, ib) = read_occ_num[0][ik*nbands_total + ib];
+                }
+                else
+                {
+                    occ_number_ks(ik, ib) = read_occ_num[PARAM.inp.nspin-1][ik*nbands_total + ib];
+                }
+            }
+        }
+    }
+
+
     rdmft::printMatrix_pointer(occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number_ks_inital", 10);
     // rdmft::printMatrix_pointer(ParaV->ncol_bands, ParaV->nrow, &(*this->psi)(0, 0, 0), "wfc_ks_inital", 10);
 

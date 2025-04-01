@@ -326,6 +326,19 @@ int smallest_loc_big_value(const int nk_nospin,
 
 
 
+template <typename TK>
+void dm_local2global(const Parallel_Orbitals* ParaV,
+                        const std::vector< std::vector<TK> >& dm_local,
+                        std::vector<TK>& dm_global)
+{
+    
+}
+
+
+
+
+
+
 }
 
 #endif

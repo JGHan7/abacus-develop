@@ -23,7 +23,7 @@ namespace rdmft
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::cal_DM_XC(const ModuleBase::matrix wk_fun_occNum_in, std::vector< std::vector<TK> >& DM_XC)
+void RDMFT<TK, TR>::cal_DM_XC(const ModuleBase::matrix& wk_fun_occNum_in, std::vector< std::vector<TK> >& DM_XC)
 {
     // get wk_funEta_wfc = wk*g(eta)*conj(wfc)
     psi::Psi<TK> wk_funEta_wfc(wfc);

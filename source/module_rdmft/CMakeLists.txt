@@ -14,6 +14,7 @@ if(ENABLE_LCAO)
         optimizer/bfgs_opti_ONs.cpp
         optimizer/ebi_constraint.cpp
         optimizer/idmft.cpp
+        optimizer/mixing_dmk.cpp
     )
 endif()
 

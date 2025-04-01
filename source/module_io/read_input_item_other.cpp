@@ -664,9 +664,9 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
-        Input_Item item("mixing_fock");
+        Input_Item item("mixing_rdmft");
         item.annotation = "linear mixing of Fock matrix";
-        read_sync_bool(input.mixing_fock);
+        read_sync_bool(input.mixing_rdmft);
         this->add_item(item);
     }
     {
@@ -693,6 +693,12 @@ void ReadInput::item_others()
         Input_Item item("exxace");
         item.annotation = "whether to perform ace calculation in exxpw";
         read_sync_bool(input.exxace);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("read_occ_num");
+        item.annotation = "read the initial occupation numbers from the provided occ_num.txt file";
+        read_sync_bool(input.read_occ_num);
         this->add_item(item);
     }
 
