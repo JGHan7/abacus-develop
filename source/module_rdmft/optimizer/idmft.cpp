@@ -198,46 +198,39 @@ double IDMFT<TK, TR>::optimize()
     ModuleBase::matrix occ_num_pass(nk_nospin*PARAM.inp.nspin, nbands);
     this->opti_occ_num(occ_num_pass);
 
-    // cal DM_out and mixing DM
+    // cal DM_out
     ModuleBase::matrix temp_wg(nk_nospin*PARAM.inp.nspin, nbands);
     rdmft::occ_num2wg(this->kv, occ_num_pass, temp_wg);
     std::vector< std::vector<TK> > DM_new(nk_total, std::vector<TK>(this->ParaV->nloc, 0.0));
     rdmft::cal_special_DM(this->ParaV, temp_wg, this->new_wfc, DM_new);
+
+    // mixing DM, get the mixed wg and wfc
     if( PARAM.inp.mixing_rdmft )
     {
+        // mixing
         rdmft::dm_local2global(this->ParaV, DM_new, this->dmk_out);
         this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
-        
-        // mixing
+
         this->mixing_dmk.mix_dmk(this->dmk_out.data());
 
         // convert and decompose DM to get wg and wfc
-
+        this->new_wfc.zero_out();
+        temp_wg.zero_out();
         rdmft::dm_global2local(this->ParaV, this->dmk_out, DM_new);
-
-        std::vector<TK> L_mat(this->ParaV->nloc, 0.0);
-        std::vector<TK> L_mat_inv(this->ParaV->nloc, 0.0);
-        std::vector<TK> temp_mat(this->ParaV->nloc, 0.0);
         for(int ik=0; ik<this->nk_total; ++ik)
         {
             this->p_hamilt_lcao->updateSk(ik);
             TK* p_sk = this->p_hamilt_lcao->getSk();
 
-            // perform Cholesky decomposition on Sk: S=L*L^dagger
-
-            // M = L^dagger*DM*L
-
-            // orthogonal diagonalization M: M = X^dagger*F*X,
-
-            // rdmft::wg2occ_num();
-
-            // wfc = X*inv(L)
-
-
+            // decompose the DM to obtain wfc and wg
+            rdmft::decom_dm(this->ParaV,
+                            DM_new[ik], 
+                            p_sk,    
+                            &this->new_wfc(ik, 0, 0),
+                            &temp_wg(ik, 0));
         }
-
+        rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
     }
-
 
     // diff_DM
     this->diff_DM_max = 0.0;

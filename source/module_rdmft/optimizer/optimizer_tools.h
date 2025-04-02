@@ -458,18 +458,93 @@ void cholesky_decom(const Parallel_2D* para_A, TK* A_mat, TK* L_mat)
 }
 
 
-//! inv A
+//! inv matrix
 template <typename TK>
-void inv_A()
+void inv_matrix()
 {
     
 }
 
 
+// // !!! Note: the upper triangular part of mat will be destroyed
+// // the scale of egienvalue is global, mat and egienvector are local (2d-block)
+// // c++ perspective: each row of the egienvector-matrix is ​​an eigenvector
+// template <typename TK>
+// void pdiag_scalapack(const Parallel_2D* para_mat,
+//                         const int global_row_mat,
+//                         TK* mat,
+//                         double* egienvalue,
+//                         TK* egienvector,
+//                         const bool get_egivector = true)
+
+
+
 //! decompose the density matrix DM into C^dagger*F*C, given that C*S*C^dagger=I
+//! nbands has only two values, PARAM.inp.nbands or the dim_row of DM
+//! if nbands = the dim_row of DM, then this function can be used for general Hermitian matrices
 template <typename TK>
-void decom_dm()
+void decom_dm(const Parallel_Orbitals* ParaV,
+                const std::vector<TK>& DMk,
+                TK* Sk,
+                TK* wfc,
+                double* wg,
+                const int nbands = PARAM.inp.nbands)
 {
+    std::vector<TK> L_mat(ParaV->nloc, 0.0);
+    std::vector<TK> L_mat_inv(ParaV->nloc, 0.0);
+    std::vector<TK> M_mat(ParaV->nloc, 0.0);
+    std::vector<TK> wfc_X(ParaV->nloc, 0.0);
+    const int dim = ParaV->get_global_row_size();
+
+    // used when global_nbands != global_nbasis
+    std::vector<double> temp_wg(dim, 0.0);
+    std::vector<TK> temp_wfc(ParaV->nloc, 0.0);
+
+    // get L matrix
+    cholesky_decom(ParaV, Sk, L_mat.data());
+
+    // M = L^dagger * DM * L
+    std::vector<TK> temp_mat(ParaV->nloc, 0.0);
+    pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'C', 'N');
+    pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'N');
+
+    // diga(M): M = X^dagger * wg * X
+    pdiag_scalapack(ParaV, dim, M_mat.data(), temp_wg.data(), wfc_X.data(), true);
+
+    // inv(L)
+
+    // wfc = X * inv(L)
+
+    // convert
+    for(int ib=0; ib<nbands; ++ib)
+    {
+        wg[ib] = temp_wg[ib];
+    }
+
+    if( nbands == dim )
+    {
+        for(int iloc=0; iloc<ParaV->nloc; ++iloc)
+        {
+            wfc[iloc] = temp_wfc[iloc];
+        }
+    }
+    else if( nbands == PARAM.inp.nbands )
+    {
+        for(int ib=0; ib<ParaV->ncol_bands; ++ib)
+        {
+            const int loc_size = ParaV->get_row_size();
+            for(int ibasis=0; ibasis<loc_size; ++ibasis)
+            {
+                wfc[ibasis + ib*loc_size] = temp_wfc[ ibasis + ib*loc_size ];
+            }
+        }
+    }
+    else
+    {
+        std::cout << "\n***\n" << "there is something wrong when calling decom_dm()" << "\n***\n" << std::endl;
+        assert(0);
+    }
+
 
 }
 
