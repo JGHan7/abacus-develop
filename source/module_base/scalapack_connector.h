@@ -78,6 +78,10 @@ extern "C"
 		std::complex<double>* alpha , std::complex<double>* a , int* ia , int* ja , int* desca ,
 		std::complex<double>* b , int* ib , int* jb , int* descb ,
 		std::complex<double>* beta ,  std::complex<double>* c , int* ic , int* jc , int* descc );
+	void pdgetrf_(
+		const int *M, const int *N, 
+		double *A, const int *IA, const int *JA, const int *DESCA,
+		int *ipiv,  int *info);
 	void pzgetrf_(
 		const int *M, const int *N, 
 		std::complex<double> *A, const int *IA, const int *JA, const int *DESCA,
@@ -88,6 +92,10 @@ extern "C"
 			const std::complex<double> *A, const int *ia, const int *ja, const int *desca,
 			int *ipiv, std::complex<double>* B, const int* ib, const int* jb, const int*descb, const int *info
 		);
+
+	// pdpotrf_() and pzpotrf_() added by jghan, for mixing dmk in rdmft
+	void pdpotrf_(char* uplo, int* n, double* A, int* ia, int* ja, int* desca, int* info);
+	void pzpotrf_(char* uplo, int* n, std::complex<double>* A, int* ia, int* ja, int* desca, int* info);
 
 	// pdsyev_() and pzheev_() added by jghan, for iterative diagonalization of rdmft
 	void pdsyev_(const char* jobz, const char* uplo, const int* n, double* A, const int* ia, const int* ja, 
@@ -121,6 +129,10 @@ extern "C"
 		const float* abstol, int* m, int* nz, float* w, const float*orfac, std::complex<float>* Z, const int* iz, const int* jz, const int*descz,
 		std::complex<float>* work, int* lwork, float* rwork, int* lrwork, int*iwork, int*liwork, int* ifail, int*iclustr, float*gap, int* info);
 
+	void pdgetri_(
+		const int *n, 
+		const double *A, const int *ia, const int *ja, const int *desca,
+		int *ipiv, const double *work, const int *lwork, const int *iwork, const int *liwork, const int *info);
 
 	void pzgetri_(
 		const int *n, 

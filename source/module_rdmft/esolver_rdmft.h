@@ -53,6 +53,8 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     bool conver_initial_value = false;
 
+    std::vector< std::vector<TK> > DM;
+
     // Parallel_2D* para_H_ni_nj = nullptr;
 
   private:

@@ -8,6 +8,7 @@
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/mixing_dmk.h"
 #include <map>
+#include "module_hamilt_lcao/hamilt_lcaodft/hamilt_lcao.h" // temp
 
 namespace rdmft
 {
@@ -25,9 +26,11 @@ class IDMFT
               const K_Vectors& kv_in,
               const Parallel_2D& para_Fij_in,
               const Parallel_Orbitals& ParaV_in,
-              RDMFT<TK, TR>* rdmft_solver_in);
+              RDMFT<TK, TR>* rdmft_solver_in,
+              hamilt::Hamilt<TK>* p_hamilt_in);
 
-    // void before_opti(int* scale_factor = nullptr);
+    //! serves for mixing, can be deleted after refactoring
+    void before_opti(const std::vector< std::vector<TK> >& DM_in);
 
     //! optimizing natural orbitals and occupation numbers
     double optimize();
@@ -70,13 +73,18 @@ class IDMFT
 
     double diff_DM_max = 0.0;
 
+    // TODO: DM and related convergence judgment conditions can be moved to esolver_rdmft
     std::vector< std::vector<TK> > DM;
 
+    // TODO: it may be a better choice to put it in esolver_rdmft, so that the mixed code can be used by multiple optimization methods
+    // then the optimizer of various methods will only give new occ_num and wfc, and will not implement the function of update_elec() in the RDMFT object.
     Mixing_DMk<TK> mixing_dmk;
 
     std::vector<TK> dmk_in;
 
     std::vector<TK> dmk_out;
+
+    hamilt::HamiltLCAO<TK, TR>* p_hamilt_lcao = nullptr; // temp, for mixing
 
     // void mixing();
 

@@ -135,32 +135,6 @@ template <>
 void conj_psi<double>(psi::Psi<double>& wfc);
 
 
-template <typename TK>
-void cal_special_DM(const Parallel_Orbitals* ParaV,
-                    const ModuleBase::matrix& special_wg,
-                    const psi::Psi<TK>& wfc,
-                    std::vector< std::vector<TK> >& DM_XC)
-{
-    psi::Psi<TK> wg_wfc(wfc);
-    conj_psi(wg_wfc);
-    occNum_MulPsi(ParaV, special_wg, wg_wfc, 0);
-
-    // get the special DM_XC used in constructing V_exx_XC
-    for(int ik=0; ik<wfc.get_nk(); ++ik)
-    {
-        // after this, be careful with wfc.get_pointer(), we can use &wfc(ik,inbn,inbs) instead
-        wfc.fix_k(ik);
-        wg_wfc.fix_k(ik);
-        TK* DM_Kpointer = DM_XC[ik].data();
-#ifdef __MPI
-        elecstate::psiMulPsiMpi(wg_wfc, wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
-#else
-        elecstate::psiMulPsi(wg_wfc, wfc, DM_Kpointer);
-#endif            
-    }
-}
-
-
 // wfc and H_wfc need to be k_firest and provide wfc(ik, 0, 0) and H_wfc(ik, 0, 0)
 //! implement matrix multiplication of Hk^dagger and psi
 template <typename TK>
@@ -260,6 +234,32 @@ void occNum_MulPsi(const Parallel_Orbitals* ParaV, const ModuleBase::matrix& occ
             TK* wfc_pointer = &(wfc(ik, ib_local, 0));
             BlasConnector::scal(nbasis_local, occNum_local, wfc_pointer, 1);
         }
+    }
+}
+
+
+template <typename TK>
+void cal_special_DM(const Parallel_Orbitals* ParaV,
+                    const ModuleBase::matrix& special_wg,
+                    const psi::Psi<TK>& wfc,
+                    std::vector< std::vector<TK> >& DM_XC)
+{
+    psi::Psi<TK> wg_wfc(wfc);
+    conj_psi(wg_wfc);
+    occNum_MulPsi(ParaV, special_wg, wg_wfc, 0);
+
+    // get the special DM_XC used in constructing V_exx_XC
+    for(int ik=0; ik<wfc.get_nk(); ++ik)
+    {
+        // after this, be careful with wfc.get_pointer(), we can use &wfc(ik,inbn,inbs) instead
+        wfc.fix_k(ik);
+        wg_wfc.fix_k(ik);
+        TK* DM_Kpointer = DM_XC[ik].data();
+#ifdef __MPI
+        elecstate::psiMulPsiMpi(wg_wfc, wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
+#else
+        elecstate::psiMulPsi(wg_wfc, wfc, DM_Kpointer);
+#endif            
     }
 }
 

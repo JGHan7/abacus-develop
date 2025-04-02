@@ -11,13 +11,16 @@
 #include "module_basis/module_ao/parallel_orbitals.h"
 #include "module_parameter/parameter.h"
 #include "module_base/constants.h"
-// #include "module_base/parallel_reduce.h"
+#include "module_base/parallel_reduce.h"
+#include "module_base/matrix.h"
+#include "module_cell/klist.h"
 // #include "module_lr/utils/lr_util.h"
 // #include "module_hamilt_pw/hamilt_pwdft/global.h"
 
 #include <iostream>
 #include <cmath>
 #include <cassert>
+#include <algorithm>
 
 
 namespace rdmft
@@ -326,13 +329,154 @@ int smallest_loc_big_value(const int nk_nospin,
 
 
 
+
+/********* the following function is used by mixing in rdmft *********/
+
+
+void occ_num2wg(const K_Vectors* kv, const ModuleBase::matrix& occ_num, ModuleBase::matrix& wg);
+
+
+void wg2occ_num(const K_Vectors* kv, const ModuleBase::matrix& wg, ModuleBase::matrix& occ_num);
+
+
+//! convert the local density matrix to the global density matrix
+//! dm_local<ik, <miu1_loc, miu2_loc>>, dm_global<ik, <miu1, miu2>>
 template <typename TK>
 void dm_local2global(const Parallel_Orbitals* ParaV,
                         const std::vector< std::vector<TK> >& dm_local,
                         std::vector<TK>& dm_global)
 {
+    // malloc and ensure the initial value is 0.0
+    int temp_size = PARAM.globalv.nlocal * PARAM.globalv.nlocal;
+    if( dm_global.size() != temp_size * dm_local.size() )
+    {
+        dm_global.assign(temp_size * dm_local.size(), static_cast<TK>(0.0));
+    }
+    else
+    {
+        std::fill(dm_global.begin(), dm_global.end(), static_cast<TK>(0.0));
+    }
+
+    // convert
+    for(int ik=0; ik<dm_local.size(); ++ik)
+    {
+        for(int iu1=0; iu1<ParaV->get_col_size(); ++iu1)
+        {
+            const int iu1_global = ParaV->local2global_col(iu1);
+            for(int iu2; iu2<ParaV->get_row_size(); ++iu2)
+            {
+                const int iu2_global = ParaV->local2global_row(iu2);
+                dm_global[ ik * temp_size + iu1 * PARAM.globalv.nlocal + iu2 ] = dm_local[ik][ iu1 * ParaV->get_row_size() + iu2 ];
+            }
+        }
+    }
+
+    // collecting data
+    Parallel_Reduce::reduce_all( dm_global.data(), dm_global.size() );
+
+}
+
+
+//! convert the global density matrix to the local density matrix
+//! dm_local<ik, <miu1_loc, miu2_loc>>, dm_global<ik, <miu1, miu2>>
+template <typename TK>
+void dm_global2local(const Parallel_Orbitals* ParaV,
+                        const std::vector<TK>& dm_global,
+                        std::vector< std::vector<TK> >& dm_local)
+{
+    // malloc and ensure the initial value is 0.0
+    for(int ik=0; ik<dm_local.size(); ++ik)
+    {
+        if( dm_local[ik].size() != ParaV->nloc )
+        {
+            dm_local[ik].assign(dm_local[ik].size(), static_cast<TK>(0.0));
+        }
+        else
+        {
+            std::fill(dm_local[ik].begin(), dm_local[ik].end(), static_cast<TK>(0.0));
+        }
+    }
+
+    // convert
+    int temp_size = PARAM.globalv.nlocal * PARAM.globalv.nlocal;
+    for(int ik=0; ik<dm_local.size(); ++ik)
+    {
+        for(int iu1=0; iu1<ParaV->get_col_size(); ++iu1)
+        {
+            const int iu1_global = ParaV->local2global_col(iu1);
+            for(int iu2; iu2<ParaV->get_row_size(); ++iu2)
+            {
+                const int iu2_global = ParaV->local2global_row(iu2);
+                dm_local[ik][ iu1 * ParaV->get_row_size() + iu2 ] = dm_global[ ik * temp_size + iu1 * PARAM.globalv.nlocal + iu2 ];
+            }
+        }
+    }
+}
+
+
+
+//! Cholesky decomposition: A = L * L^dagger
+//! fortran perspective: the lower triangular part of A is destroyed
+template <typename TK>
+void cholesky_decom(const Parallel_2D* para_A, TK* A_mat, TK* L_mat)
+{
+    const char uplo = 'L';
+    const int one_int = 1;
+    int info = 0;
+    const int global_row_A = para_A->get_global_row_size();
+
+    // Cholesky decomposition, the lower triangular part of A is L
+    if constexpr (std::is_same<TK, double>::value)
+    {
+        pdpotrf_( &uplo, &global_row_A, A_mat, &one_int, &one_int, para_A->desc, &info );
+    }
+    else if constexpr (std::is_same<TK, std::complex<double>>::value)
+    {
+        pzpotrf_( &uplo, &global_row_A, A_mat, &one_int, &one_int, para_A->desc, &info );
+    }
+
+    if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzpotrf_()" << "\n***\n" << std::endl; }
+    assert( info == 0 );
+
+    // copy the lower triangular part of A to L
+    for(int ic=0; ic<para_A->get_col_size(); ++ic)
+    {
+        const int ic_global = para_A->local2global_col(ic);
+        for(int ir=0; ir<para_A->get_row_size(); ++ir)
+        {
+            const int ir_global = para_A->local2global_row(ir);
+            if( ir_global >= ic_global )
+            {
+                L_mat[ ir + ic*para_A->get_row_size() ] = A_mat[ ir + ic*para_A->get_row_size() ];
+            }
+            else
+            {
+                L_mat[ ir + ic*para_A->get_row_size() ] = static_cast<TK>(0.0);
+            }
+        }
+    }
+}
+
+
+//! inv A
+template <typename TK>
+void inv_A()
+{
     
 }
+
+
+//! decompose the density matrix DM into C^dagger*F*C, given that C*S*C^dagger=I
+template <typename TK>
+void decom_dm()
+{
+
+}
+
+
+
+
+
 
 
 

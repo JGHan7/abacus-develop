@@ -387,4 +387,46 @@ int smallest_loc_big_value(const int nk_nospin,
 
 
 
+
+/********* the following function is used by mixing in rdmft *********/
+
+
+void occ_num2wg(const K_Vectors* kv, const ModuleBase::matrix& occ_num, ModuleBase::matrix& wg)
+{
+    wg = (occ_num);
+    for(int ik=0; ik < wg.nr; ++ik)
+    {
+        for(int inb=0; inb < wg.nc; ++inb)
+        {
+            wg(ik, inb) *= kv->wk[ik];
+        }
+    }
+}
+
+
+void wg2occ_num(const K_Vectors* kv, const ModuleBase::matrix& wg, ModuleBase::matrix& occ_num)
+{
+    occ_num = (wg);
+    for(int ik=0; ik < wg.nr; ++ik)
+    {
+        for(int inb=0; inb < wg.nc; ++inb)
+        {
+            occ_num(ik, inb) /= kv->wk[ik];
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

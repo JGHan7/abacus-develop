@@ -95,7 +95,7 @@ void Mixing_DMk<TK>::mix_dmk(TK* dmk_mixed)
             BlasConnector::gemv(C_char, this->length, one_int, one_complex, resi_i, this->length, resi_j, one_int, zero_complex, temp.data(), one_int);
         }
 
-        return temp[0];
+        return std::abs(temp[0]);
     };
 
     this->mixing->cal_coef(this->dmk_mdata, inner_product);
@@ -110,11 +110,8 @@ void Mixing_DMk<TK>::mix_dmk(TK* dmk_mixed)
 
 
 
-
-
-
-
-
+template class Mixing_DMk<double>;
+template class Mixing_DMk<std::complex<double>>;
 
 
 

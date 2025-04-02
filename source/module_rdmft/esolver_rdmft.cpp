@@ -90,8 +90,10 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
-        this->idmft.init(rdmft_solver.nk_total, this->kv, rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
+        this->idmft.init(rdmft_solver.nk_total, this->kv, rdmft_solver.para_Eij, this->pv, &this->rdmft_solver, this->p_hamilt);
     }
+
+    this->DM.resize(rdmft_solver.nk_total, std::vector<TK>(this->pv.nloc, 0.0));
 
     // convergence parameters
     this->dft_optimize = PARAM.inp.dft_opti;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -121,18 +123,18 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         this->maxniter = 1;
         ModuleESolver::ESolver_KS<TK>::runner(ucell, istep);
     }
-    this->rdmft_solver.inital_wfc_occNum(this->pelec->wg, this->psi);
 
+    this->rdmft_solver.inital_wfc_occNum(this->pelec->wg, this->psi);
 
     // test
     GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
     std::cout << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
     this->rdmft_solver.cal_Energy();
 
+    this->get_start_guess();
+
     if( PARAM.inp.rdmft_orb_opti == "iter_diag" )
     {
-        this->get_start_guess();
-
         double diff_etotal = 1.0;
         double diff_occ_num_max = 1.0;
 
@@ -304,20 +306,31 @@ double ESolver_RDMFT<TK, TR>::opti_occ_num(bool dft_type, bool first_time)
 template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::get_start_guess()
 {
-    // get start guess occ_number and optimize once
-    this->opti_occ_num(this->dft_optimize, true);
-    
-    std::cout << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
+    if( PARAM.inp.rdmft_orb_opti == "iter_diag" )
+    {
+        // get start guess occ_number and optimize once
+        this->opti_occ_num(this->dft_optimize, true);
+        
+        std::cout << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
 
-    // get start guess natural orbitals
-    this->iter_diag_orb.get_start_guess(rdmft_solver, this->conver_initial_value);
+        // get start guess natural orbitals
+        this->iter_diag_orb.get_start_guess(rdmft_solver, this->conver_initial_value);
 
-    std::cout << "\n******\n" << "get inital value in orbitals !!!!!!" << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "get inital value in orbitals !!!!!!" << "\n******\n" << std::endl;
 
-    // optimize occ_number
-    this->opti_occ_num(this->dft_optimize);
+        // optimize occ_number
+        this->opti_occ_num(this->dft_optimize);
 
-    std::cout << "\n******\n" << "after ESolver_RDMF::get_start_guess() !!!!!!" << "\n******\n" << std::endl;
+        std::cout << "\n******\n" << "after ESolver_RDMF::get_start_guess() !!!!!!" << "\n******\n" << std::endl;
+    }
+    else if( PARAM.inp.rdmft_orb_opti == "idmft" )
+    {
+        if( PARAM.inp.mixing_rdmft )
+        {
+            rdmft::cal_special_DM(&this->pv, this->rdmft_solver.wg, this->rdmft_solver.wfc, this->DM);
+            this->idmft.before_opti(this->DM);
+        }
+    }
 }
 
 

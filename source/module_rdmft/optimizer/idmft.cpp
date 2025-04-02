@@ -39,7 +39,8 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
                             const K_Vectors& kv_in,
                             const Parallel_2D& para_Fij_in,
                             const Parallel_Orbitals& ParaV_in,
-                            RDMFT<TK, TR>* rdmft_solver_in)
+                            RDMFT<TK, TR>* rdmft_solver_in,
+                            hamilt::Hamilt<TK>* p_hamilt_in)
 {
     this->nk_total = nk_total_in;
     this->nk_nospin = this->nk_total / PARAM.inp.nspin;
@@ -51,6 +52,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     this->para_Fij = &para_Fij_in;
     this->ParaV = &ParaV_in;
     this->rdmft_solver = rdmft_solver_in;
+    this->p_hamilt_lcao = dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(p_hamilt_in);
 
     // malloc
     this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
@@ -78,7 +80,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
 
     if( PARAM.inp.mixing_rdmft )
     {
-        this->dmk_in.resize(PARAM.sys.nlocal*PARAM.sys.nlocal*this->nk_total, 0.0);
+        this->dmk_in.resize(PARAM.globalv.nlocal*PARAM.globalv.nlocal*this->nk_total, 0.0);
         this->dmk_out.resize(this->dmk_in.size(), 0.0);
         this->mixing_dmk.init( PARAM.inp.mixing_mode, PARAM.inp.mixing_beta, PARAM.inp.mixing_ndim, this->dmk_in.size() );
     }
@@ -132,11 +134,24 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
 
 
 template <typename TK, typename TR>
+void IDMFT<TK, TR>::before_opti(const std::vector< std::vector<TK> >& DM_in)
+{
+    // get the initial guess of DM
+    this->DM = DM_in;
+}
+
+
+template <typename TK, typename TR>
 double IDMFT<TK, TR>::optimize()
 {
     this->etotal_old = this->etotal;
 
     this->get_Fock();
+
+    if( PARAM.inp.mixing_rdmft )
+    {
+        rdmft::dm_local2global(this->ParaV, this->DM, this->dmk_in);
+    }
 
     for(int ik=0; ik<nk_total; ++ik)
     {
@@ -183,14 +198,48 @@ double IDMFT<TK, TR>::optimize()
     ModuleBase::matrix occ_num_pass(nk_nospin*PARAM.inp.nspin, nbands);
     this->opti_occ_num(occ_num_pass);
 
-    // update the occupation number and wfc
-    this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
-    this->etotal = this->rdmft_solver->cal_Energy();
-    this->new_wfc.zero_out();
+    // cal DM_out and mixing DM
+    ModuleBase::matrix temp_wg(nk_nospin*PARAM.inp.nspin, nbands);
+    rdmft::occ_num2wg(this->kv, occ_num_pass, temp_wg);
+    std::vector< std::vector<TK> > DM_new(nk_total, std::vector<TK>(this->ParaV->nloc, 0.0));
+    rdmft::cal_special_DM(this->ParaV, temp_wg, this->new_wfc, DM_new);
+    if( PARAM.inp.mixing_rdmft )
+    {
+        rdmft::dm_local2global(this->ParaV, DM_new, this->dmk_out);
+        this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
+        
+        // mixing
+        this->mixing_dmk.mix_dmk(this->dmk_out.data());
 
-    // cal new DM and diff_DM
-    std::vector< std::vector<TK> > DM_new(nk_total, std::vector<TK>(this->ParaV->nloc));
-    this->rdmft_solver->cal_DM_XC(this->rdmft_solver->wg, DM_new);
+        // convert and decompose DM to get wg and wfc
+
+        rdmft::dm_global2local(this->ParaV, this->dmk_out, DM_new);
+
+        std::vector<TK> L_mat(this->ParaV->nloc, 0.0);
+        std::vector<TK> L_mat_inv(this->ParaV->nloc, 0.0);
+        std::vector<TK> temp_mat(this->ParaV->nloc, 0.0);
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            this->p_hamilt_lcao->updateSk(ik);
+            TK* p_sk = this->p_hamilt_lcao->getSk();
+
+            // perform Cholesky decomposition on Sk: S=L*L^dagger
+
+            // M = L^dagger*DM*L
+
+            // orthogonal diagonalization M: M = X^dagger*F*X,
+
+            // rdmft::wg2occ_num();
+
+            // wfc = X*inv(L)
+
+
+        }
+
+    }
+
+
+    // diff_DM
     this->diff_DM_max = 0.0;
     for(int ik=0; ik<nk_total; ++ik)
     {
@@ -201,11 +250,17 @@ double IDMFT<TK, TR>::optimize()
             {
                 this->diff_DM_max = diff_DM;
             }
-
             this->DM[ik][iloc] = DM_new[ik][iloc];
         }
     }
     rdmft::reduce_all_max(this->diff_DM_max);
+
+
+
+    // update the occupation number and wfc
+    this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
+    this->etotal = this->rdmft_solver->cal_Energy();
+    this->new_wfc.zero_out();
 
     this->diff_Etotal = this->etotal - this->etotal_old;
 
