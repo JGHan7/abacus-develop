@@ -458,11 +458,53 @@ void cholesky_decom(const Parallel_2D* para_A, TK* A_mat, TK* L_mat)
 }
 
 
-//! inv matrix
+// // these settings refer to the scalapack source code documentation
+// int tmp_num = para_mat->get_row_size() + para_mat->get_col_size() + PARAM.inp.nb2d;
+// int lwork = static_cast<int>( (tmp_num*PARAM.inp.nb2d + 3*global_row_mat + std::pow(global_row_mat, 2)) * 1.1 );
+// int lrwork = static_cast<int>( (4*global_row_mat - 2) * 1.1 );
+
+// // std::vector<std::complex<double>> work(lwork, 0);
+// std::vector<TK> work(lwork, 0);
+// std::vector<double> rwork(lrwork, 0);
+
+
+//! inv matrix, output inv_A_mat will overwrite A_mat
 template <typename TK>
-void inv_matrix(const Parallel_2D* para_A, const TK* A_mat, TK* inv_A_mat)
+void inv_matrix(const Parallel_2D* para_A, TK* A_mat)
 {
-    
+    const int global_dim = para_A->get_global_row_size();
+    const int one_int = 1;
+    int info1 = 0;
+    int info2 = 0;
+
+    std::vector<int> ipiv(para_A->get_row_size(), 0);
+
+    const int lwork = global_dim * PARAM.inp.nb2d;
+    const int liwork = std::max(1, para_A->get_row_size());
+    std::vector<TK> work(lwork, static_cast<TK>(0.0));
+    std::vector<int> iwork(liwork, 0.0);
+
+    if constexpr (std::is_same<TK, double>::value)
+    {
+        // LU decomposition
+        pdgetrf_( &global_dim, &global_dim, A_mat, &one_int, &one_int, para_A->desc, ipiv.data(), &info1 );
+        // inverse
+        pdgetri_( &global_dim, A_mat, &one_int, &one_int, para_A->desc, ipiv.data(), work.data(), &lwork, iwork.data(), &liwork, &info2 );
+    }
+    else if constexpr (std::is_same<TK, std::complex<double>>::value)
+    {
+        // LU decomposition
+        pzgetrf_( &global_dim, &global_dim, A_mat, &one_int, &one_int, para_A->desc, ipiv.data(), &info1 );
+        // inverse
+        pzgetri_( &global_dim, A_mat, &one_int, &one_int, para_A->desc, ipiv.data(), work.data(), &lwork, iwork.data(), &liwork, &info2 );
+    }
+
+    if( info1 != 0 || info2 != 0 )
+    {
+        std::cout << "\n***\n" << "there is something wrong when calling pzgetrf_()/pzgetri_()" << "\n***\n" << std::endl;
+    }
+    assert( info1 == 0 && info2 == 0 );
+
 }
 
 
@@ -476,7 +518,6 @@ void decom_dm(const Parallel_2D* ParaV,
                 const Parallel_Orbitals* para_wfc)
 {
     std::vector<TK> L_mat(ParaV->nloc, 0.0);
-    std::vector<TK> L_mat_inv(ParaV->nloc, 0.0);
     std::vector<TK> M_mat(ParaV->nloc, 0.0);
     std::vector<TK> wfc_X(ParaV->nloc, 0.0);
     const int dim = ParaV->get_global_row_size(); // global_nbasis
@@ -496,11 +537,11 @@ void decom_dm(const Parallel_2D* ParaV,
     // diga(M): M = X^dagger * wg * X
     pdiag_scalapack(ParaV, dim, M_mat.data(), temp_wg.data(), wfc_X.data(), true);
 
-    // inv(L)
-    inv_matrix(ParaV, L_mat.data(), L_mat_inv.data());
+    // inv(L), L_mat_inv will overwrite L_mat
+    inv_matrix(ParaV, L_mat.data());
 
     // wfc = X * inv(L)
-    pTgemm_scalapack(ParaV, wfc_X.data(), L_mat_inv.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
+    pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
 
     // convert
     for(int ib=0; ib<para_wfc->get_wfc_global_nbands(); ++ib)
