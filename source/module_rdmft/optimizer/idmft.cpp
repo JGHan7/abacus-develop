@@ -225,9 +225,10 @@ double IDMFT<TK, TR>::optimize()
             // decompose the DM to obtain wfc and wg
             rdmft::decom_dm(this->ParaV,
                             DM_new[ik], 
-                            p_sk,    
+                            p_sk,
+                            &temp_wg(ik, 0),
                             &this->new_wfc(ik, 0, 0),
-                            &temp_wg(ik, 0));
+                            this->ParaV);
         }
         rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
     }

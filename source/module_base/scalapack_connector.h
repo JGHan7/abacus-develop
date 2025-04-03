@@ -18,9 +18,11 @@ extern "C"
 	void pzdotc_(int* n, std::complex<double>* dot, std::complex<double>* x, int* ix, int* jx, int* descx, int* incx,
 		std::complex<double>* y, int* iy, int* jy, int* descy, int* incy);
 
-	void pdpotrf_(char *uplo, int *n, double *a, int *ia, int *ja, int *desca, int *info);
+	void pdpotrf_(const char *uplo, const int *n, double *a,
+					const int *ia, const int *ja, const int *desca, int *info);
 //	void pzpotrf_(char *uplo, int *n, double _Complex *a, int *ia, int *ja, int *desca, int *info);
-	void pzpotrf_(char *uplo, int *n, std::complex<double> *a, int *ia, int *ja, int *desca, int *info);
+	void pzpotrf_(const char *uplo, const int *n, std::complex<double> *a,
+					const int *ia, const int *ja, const int *desca, int *info);
 
     void pdtran_(const int* m, const int* n,
         const double* alpha, const double* a, const int* ia, const int* ja, const  int* desca,
@@ -93,9 +95,7 @@ extern "C"
 			int *ipiv, std::complex<double>* B, const int* ib, const int* jb, const int*descb, const int *info
 		);
 
-	// pdpotrf_() and pzpotrf_() added by jghan, for mixing dmk in rdmft
-	void pdpotrf_(char* uplo, int* n, double* A, int* ia, int* ja, int* desca, int* info);
-	void pzpotrf_(char* uplo, int* n, std::complex<double>* A, int* ia, int* ja, int* desca, int* info);
+	// // pdpotrf_() and pzpotrf_() added by jghan, for mixing dmk in rdmft
 
 	// pdsyev_() and pzheev_() added by jghan, for iterative diagonalization of rdmft
 	void pdsyev_(const char* jobz, const char* uplo, const int* n, double* A, const int* ia, const int* ja, 
