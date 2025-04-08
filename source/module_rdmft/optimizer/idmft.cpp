@@ -138,6 +138,7 @@ void IDMFT<TK, TR>::before_opti(const std::vector< std::vector<TK> >& DM_in)
 {
     // get the initial guess of DM
     this->DM = DM_in;
+    this->iter_step = 0;
 }
 
 
@@ -207,31 +208,49 @@ double IDMFT<TK, TR>::optimize()
     // mixing DM, get the mixed wg and wfc
     if( PARAM.inp.mixing_rdmft )
     {
+        ++this->iter_step;
         // mixing
         rdmft::dm_local2global(this->ParaV, DM_new, this->dmk_out);
         this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
 
-        this->mixing_dmk.mix_dmk(this->dmk_out.data());
+        // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), this->DM[0].data(), "DM");
+        rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), DM_new[0].data(), "DM_new");
+        // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_in.data(), "dmk_in");
+        rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_out.data(), "dmk_out");
 
-        // convert and decompose DM to get wg and wfc
-        this->new_wfc.zero_out();
-        temp_wg.zero_out();
-        rdmft::dm_global2local(this->ParaV, this->dmk_out, DM_new);
-        for(int ik=0; ik<this->nk_total; ++ik)
+        this->mixing_dmk.cal_coef();
+        std::cout << "\n******\n" << "in idmft, 0.65" << "\n******\n" << std::endl;
+
+        if( this->iter_step > PARAM.inp.mixing_ndim ) // >=
         {
-            this->p_hamilt_lcao->updateSk(ik);
-            TK* p_sk = this->p_hamilt_lcao->getSk();
+            std::cout << "\n******\n" << "in idmft, 0.7" << "\n******\n" << std::endl;
+            this->mixing_dmk.mix_dmk(this->dmk_out.data());
+        
+            std::cout << "\n******\n" << "in idmft, 0.8" << "\n******\n" << std::endl;
 
-            // decompose the DM to obtain wfc and wg
-            rdmft::decom_dm(this->ParaV,
-                            DM_new[ik], 
-                            p_sk,
-                            &temp_wg(ik, 0),
-                            &this->new_wfc(ik, 0, 0),
-                            this->ParaV);
+            // convert and decompose DM to get wg and wfc
+            this->new_wfc.zero_out();
+            temp_wg.zero_out();
+            rdmft::dm_global2local(this->ParaV, this->dmk_out, DM_new);
+            for(int ik=0; ik<this->nk_total; ++ik)
+            {
+                this->p_hamilt_lcao->updateSk(ik);
+                TK* p_sk = this->p_hamilt_lcao->getSk();
+
+                // decompose the DM to obtain wfc and wg
+                rdmft::decom_dm(this->ParaV,
+                                DM_new[ik], 
+                                p_sk,
+                                &temp_wg(ik, 0),
+                                &this->new_wfc(ik, 0, 0),
+                                this->ParaV);
+            }
+            rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
+            std::cout << "\n******\n" << "in idmft, 1.0" << "\n******\n" << std::endl;
         }
-        rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
     }
+
+    std::cout << "\n******\n" << "in idmft, 1.1" << "\n******\n" << std::endl;
 
     // diff_DM
     this->diff_DM_max = 0.0;
@@ -248,7 +267,6 @@ double IDMFT<TK, TR>::optimize()
         }
     }
     rdmft::reduce_all_max(this->diff_DM_max);
-
 
 
     // update the occupation number and wfc

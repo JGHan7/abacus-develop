@@ -28,6 +28,8 @@ class Mixing_DMk
 
     void push_data(const TK* dmk_in, const TK* dmk_out);
 
+    void cal_coef();
+
     void mix_dmk(TK* dmk_mixed);
 
     std::string mixing_mode = "pulay";
@@ -38,27 +40,6 @@ class Mixing_DMk
     // mixing_data
     Base_Mixing::Mixing* mixing = nullptr;
     Base_Mixing::Mixing_Data dmk_mdata;
-
-
-
-
-// this->mixing = new Base_Mixing::Pulay_Mixing(this->mixing_ndim, this->mixing_beta);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

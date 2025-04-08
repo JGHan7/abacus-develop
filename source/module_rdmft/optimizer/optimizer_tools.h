@@ -16,6 +16,7 @@
 #include "module_cell/klist.h"
 // #include "module_lr/utils/lr_util.h"
 // #include "module_hamilt_pw/hamilt_pwdft/global.h"
+#include "module_rdmft/rdmft_tools.h" // temp
 
 #include <iostream>
 #include <cmath>
@@ -363,10 +364,10 @@ void dm_local2global(const Parallel_Orbitals* ParaV,
         for(int iu1=0; iu1<ParaV->get_col_size(); ++iu1)
         {
             const int iu1_global = ParaV->local2global_col(iu1);
-            for(int iu2; iu2<ParaV->get_row_size(); ++iu2)
+            for(int iu2=0; iu2<ParaV->get_row_size(); ++iu2)
             {
                 const int iu2_global = ParaV->local2global_row(iu2);
-                dm_global[ ik * temp_size + iu1 * PARAM.globalv.nlocal + iu2 ] = dm_local[ik][ iu1 * ParaV->get_row_size() + iu2 ];
+                dm_global[ ik * temp_size + iu1_global * PARAM.globalv.nlocal + iu2_global ] = dm_local[ik][ iu1 * ParaV->get_row_size() + iu2 ];
             }
         }
     }
@@ -404,10 +405,10 @@ void dm_global2local(const Parallel_Orbitals* ParaV,
         for(int iu1=0; iu1<ParaV->get_col_size(); ++iu1)
         {
             const int iu1_global = ParaV->local2global_col(iu1);
-            for(int iu2; iu2<ParaV->get_row_size(); ++iu2)
+            for(int iu2=0; iu2<ParaV->get_row_size(); ++iu2)
             {
                 const int iu2_global = ParaV->local2global_row(iu2);
-                dm_local[ik][ iu1 * ParaV->get_row_size() + iu2 ] = dm_global[ ik * temp_size + iu1 * PARAM.globalv.nlocal + iu2 ];
+                dm_local[ik][ iu1 * ParaV->get_row_size() + iu2 ] = dm_global[ ik * temp_size + iu1_global * PARAM.globalv.nlocal + iu2_global ];
             }
         }
     }

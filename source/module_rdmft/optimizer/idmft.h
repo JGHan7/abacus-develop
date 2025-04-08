@@ -86,6 +86,8 @@ class IDMFT
 
     hamilt::HamiltLCAO<TK, TR>* p_hamilt_lcao = nullptr; // temp, for mixing
 
+    int iter_step = 0;
+
     // void mixing();
 
     // bool mixing_rdmft = true;

@@ -95,8 +95,6 @@ extern "C"
 			int *ipiv, std::complex<double>* B, const int* ib, const int* jb, const int*descb, const int *info
 		);
 
-	// // pdpotrf_() and pzpotrf_() added by jghan, for mixing dmk in rdmft
-
 	// pdsyev_() and pzheev_() added by jghan, for iterative diagonalization of rdmft
 	void pdsyev_(const char* jobz, const char* uplo, const int* n, double* A, const int* ia, const int* ja, 
              const int* desca, double* w, double* z, const int* iz, const int* jz, const int* descz,
@@ -129,15 +127,25 @@ extern "C"
 		const float* abstol, int* m, int* nz, float* w, const float*orfac, std::complex<float>* Z, const int* iz, const int* jz, const int*descz,
 		std::complex<float>* work, int* lwork, float* rwork, int* lrwork, int*iwork, int*liwork, int* ifail, int*iclustr, float*gap, int* info);
 
+	// void pdgetri_(
+	// 	const int *n, 
+	// 	const double *A, const int *ia, const int *ja, const int *desca,
+	// 	int *ipiv, const double *work, const int *lwork, const int *iwork, const int *liwork, const int *info);
+
+	// void pzgetri_(
+	// 	const int *n, 
+	// 	const std::complex<double> *A, const int *ia, const int *ja, const int *desca,
+	// 	int *ipiv, const std::complex<double> *work, const int *lwork, const int *iwork, const int *liwork, const int *info);
+
+	// pdgetri_() and pzgetri_() without const added by jghan, for mixing dmk in rdmft
 	void pdgetri_(
 		const int *n, 
-		const double *A, const int *ia, const int *ja, const int *desca,
-		int *ipiv, const double *work, const int *lwork, const int *iwork, const int *liwork, const int *info);
-
+		double *A, const int *ia, const int *ja, const int *desca,
+		int *ipiv, double *work, const int *lwork, int *iwork, const int *liwork, int *info);
 	void pzgetri_(
 		const int *n, 
-		const std::complex<double> *A, const int *ia, const int *ja, const int *desca,
-		int *ipiv, const std::complex<double> *work, const int *lwork, const int *iwork, const int *liwork, const int *info);
+		std::complex<double> *A, const int *ia, const int *ja, const int *desca,
+		int *ipiv, std::complex<double> *work, const int *lwork, int *iwork, const int *liwork, int *info);
 
     void pzgeadd_(
 		const char *transa,
@@ -379,8 +387,8 @@ public:
 	static inline
 	void getri(
 		const int n, 
-		const std::complex<double> *A, const int ia, const int ja, const int *desca, int *ipiv, 
-		const std::complex<double> *work, const int *lwork, const int *iwork, const int *liwork, int *info)
+		std::complex<double> *A, const int ia, const int ja, const int *desca, int *ipiv, 
+		std::complex<double> *work, const int *lwork, int *iwork, const int *liwork, int *info)
 	{
 		pzgetri_(&n, A, &ia, &ja, desca, ipiv, work, lwork, iwork, liwork, info);
 	}

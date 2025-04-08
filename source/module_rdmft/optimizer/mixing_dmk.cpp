@@ -74,7 +74,7 @@ void Mixing_DMk<TK>::push_data(const TK* dmk_in, const TK* dmk_out)
 
 
 template<typename TK>
-void Mixing_DMk<TK>::mix_dmk(TK* dmk_mixed)
+void Mixing_DMk<TK>::cal_coef()
 {
     // temporary, no process
     auto inner_product = [this](const TK* resi_i, const TK* resi_j)
@@ -99,7 +99,12 @@ void Mixing_DMk<TK>::mix_dmk(TK* dmk_mixed)
     };
 
     this->mixing->cal_coef(this->dmk_mdata, inner_product);
+}
 
+
+template<typename TK>
+void Mixing_DMk<TK>::mix_dmk(TK* dmk_mixed)
+{
     this->mixing->mix_data(this->dmk_mdata, dmk_mixed);
 }
 
