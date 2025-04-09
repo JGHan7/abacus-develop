@@ -211,7 +211,7 @@ void pdiag_scalapack(const Parallel_2D* para_mat,
             &info);
 #endif
 
-    if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzheev_()" << "\n***\n" << std::endl; }
+    if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzheev_(), info: " << info << "\n***\n" << std::endl; }
     assert( info == 0 );
 
 }
@@ -466,7 +466,7 @@ void cholesky_decom(const Parallel_2D* para_A, TK* A_mat, TK* L_mat)
         pzpotrf_( &uplo, &global_row_A, A_mat, &one_int, &one_int, para_A->desc, &info );
     }
 
-    if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzpotrf_()" << "\n***\n" << std::endl; }
+    if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzpotrf_(), info: " << info << "\n***\n" << std::endl; }
     assert( info == 0 );
 
     // copy the lower triangular part of A to L
@@ -568,7 +568,7 @@ void inv_matrix(const Parallel_2D* para_A, TK* A_mat)
 
     if( info1 != 0 || info2 != 0 )
     {
-        std::cout << "\n***\n" << "there is something wrong when calling pzgetrf_()/pzgetri_()" << "\n***\n" << std::endl;
+        std::cout << "\n***\n" << "there is something wrong when calling pzgetrf_()/pzgetri_(), info1: " << info1 << ", info2: " << info2 << "\n***\n" << std::endl;
     }
     assert( info1 == 0 && info2 == 0 );
 
@@ -626,7 +626,7 @@ void decom_dm(const Parallel_2D* ParaV,
     get_exchange_mat(ParaV, exch_mat);
     pTgemm_scalapack(ParaV, temp_wfc.data(), exch_mat.data(), temp_wfc2.data(), dim, dim, dim, 'N', 'N');
 
-    rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), exch_mat.data(), "exch_mat", 10);
+    // rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), exch_mat.data(), "exch_mat", 10);
 
     if( para_wfc->get_wfc_global_nbands() == dim )
     {
