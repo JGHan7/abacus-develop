@@ -132,17 +132,6 @@ void Pulay_Mixing::tem_cal_coef(const Mixing_Data& mdata, std::function<double(F
             }
         }
 
-        // temp
-        std::cout << std::endl;
-        for(int ir=0; ir<beta_tmp.nr; ++ir)
-        {
-            for(int ic=0; ic<beta_tmp.nc; ++ic)
-            {
-                std::cout << beta_tmp(ir, ic) << " ";
-            }
-            std::cout << std::endl;
-        }
-
         double* work = new double[ndim_use];
         int* iwork = new int[ndim_use];
         char uu = 'U';

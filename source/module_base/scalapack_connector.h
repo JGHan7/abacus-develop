@@ -137,7 +137,7 @@ extern "C"
 	// 	const std::complex<double> *A, const int *ia, const int *ja, const int *desca,
 	// 	int *ipiv, const std::complex<double> *work, const int *lwork, const int *iwork, const int *liwork, const int *info);
 
-	// pdgetri_() and pzgetri_() without const added by jghan, for mixing dmk in rdmft
+	// pdgetri_() and pzgetri_() without const added by jghan
 	void pdgetri_(
 		const int *n, 
 		double *A, const int *ia, const int *ja, const int *desca,

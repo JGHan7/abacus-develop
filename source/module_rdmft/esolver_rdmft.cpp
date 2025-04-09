@@ -90,7 +90,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
-        this->idmft.init(rdmft_solver.nk_total, this->kv, rdmft_solver.para_Eij, this->pv, &this->rdmft_solver, this->p_hamilt);
+        this->idmft.init(rdmft_solver.nk_total, this->kv, rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
     }
 
     this->DM.resize(rdmft_solver.nk_total, std::vector<TK>(this->pv.nloc, 0.0));
@@ -328,7 +328,7 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
         if( PARAM.inp.mixing_rdmft )
         {
             rdmft::cal_special_DM(&this->pv, this->rdmft_solver.wg, this->rdmft_solver.wfc, this->DM);
-            this->idmft.before_opti(this->DM);
+            this->idmft.before_opti(this->DM, this->p_hamilt);
         }
     }
 }

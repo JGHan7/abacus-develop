@@ -133,6 +133,36 @@ void get_identi_mat(const Parallel_2D* para_mat, std::vector<TK>& iden_mat)
 }
 
 
+//! The diagonal is 1, and the rest is 0
+//! Multiplying exch_mat on the left will reverse the order of the rows of the matrix
+//! Multiplying exch_mat on the right will reverse the order of the columns of the matrix
+template<typename TK>
+void get_exchange_mat(const Parallel_2D* para_mat, std::vector<TK>& exch_mat)
+{
+    if( exch_mat.size() != para_mat->get_local_size() ) { exch_mat.resize(para_mat->get_local_size(), static_cast<TK>(0.0)); }
+
+    const int nrow = para_mat->get_row_size();
+    const int ncol = para_mat->get_col_size();
+    const int global_row = para_mat->get_global_row_size();
+
+    for(int i=0; i<nrow; ++i)
+    {
+        const int i_global = para_mat->local2global_row(i);
+        for(int j=0; j<ncol; ++j)
+        {
+            int j_global = para_mat->local2global_col(j);
+            if( (global_row - i_global - 1) == j_global )
+            {
+                exch_mat[ i+j*nrow ] = static_cast<TK>(1.0);
+            }
+            else
+            {
+                exch_mat[ i+j*nrow ] = static_cast<TK>(0.0);
+            }
+        }
+    }
+}
+
 
 // !!! Note: the upper triangular part of mat will be destroyed
 // the scale of egienvalue is global, mat and egienvector are local (2d-block)
@@ -459,14 +489,44 @@ void cholesky_decom(const Parallel_2D* para_A, TK* A_mat, TK* L_mat)
 }
 
 
-// // these settings refer to the scalapack source code documentation
-// int tmp_num = para_mat->get_row_size() + para_mat->get_col_size() + PARAM.inp.nb2d;
-// int lwork = static_cast<int>( (tmp_num*PARAM.inp.nb2d + 3*global_row_mat + std::pow(global_row_mat, 2)) * 1.1 );
-// int lrwork = static_cast<int>( (4*global_row_mat - 2) * 1.1 );
+template <typename TK>
+int get_work_size_getri(const int global_row,
+                        const int* desc,
+                        std::vector<int>& ipiv,
+                        int& lwork_out,
+                        int& liwork_out)
+{
+    int info = 0;
+    int ia = 1, ja = 1;
 
-// // std::vector<std::complex<double>> work(lwork, 0);
-// std::vector<TK> work(lwork, 0);
-// std::vector<double> rwork(lrwork, 0);
+    std::vector<TK> dummy_mat(1, static_cast<TK>(0));
+    TK work = static_cast<TK>(0.0);
+    int iwork = 0;
+    int lwork = -1;
+    int liwork = -1;
+
+    if constexpr (std::is_same<TK, double>::value)
+    {
+        pdgetri_(&global_row, dummy_mat.data(), &ia, &ja, desc, ipiv.data(), &work, &lwork, &iwork, &liwork, &info);
+        lwork_out = static_cast<int>(work);
+    }
+    else if constexpr (std::is_same<TK, std::complex<double>>::value)
+    {
+        pzgetri_(&global_row, dummy_mat.data(), &ia, &ja, desc, ipiv.data(), &work, &lwork, &iwork, &liwork, &info);
+        lwork_out = static_cast<int>(std::real(work));
+    }
+
+    liwork_out = iwork;
+
+    return info;
+
+    if (info != 0)
+    {
+        std::cout << "Query pd/zgetri_ failed with info = " << info << std::endl;
+    }
+    assert( info == 0 );
+
+}
 
 
 //! inv matrix, output inv_A_mat will overwrite A_mat
@@ -480,8 +540,14 @@ void inv_matrix(const Parallel_2D* para_A, TK* A_mat)
 
     std::vector<int> ipiv(para_A->get_row_size(), 0);
 
-    const int lwork = global_dim * PARAM.inp.nb2d;
-    const int liwork = std::max(1, para_A->get_row_size());
+    int lwork = 0;
+    int liwork = 0;
+    int info3 = get_work_size_getri<TK>(global_dim, para_A->desc, ipiv, lwork, liwork);
+    if( info3 != 0 )
+    {
+        lwork = std::max( 4*global_dim*PARAM.inp.nb2d, 1024 );
+        liwork = std::max( 2*para_A->get_row_size(), 64 );
+    }
     std::vector<TK> work(lwork, static_cast<TK>(0.0));
     std::vector<int> iwork(liwork, 0.0);
 
@@ -547,14 +613,26 @@ void decom_dm(const Parallel_2D* ParaV,
     // convert
     for(int ib=0; ib<para_wfc->get_wfc_global_nbands(); ++ib)
     {
-        wg[ib] = temp_wg[ib];
+        // sort the natural occupation numbers from largest to smallest
+        // note that the corresponding wfc also needs to change the order
+        wg[ib] = temp_wg[para_wfc->get_wfc_global_nbands() - ib - 1];
+
+        // wg[ib] = temp_wg[ib];
     }
+
+    // change the order of the eigenvectors wfc so that they correspond to the eigenvalues ​​wg
+    std::vector<TK> exch_mat(ParaV->get_local_size(), 0.0);
+    std::vector<TK> temp_wfc2(ParaV->nloc, 0.0);
+    get_exchange_mat(ParaV, exch_mat);
+    pTgemm_scalapack(ParaV, temp_wfc.data(), exch_mat.data(), temp_wfc2.data(), dim, dim, dim, 'N', 'N');
+
+    rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), exch_mat.data(), "exch_mat", 10);
 
     if( para_wfc->get_wfc_global_nbands() == dim )
     {
         for(int iloc=0; iloc<para_wfc->nloc; ++iloc)
         {
-            wfc[iloc] = temp_wfc[iloc];
+            wfc[iloc] = temp_wfc2[iloc];
         }
     }
     else
@@ -564,14 +642,14 @@ void decom_dm(const Parallel_2D* ParaV,
             const int loc_size = para_wfc->get_row_size();
             for(int ibasis=0; ibasis<loc_size; ++ibasis)
             {
-                wfc[ibasis + ib*loc_size] = temp_wfc[ ibasis + ib*loc_size ];
+                wfc[ibasis + ib*loc_size] = temp_wfc2[ ibasis + ib*loc_size ];
             }
         }
     }
 
 
-}
 
+}
 
 
 

@@ -39,8 +39,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
                             const K_Vectors& kv_in,
                             const Parallel_2D& para_Fij_in,
                             const Parallel_Orbitals& ParaV_in,
-                            RDMFT<TK, TR>* rdmft_solver_in,
-                            hamilt::Hamilt<TK>* p_hamilt_in)
+                            RDMFT<TK, TR>* rdmft_solver_in)
 {
     this->nk_total = nk_total_in;
     this->nk_nospin = this->nk_total / PARAM.inp.nspin;
@@ -52,7 +51,6 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     this->para_Fij = &para_Fij_in;
     this->ParaV = &ParaV_in;
     this->rdmft_solver = rdmft_solver_in;
-    this->p_hamilt_lcao = dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(p_hamilt_in);
 
     // malloc
     this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
@@ -134,11 +132,12 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
 
 
 template <typename TK, typename TR>
-void IDMFT<TK, TR>::before_opti(const std::vector< std::vector<TK> >& DM_in)
+void IDMFT<TK, TR>::before_opti(const std::vector< std::vector<TK> >& DM_in, hamilt::Hamilt<TK>* p_hamilt_in)
 {
     // get the initial guess of DM
     this->DM = DM_in;
     this->iter_step = 0;
+    this->p_hamilt_lcao = dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(p_hamilt_in);
 }
 
 
@@ -214,29 +213,26 @@ double IDMFT<TK, TR>::optimize()
         this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
 
         // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), this->DM[0].data(), "DM");
-        rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), DM_new[0].data(), "DM_new");
+        // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), DM_new[0].data(), "DM_new");
         // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_in.data(), "dmk_in");
-        rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_out.data(), "dmk_out");
+        // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_out.data(), "dmk_out");
 
         this->mixing_dmk.cal_coef();
-        std::cout << "\n******\n" << "in idmft, 0.65" << "\n******\n" << std::endl;
 
-        if( this->iter_step > PARAM.inp.mixing_ndim ) // >=
+        if( 1 ) // this->iter_step >= PARAM.inp.mixing_ndim
         {
-            std::cout << "\n******\n" << "in idmft, 0.7" << "\n******\n" << std::endl;
             this->mixing_dmk.mix_dmk(this->dmk_out.data());
-        
-            std::cout << "\n******\n" << "in idmft, 0.8" << "\n******\n" << std::endl;
 
             // convert and decompose DM to get wg and wfc
             this->new_wfc.zero_out();
             temp_wg.zero_out();
             rdmft::dm_global2local(this->ParaV, this->dmk_out, DM_new);
+
             for(int ik=0; ik<this->nk_total; ++ik)
             {
                 this->p_hamilt_lcao->updateSk(ik);
                 TK* p_sk = this->p_hamilt_lcao->getSk();
-
+  
                 // decompose the DM to obtain wfc and wg
                 rdmft::decom_dm(this->ParaV,
                                 DM_new[ik], 
@@ -246,12 +242,24 @@ double IDMFT<TK, TR>::optimize()
                                 this->ParaV);
             }
             rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
-            std::cout << "\n******\n" << "in idmft, 1.0" << "\n******\n" << std::endl;
         }
     }
 
-    std::cout << "\n******\n" << "in idmft, 1.1" << "\n******\n" << std::endl;
+    // // test!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // this->opti_occ_num(occ_num_pass);
 
+    double tot_occ_num = 0.0;
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+        {
+            tot_occ_num += occ_num_pass(ik, ib) * this->num_symm_k[ik];
+        }
+    }
+
+    std::cout << "\n******\nafter mixing:\n" << "total_elec_num: " << tot_occ_num << std::endl;
+    std::cout << "mixing_occ_num_error: " << tot_occ_num - this->sys_nelec_spin[0] << "\n******\n" << std::endl;
+    
     // diff_DM
     this->diff_DM_max = 0.0;
     for(int ik=0; ik<nk_total; ++ik)
