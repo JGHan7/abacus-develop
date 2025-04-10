@@ -447,11 +447,11 @@ void dm_global2local(const Parallel_Orbitals* ParaV,
 
 
 //! Cholesky decomposition: A = L * L^dagger
-//! fortran perspective: the lower triangular part of A is destroyed
+//! fortran perspective: L, the lower triangular part of A is destroyed. U, the upper triangular part of A is destroyed.
 template <typename TK>
-void cholesky_decom(const Parallel_2D* para_A, TK* A_mat, TK* L_mat)
+void cholesky_decom(const Parallel_2D* para_A, TK* A_mat, TK* L_mat, const char uplo_in = 'L')
 {
-    const char uplo = 'L';
+    const char uplo = uplo_in;
     const int one_int = 1;
     int info = 0;
     const int global_row_A = para_A->get_global_row_size();
@@ -469,21 +469,36 @@ void cholesky_decom(const Parallel_2D* para_A, TK* A_mat, TK* L_mat)
     if( info ) { std::cout << "\n***\n" << "there is something wrong when calling pzpotrf_(), info: " << info << "\n***\n" << std::endl; }
     assert( info == 0 );
 
-    // copy the lower triangular part of A to L
+    // copy the lower triangular or upper triangular part of A to L
     for(int ic=0; ic<para_A->get_col_size(); ++ic)
     {
         const int ic_global = para_A->local2global_col(ic);
         for(int ir=0; ir<para_A->get_row_size(); ++ir)
         {
             const int ir_global = para_A->local2global_row(ir);
-            if( ir_global >= ic_global )
+            if(uplo == 'L')
             {
-                L_mat[ ir + ic*para_A->get_row_size() ] = A_mat[ ir + ic*para_A->get_row_size() ];
+                if( ir_global >= ic_global )
+                {
+                    L_mat[ ir + ic*para_A->get_row_size() ] = A_mat[ ir + ic*para_A->get_row_size() ];
+                }
+                else
+                {
+                    L_mat[ ir + ic*para_A->get_row_size() ] = static_cast<TK>(0.0);
+                }
             }
             else
             {
-                L_mat[ ir + ic*para_A->get_row_size() ] = static_cast<TK>(0.0);
+                if( ir_global <= ic_global )
+                {
+                    L_mat[ ir + ic*para_A->get_row_size() ] = A_mat[ ir + ic*para_A->get_row_size() ];
+                }
+                else
+                {
+                    L_mat[ ir + ic*para_A->get_row_size() ] = static_cast<TK>(0.0);
+                }
             }
+
         }
     }
 }
@@ -600,6 +615,9 @@ void decom_dm(const Parallel_2D* ParaV,
     std::vector<TK> temp_mat(ParaV->nloc, 0.0);
     pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'C', 'N');
     pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'N');
+    // test1, test2
+    // pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'N', 'N');
+    // pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'C');
 
     // diga(M): M = X^dagger * wg * X
     pdiag_scalapack(ParaV, dim, M_mat.data(), temp_wg.data(), wfc_X.data(), true);
@@ -608,7 +626,11 @@ void decom_dm(const Parallel_2D* ParaV,
     inv_matrix(ParaV, L_mat.data());
 
     // wfc = X * inv(L)
-    pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
+    // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
+    // test1
+    // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
+    // test2
+    pTgemm_scalapack(ParaV, L_mat.data(), wfc_X.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
 
     // convert
     for(int ib=0; ib<para_wfc->get_wfc_global_nbands(); ++ib)

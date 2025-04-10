@@ -204,6 +204,37 @@ double IDMFT<TK, TR>::optimize()
     std::vector< std::vector<TK> > DM_new(nk_total, std::vector<TK>(this->ParaV->nloc, 0.0));
     rdmft::cal_special_DM(this->ParaV, temp_wg, this->new_wfc, DM_new);
 
+    // diff_DM
+    this->diff_DM_max = 0.0;
+    for(int ik=0; ik<nk_total; ++ik)
+    {
+        for(int iloc=0; iloc<DM_new[ik].size(); ++iloc)
+        {
+            double diff_DM = std::abs( this->DM[ik][iloc] - DM_new[ik][iloc] );
+            if( diff_DM > this->diff_DM_max )
+            {
+                this->diff_DM_max = diff_DM;
+            }
+        }
+    }
+    rdmft::reduce_all_max(this->diff_DM_max);
+
+    if( this->diff_DM_max < PARAM.inp.scf_thr )
+    {
+        // update the occupation number and wfc
+        this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
+        this->etotal = this->rdmft_solver->cal_Energy();
+        this->new_wfc.zero_out();
+
+        this->diff_Etotal = this->etotal - this->etotal_old;
+
+        if( std::abs(this->diff_Etotal) < PARAM.inp.iter_diag_ethr )
+        {
+            this->DM = DM_new;
+            return this->diff_Etotal;
+        }
+    }
+
     // mixing DM, get the mixed wg and wfc
     if( PARAM.inp.mixing_rdmft )
     {
@@ -245,9 +276,6 @@ double IDMFT<TK, TR>::optimize()
         }
     }
 
-    // // test!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // this->opti_occ_num(occ_num_pass);
-
     double tot_occ_num = 0.0;
     for(int ik=0; ik<this->nk_total; ++ik)
     {
@@ -256,26 +284,34 @@ double IDMFT<TK, TR>::optimize()
             tot_occ_num += occ_num_pass(ik, ib) * this->num_symm_k[ik];
         }
     }
+    double occ_num_error = tot_occ_num - this->sys_nelec_spin[0];
 
     std::cout << "\n******\nafter mixing:\n" << "total_elec_num: " << tot_occ_num << std::endl;
-    std::cout << "mixing_occ_num_error: " << tot_occ_num - this->sys_nelec_spin[0] << "\n******\n" << std::endl;
-    
-    // diff_DM
-    this->diff_DM_max = 0.0;
-    for(int ik=0; ik<nk_total; ++ik)
-    {
-        for(int iloc=0; iloc<DM_new[ik].size(); ++iloc)
-        {
-            double diff_DM = std::abs( this->DM[ik][iloc] - DM_new[ik][iloc] );
-            if( diff_DM > this->diff_DM_max )
-            {
-                this->diff_DM_max = diff_DM;
-            }
-            this->DM[ik][iloc] = DM_new[ik][iloc];
-        }
-    }
-    rdmft::reduce_all_max(this->diff_DM_max);
+    std::cout << "mixing_occ_num_error: " << occ_num_error << "\n******\n" << std::endl;
 
+    // not mixed occupation number?
+    if( std::abs(occ_num_error) > PARAM.inp.tot_nelec_thr )
+    {
+        this->opti_occ_num(occ_num_pass);
+    }
+    
+    // // diff_DM
+    // this->diff_DM_max = 0.0;
+    // for(int ik=0; ik<nk_total; ++ik)
+    // {
+    //     for(int iloc=0; iloc<DM_new[ik].size(); ++iloc)
+    //     {
+    //         double diff_DM = std::abs( this->DM[ik][iloc] - DM_new[ik][iloc] );
+    //         if( diff_DM > this->diff_DM_max )
+    //         {
+    //             this->diff_DM_max = diff_DM;
+    //         }
+    //         this->DM[ik][iloc] = DM_new[ik][iloc];
+    //     }
+    // }
+    // rdmft::reduce_all_max(this->diff_DM_max);
+
+    this->DM = DM_new;
 
     // update the occupation number and wfc
     this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
