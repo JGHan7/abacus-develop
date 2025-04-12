@@ -87,6 +87,8 @@ class IDMFT
 
     int iter_step = 0;
 
+    void do_mixing(std::vector< std::vector<TK> >& DM_new, ModuleBase::matrix& occ_num_pass);
+
     // void mixing();
 
     // bool mixing_rdmft = true;

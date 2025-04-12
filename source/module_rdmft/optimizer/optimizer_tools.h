@@ -590,14 +590,71 @@ void inv_matrix(const Parallel_2D* para_A, TK* A_mat)
 }
 
 
+//! decompose the density matrix DM into C^dagger*F*C, given that C*C^dagger=I
+template <typename TK>
+void decom_dm_nos(const Parallel_2D* ParaV,
+                const std::vector<TK>& DMk,
+                double* wg,
+                TK* wfc,
+                const Parallel_Orbitals* para_wfc)
+{
+
+    const int dim = ParaV->get_global_row_size(); // global_nbasis
+
+    // used when global_nbands != global_nbasis
+    std::vector<double> temp_wg(dim, 0.0);
+    std::vector<TK> temp_wfc(ParaV->nloc, 0.0);
+    std::vector<TK> temp_DM(ParaV->nloc, 0.0);
+
+    // diga(D): D = C^dagger * wg * C
+    std::vector<TK> iden_mat(ParaV->get_local_size(), 0.0);
+    get_identi_mat(ParaV, iden_mat);
+    pTgemm_scalapack(ParaV, DMk.data(), iden_mat.data(), temp_DM.data(), dim, dim, dim, 'N', 'N');
+    pdiag_scalapack(ParaV, dim, temp_DM.data(), temp_wg.data(), temp_wfc.data(), true);
+
+    // convert
+    for(int ib=0; ib<para_wfc->get_wfc_global_nbands(); ++ib)
+    {
+        // sort the natural occupation numbers from largest to smallest
+        // note that the corresponding wfc also needs to change the order
+        wg[ib] = temp_wg[para_wfc->get_wfc_global_nbands() - ib - 1];
+    }
+
+    // change the order of the eigenvectors wfc so that they correspond to the eigenvalues ​​wg
+    std::vector<TK> exch_mat(ParaV->get_local_size(), 0.0);
+    std::vector<TK> temp_wfc2(ParaV->nloc, 0.0);
+    get_exchange_mat(ParaV, exch_mat);
+    pTgemm_scalapack(ParaV, temp_wfc.data(), exch_mat.data(), temp_wfc2.data(), dim, dim, dim, 'N', 'N');
+
+    if( para_wfc->get_wfc_global_nbands() == dim )
+    {
+        for(int iloc=0; iloc<para_wfc->nloc; ++iloc)
+        {
+            wfc[iloc] = temp_wfc2[iloc];
+        }
+    }
+    else
+    {
+        for(int ib=0; ib<para_wfc->ncol_bands; ++ib)
+        {
+            const int loc_size = para_wfc->get_row_size();
+            for(int ibasis=0; ibasis<loc_size; ++ibasis)
+            {
+                wfc[ibasis + ib*loc_size] = temp_wfc2[ ibasis + ib*loc_size ];
+            }
+        }
+    }
+}
+
+
 //! decompose the density matrix DM into C^dagger*F*C, given that C*S*C^dagger=I
 template <typename TK>
 void decom_dm(const Parallel_2D* ParaV,
                 const std::vector<TK>& DMk,
-                TK* Sk,
                 double* wg,
                 TK* wfc,
-                const Parallel_Orbitals* para_wfc)
+                const Parallel_Orbitals* para_wfc,
+                TK* Sk)
 {
     std::vector<TK> L_mat(ParaV->nloc, 0.0);
     std::vector<TK> M_mat(ParaV->nloc, 0.0);
@@ -608,27 +665,27 @@ void decom_dm(const Parallel_2D* ParaV,
     std::vector<double> temp_wg(dim, 0.0);
     std::vector<TK> temp_wfc(ParaV->nloc, 0.0);
 
-    // // get L matrix
-    // cholesky_decom(ParaV, Sk, L_mat.data());
+    // get L matrix
+    cholesky_decom(ParaV, Sk, L_mat.data());
 
-    // // M = L^dagger * DM * L
-    // std::vector<TK> temp_mat(ParaV->nloc, 0.0);
-    // // pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'C', 'N');
-    // // pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'N');
+    // M = L^dagger * DM * L
+    std::vector<TK> temp_mat(ParaV->nloc, 0.0);
+    pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'C', 'N');
+    pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'N');
     // // test1
     // pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'N', 'N');
     // pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'C');
 
-    // // diga(M): M = X^dagger * wg * X
-    // pdiag_scalapack(ParaV, dim, M_mat.data(), temp_wg.data(), wfc_X.data(), true);
+    // diga(M): M = X^dagger * wg * X
+    pdiag_scalapack(ParaV, dim, M_mat.data(), temp_wg.data(), wfc_X.data(), true);
 
-    // // inv(L), L_mat_inv will overwrite L_mat
-    // inv_matrix(ParaV, L_mat.data());
+    // inv(L), L_mat_inv will overwrite L_mat
+    inv_matrix(ParaV, L_mat.data());
 
-    // // wfc = X * inv(L)
-    // // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
+    // wfc = X * inv(L)
+    pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
     // // test1
-    // // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'C');
+    // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'C');
     // // test2
     // pTgemm_scalapack(ParaV, L_mat.data(), wfc_X.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
 
@@ -684,11 +741,6 @@ void decom_dm(const Parallel_2D* ParaV,
 
 
 }
-
-
-
-
-
 
 
 

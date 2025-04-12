@@ -180,17 +180,16 @@ double IDMFT<TK, TR>::optimize()
         }
     }
 
-    // update from 1-step_wfc?
     if( !this->if_get_wfc1 && this->if_rotate_Fock )
     {
         // rotate the Fock-like matrix to the first step NOs representation,
-        // then new_wfc = nos_rep_wfc * ( nos_rep_wfc1 * NAOs_rep_wfc0) for each iteration
-
-        // get NAOs_rep_wfc1 = nos_rep_wfc1 * NAOs_rep_wfc0
+        // then new_wfc = nos_rep_wfc * NAOs_rep_wfc0 for each iteration
         TK* p_wfc = &this->rdmft_solver->wfc(0, 0, 0);
         TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
-        for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_wfc[i]; }
-
+        for(int i=0; i<this->naos_rep_wfc1.size(); ++i)
+        {
+            p_naos_rep_wfc1[i] = p_wfc[i];
+        }
         this->if_get_wfc1 = true;
     }
 
@@ -219,109 +218,35 @@ double IDMFT<TK, TR>::optimize()
     }
     rdmft::reduce_all_max(this->diff_DM_max);
 
-    // if converage, don't mixing
-    if( this->diff_DM_max < PARAM.inp.scf_thr )
-    {
-        // update the occupation number and wfc
-        this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
-        this->etotal = this->rdmft_solver->cal_Energy();
-        this->new_wfc.zero_out();
-
-        this->diff_Etotal = this->etotal - this->etotal_old;
-
-        if( std::abs(this->diff_Etotal) < PARAM.inp.iter_diag_ethr )
-        {
-            this->DM = DM_new;
-            return this->diff_Etotal;
-        }
-    }
-
-    // mixing DM, get the mixed wg and wfc
-    if( PARAM.inp.mixing_rdmft )
-    {
-        ++this->iter_step;
-        // mixing
-        rdmft::dm_local2global(this->ParaV, DM_new, this->dmk_out);
-        this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
-
-        // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), this->DM[0].data(), "DM");
-        // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), DM_new[0].data(), "DM_new");
-        // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_in.data(), "dmk_in");
-        // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_out.data(), "dmk_out");
-
-        this->mixing_dmk.cal_coef();
-
-        if( 1 ) // this->iter_step >= PARAM.inp.mixing_ndim
-        {
-            this->mixing_dmk.mix_dmk(this->dmk_out.data());
-
-            // convert and decompose DM to get wg and wfc
-            this->new_wfc.zero_out();
-            temp_wg.zero_out();
-            rdmft::dm_global2local(this->ParaV, this->dmk_out, DM_new);
-
-            for(int ik=0; ik<this->nk_total; ++ik)
-            {
-                this->p_hamilt_lcao->updateSk(ik);
-                TK* p_sk = this->p_hamilt_lcao->getSk();
-  
-                // decompose the DM to obtain wfc and wg
-                rdmft::decom_dm(this->ParaV,
-                                DM_new[ik], 
-                                p_sk,
-                                &temp_wg(ik, 0),
-                                &this->new_wfc(ik, 0, 0),
-                                this->ParaV);
-            }
-            rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
-        }
-    }
-
-    double tot_occ_num = 0.0;
-    for(int ik=0; ik<this->nk_total; ++ik)
-    {
-        for(int ib=0; ib<PARAM.inp.nbands; ++ib)
-        {
-            tot_occ_num += occ_num_pass(ik, ib) * this->num_symm_k[ik];
-        }
-    }
-    double occ_num_error = tot_occ_num - this->sys_nelec_spin[0];
-
-    std::cout << "\n******\nafter mixing:\n" << "total_elec_num: " << tot_occ_num << std::endl;
-    std::cout << "mixing_occ_num_error: " << occ_num_error << "\n******\n" << std::endl;
-
-
-
-
-
-    // // not mixed occupation number?
-    // if( std::abs(occ_num_error) > PARAM.inp.tot_nelec_thr )
+    // // if converage, don't mixing
+    // if( this->diff_DM_max < PARAM.inp.scf_thr )
     // {
-    //     this->opti_occ_num(occ_num_pass);
-    // }
-    
+    //     // update the occupation number and wfc
+    //     this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
+    //     this->etotal = this->rdmft_solver->cal_Energy();
+    //     this->new_wfc.zero_out();
 
+    //     this->diff_Etotal = this->etotal - this->etotal_old;
 
-
-
-    // // diff_DM
-    // this->diff_DM_max = 0.0;
-    // for(int ik=0; ik<nk_total; ++ik)
-    // {
-    //     for(int iloc=0; iloc<DM_new[ik].size(); ++iloc)
+    //     if( std::abs(this->diff_Etotal) < PARAM.inp.iter_diag_ethr )
     //     {
-    //         double diff_DM = std::abs( this->DM[ik][iloc] - DM_new[ik][iloc] );
-    //         if( diff_DM > this->diff_DM_max )
-    //         {
-    //             this->diff_DM_max = diff_DM;
-    //         }
-    //         this->DM[ik][iloc] = DM_new[ik][iloc];
+    //         this->DM = DM_new;
+    //         return this->diff_Etotal;
     //     }
     // }
-    // rdmft::reduce_all_max(this->diff_DM_max);
+
+
+    // if converage, don't mixing
+    if( this->diff_DM_max > PARAM.inp.scf_thr )
+    {
+        // mixing DM, get the mixed wg and wfc
+        if( PARAM.inp.mixing_rdmft )
+        {
+            this->do_mixing(DM_new, occ_num_pass);
+        }
+    }
 
     this->DM = DM_new;
-
 
     // update the occupation number and wfc
     this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
@@ -329,6 +254,8 @@ double IDMFT<TK, TR>::optimize()
     this->new_wfc.zero_out();
 
     this->diff_Etotal = this->etotal - this->etotal_old;
+
+    ++this->iter_step;
 
     return this->diff_Etotal;
 
@@ -391,6 +318,81 @@ void IDMFT<TK, TR>::get_Fock()
         this->rotate_Fock();
     }
 }
+
+
+template <typename TK, typename TR>
+void IDMFT<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DM_new, ModuleBase::matrix& occ_num_pass)
+{
+    // mixing
+    rdmft::dm_local2global(this->ParaV, DM_new, this->dmk_out);
+    this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
+
+    // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), this->DM[0].data(), "DM");
+    // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), DM_new[0].data(), "DM_new");
+    // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_in.data(), "dmk_in");
+    // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_out.data(), "dmk_out");
+
+    this->mixing_dmk.cal_coef();
+    
+    if( 1 ) // this->iter_step >= PARAM.inp.mixing_ndim
+    {
+        this->mixing_dmk.mix_dmk(this->dmk_out.data());
+
+        // convert and decompose DM to get wg and wfc
+        this->new_wfc.zero_out();
+        ModuleBase::matrix temp_wg(nk_nospin*PARAM.inp.nspin, nbands);
+        temp_wg.zero_out();
+        rdmft::dm_global2local(this->ParaV, this->dmk_out, DM_new);
+
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            if( !this->if_rotate_Fock )
+            {
+                this->p_hamilt_lcao->updateSk(ik);
+                TK* p_sk = this->p_hamilt_lcao->getSk();
+
+                // decompose the DM to obtain wfc and wg
+                rdmft::decom_dm(this->ParaV,
+                                DM_new[ik], 
+                                &temp_wg(ik, 0),
+                                &this->new_wfc(ik, 0, 0),
+                                this->ParaV,
+                                p_sk);
+            }
+            // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix
+            else if( this->if_rotate_Fock && this->iter_step > 0 )
+            {
+                // rdmft::decom_dm_nos();
+            }
+
+
+        }
+        rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
+    }
+
+    double tot_occ_num = 0.0;
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+        {
+            tot_occ_num += occ_num_pass(ik, ib) * this->num_symm_k[ik];
+        }
+    }
+    double occ_num_error = tot_occ_num - this->sys_nelec_spin[0];
+
+    std::cout << "\n******\nafter mixing:\n" << "total_elec_num: " << tot_occ_num << std::endl;
+    std::cout << "mixing_occ_num_error: " << occ_num_error << "\n******\n" << std::endl;
+
+
+    // // not mixed occupation number?
+    // if( std::abs(occ_num_error) > PARAM.inp.tot_nelec_thr )
+    // {
+    //     this->opti_occ_num(occ_num_pass);
+    // }
+
+}
+
+
 
 
 // template <typename TK, typename TR>
