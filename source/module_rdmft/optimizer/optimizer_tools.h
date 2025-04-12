@@ -608,29 +608,41 @@ void decom_dm(const Parallel_2D* ParaV,
     std::vector<double> temp_wg(dim, 0.0);
     std::vector<TK> temp_wfc(ParaV->nloc, 0.0);
 
-    // get L matrix
-    cholesky_decom(ParaV, Sk, L_mat.data());
+    // // get L matrix
+    // cholesky_decom(ParaV, Sk, L_mat.data());
 
-    // M = L^dagger * DM * L
-    std::vector<TK> temp_mat(ParaV->nloc, 0.0);
-    pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'C', 'N');
-    pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'N');
-    // test1, test2
+    // // M = L^dagger * DM * L
+    // std::vector<TK> temp_mat(ParaV->nloc, 0.0);
+    // // pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'C', 'N');
+    // // pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'N');
+    // // test1
     // pTgemm_scalapack(ParaV, L_mat.data(), DMk.data(), temp_mat.data(), dim, dim, dim, 'N', 'N');
     // pTgemm_scalapack(ParaV, temp_mat.data(), L_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'C');
 
-    // diga(M): M = X^dagger * wg * X
-    pdiag_scalapack(ParaV, dim, M_mat.data(), temp_wg.data(), wfc_X.data(), true);
+    // // diga(M): M = X^dagger * wg * X
+    // pdiag_scalapack(ParaV, dim, M_mat.data(), temp_wg.data(), wfc_X.data(), true);
 
-    // inv(L), L_mat_inv will overwrite L_mat
-    inv_matrix(ParaV, L_mat.data());
+    // // inv(L), L_mat_inv will overwrite L_mat
+    // inv_matrix(ParaV, L_mat.data());
 
-    // wfc = X * inv(L)
-    // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
-    // test1
-    // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
-    // test2
-    pTgemm_scalapack(ParaV, L_mat.data(), wfc_X.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
+    // // wfc = X * inv(L)
+    // // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
+    // // test1
+    // // pTgemm_scalapack(ParaV, wfc_X.data(), L_mat.data(), temp_wfc.data(), dim, dim, dim, 'N', 'C');
+    // // test2
+    // pTgemm_scalapack(ParaV, L_mat.data(), wfc_X.data(), temp_wfc.data(), dim, dim, dim, 'N', 'N');
+
+
+
+
+    // isolated atom case: diga(D): D = C^dagger * wg * C
+    std::vector<TK> iden_mat(ParaV->get_local_size(), 0.0);
+    get_identi_mat(ParaV, iden_mat);
+    pTgemm_scalapack(ParaV, DMk.data(), iden_mat.data(), M_mat.data(), dim, dim, dim, 'N', 'N');
+    pdiag_scalapack(ParaV, dim, M_mat.data(), temp_wg.data(), temp_wfc.data(), true);
+
+
+
 
     // convert
     for(int ib=0; ib<para_wfc->get_wfc_global_nbands(); ++ib)

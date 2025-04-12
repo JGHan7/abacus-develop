@@ -59,7 +59,7 @@ void EBI::init(const int nk_total, const int nkstot_full, const std::vector<doub
     {
         this->sys_nelec_spin[0] = (PARAM.inp.nelec / 2.0) * nkstot_full;
         // remove the weight of spin
-        for(int ik; ik<this->num_symm_k.size(); ++ik)
+        for(int ik=0; ik<this->num_symm_k.size(); ++ik)
         {
             this->num_symm_k[ik] /= 2.0;
         }
@@ -74,7 +74,7 @@ void EBI::init(const int nk_total, const int nkstot_full, const std::vector<doub
     }
 
     // get the number of symmetric k-points
-    for(int iks; iks<this->num_symm_k.size(); ++iks)
+    for(int iks=0; iks<this->num_symm_k.size(); ++iks)
     {
         this->num_symm_k[iks] *= nkstot_full;
     }

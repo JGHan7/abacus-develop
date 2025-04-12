@@ -98,7 +98,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
 
     // get the number of symmetric k-points
     this->num_symm_k.resize(this->kv->wk.size());
-    for(int iks; iks<this->num_symm_k.size(); ++iks)
+    for(int iks=0; iks<this->num_symm_k.size(); ++iks)
     {
         this->num_symm_k[iks] = this->kv->wk[iks] * nkstot_full;
     }
@@ -109,7 +109,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     if( PARAM.inp.nspin == 1 )
     {
         // remove the weight of spin
-        for(int iks; iks<this->kv->wk.size(); ++iks)
+        for(int iks=0; iks<this->kv->wk.size(); ++iks)
         {
             // this->wk_nospin[iks] /= 2.0;
             this->num_symm_k[iks] /= 2.0;
@@ -219,6 +219,7 @@ double IDMFT<TK, TR>::optimize()
     }
     rdmft::reduce_all_max(this->diff_DM_max);
 
+    // if converage, don't mixing
     if( this->diff_DM_max < PARAM.inp.scf_thr )
     {
         // update the occupation number and wfc
@@ -289,12 +290,20 @@ double IDMFT<TK, TR>::optimize()
     std::cout << "\n******\nafter mixing:\n" << "total_elec_num: " << tot_occ_num << std::endl;
     std::cout << "mixing_occ_num_error: " << occ_num_error << "\n******\n" << std::endl;
 
-    // not mixed occupation number?
-    if( std::abs(occ_num_error) > PARAM.inp.tot_nelec_thr )
-    {
-        this->opti_occ_num(occ_num_pass);
-    }
+
+
+
+
+    // // not mixed occupation number?
+    // if( std::abs(occ_num_error) > PARAM.inp.tot_nelec_thr )
+    // {
+    //     this->opti_occ_num(occ_num_pass);
+    // }
     
+
+
+
+
     // // diff_DM
     // this->diff_DM_max = 0.0;
     // for(int ik=0; ik<nk_total; ++ik)
@@ -312,6 +321,7 @@ double IDMFT<TK, TR>::optimize()
     // rdmft::reduce_all_max(this->diff_DM_max);
 
     this->DM = DM_new;
+
 
     // update the occupation number and wfc
     this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
