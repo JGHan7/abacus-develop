@@ -373,12 +373,13 @@ void wg2occ_num(const K_Vectors* kv, const ModuleBase::matrix& wg, ModuleBase::m
 //! convert the local density matrix to the global density matrix
 //! dm_local<ik, <miu1_loc, miu2_loc>>, dm_global<ik, <miu1, miu2>>
 template <typename TK>
-void dm_local2global(const Parallel_Orbitals* ParaV,
+void dm_local2global(const Parallel_2D* para_D,
                         const std::vector< std::vector<TK> >& dm_local,
-                        std::vector<TK>& dm_global)
+                        std::vector<TK>& dm_global,
+                        const int global_dim)
 {
     // malloc and ensure the initial value is 0.0
-    int temp_size = PARAM.globalv.nlocal * PARAM.globalv.nlocal;
+    int temp_size = global_dim * global_dim;
     if( dm_global.size() != temp_size * dm_local.size() )
     {
         dm_global.assign(temp_size * dm_local.size(), static_cast<TK>(0.0));
@@ -391,13 +392,13 @@ void dm_local2global(const Parallel_Orbitals* ParaV,
     // convert
     for(int ik=0; ik<dm_local.size(); ++ik)
     {
-        for(int iu1=0; iu1<ParaV->get_col_size(); ++iu1)
+        for(int iu1=0; iu1<para_D->get_col_size(); ++iu1)
         {
-            const int iu1_global = ParaV->local2global_col(iu1);
-            for(int iu2=0; iu2<ParaV->get_row_size(); ++iu2)
+            const int iu1_global = para_D->local2global_col(iu1);
+            for(int iu2=0; iu2<para_D->get_row_size(); ++iu2)
             {
-                const int iu2_global = ParaV->local2global_row(iu2);
-                dm_global[ ik * temp_size + iu1_global * PARAM.globalv.nlocal + iu2_global ] = dm_local[ik][ iu1 * ParaV->get_row_size() + iu2 ];
+                const int iu2_global = para_D->local2global_row(iu2);
+                dm_global[ ik * temp_size + iu1_global * global_dim + iu2_global ] = dm_local[ik][ iu1 * para_D->get_row_size() + iu2 ];
             }
         }
     }
@@ -411,14 +412,15 @@ void dm_local2global(const Parallel_Orbitals* ParaV,
 //! convert the global density matrix to the local density matrix
 //! dm_local<ik, <miu1_loc, miu2_loc>>, dm_global<ik, <miu1, miu2>>
 template <typename TK>
-void dm_global2local(const Parallel_Orbitals* ParaV,
+void dm_global2local(const Parallel_2D* para_D,
                         const std::vector<TK>& dm_global,
-                        std::vector< std::vector<TK> >& dm_local)
+                        std::vector< std::vector<TK> >& dm_local,
+                        const int global_dim)
 {
     // malloc and ensure the initial value is 0.0
     for(int ik=0; ik<dm_local.size(); ++ik)
     {
-        if( dm_local[ik].size() != ParaV->nloc )
+        if( dm_local[ik].size() != para_D->nloc )
         {
             dm_local[ik].assign(dm_local[ik].size(), static_cast<TK>(0.0));
         }
@@ -429,16 +431,16 @@ void dm_global2local(const Parallel_Orbitals* ParaV,
     }
 
     // convert
-    int temp_size = PARAM.globalv.nlocal * PARAM.globalv.nlocal;
+    int temp_size = global_dim * global_dim;
     for(int ik=0; ik<dm_local.size(); ++ik)
     {
-        for(int iu1=0; iu1<ParaV->get_col_size(); ++iu1)
+        for(int iu1=0; iu1<para_D->get_col_size(); ++iu1)
         {
-            const int iu1_global = ParaV->local2global_col(iu1);
-            for(int iu2=0; iu2<ParaV->get_row_size(); ++iu2)
+            const int iu1_global = para_D->local2global_col(iu1);
+            for(int iu2=0; iu2<para_D->get_row_size(); ++iu2)
             {
-                const int iu2_global = ParaV->local2global_row(iu2);
-                dm_local[ik][ iu1 * ParaV->get_row_size() + iu2 ] = dm_global[ ik * temp_size + iu1_global * PARAM.globalv.nlocal + iu2_global ];
+                const int iu2_global = para_D->local2global_row(iu2);
+                dm_local[ik][ iu1 * para_D->get_row_size() + iu2 ] = dm_global[ ik * temp_size + iu1_global * global_dim + iu2_global ];
             }
         }
     }
@@ -591,59 +593,61 @@ void inv_matrix(const Parallel_2D* para_A, TK* A_mat)
 
 
 //! decompose the density matrix DM into C^dagger*F*C, given that C*C^dagger=I
+//! the code assumes that the number of eigenvectors obtained = DMk's dimension
 template <typename TK>
-void decom_dm_nos(const Parallel_2D* ParaV,
+void decom_dm(const Parallel_2D* para_D,
                 const std::vector<TK>& DMk,
                 double* wg,
-                TK* wfc,
-                const Parallel_Orbitals* para_wfc)
+                TK* wfc)
 {
 
-    const int dim = ParaV->get_global_row_size(); // global_nbasis
+    const int dim = para_D->get_global_row_size(); // global_nbasis
 
-    // used when global_nbands != global_nbasis
+    // to reorder
     std::vector<double> temp_wg(dim, 0.0);
-    std::vector<TK> temp_wfc(ParaV->nloc, 0.0);
-    std::vector<TK> temp_DM(ParaV->nloc, 0.0);
+    std::vector<TK> temp_wfc(para_D->nloc, 0.0);
 
     // diga(D): D = C^dagger * wg * C
-    std::vector<TK> iden_mat(ParaV->get_local_size(), 0.0);
-    get_identi_mat(ParaV, iden_mat);
-    pTgemm_scalapack(ParaV, DMk.data(), iden_mat.data(), temp_DM.data(), dim, dim, dim, 'N', 'N');
-    pdiag_scalapack(ParaV, dim, temp_DM.data(), temp_wg.data(), temp_wfc.data(), true);
+    std::vector<TK> iden_mat(para_D->get_local_size(), 0.0);
+    std::vector<TK> temp_DM(para_D->nloc, 0.0);
+    get_identi_mat(para_D, iden_mat);
+    pTgemm_scalapack(para_D, DMk.data(), iden_mat.data(), temp_DM.data(), dim, dim, dim, 'N', 'N');
+    pdiag_scalapack(para_D, dim, temp_DM.data(), temp_wg.data(), temp_wfc.data(), true);
+
+    // rdmft::printMatrix_pointer(para_D->get_row_size(), para_D->get_col_size(), temp_wfc.data(), "temp_wfc in decom_dm", 10);
 
     // convert
-    for(int ib=0; ib<para_wfc->get_wfc_global_nbands(); ++ib)
+    for(int ib=0; ib<para_D->get_global_col_size(); ++ib)
     {
         // sort the natural occupation numbers from largest to smallest
-        // note that the corresponding wfc also needs to change the order
-        wg[ib] = temp_wg[para_wfc->get_wfc_global_nbands() - ib - 1];
+        wg[ib] = temp_wg[para_D->get_global_col_size() - ib - 1];
     }
 
     // change the order of the eigenvectors wfc so that they correspond to the eigenvalues ​​wg
-    std::vector<TK> exch_mat(ParaV->get_local_size(), 0.0);
-    std::vector<TK> temp_wfc2(ParaV->nloc, 0.0);
-    get_exchange_mat(ParaV, exch_mat);
-    pTgemm_scalapack(ParaV, temp_wfc.data(), exch_mat.data(), temp_wfc2.data(), dim, dim, dim, 'N', 'N');
+    std::vector<TK> exch_mat(para_D->get_local_size(), 0.0);
+    std::vector<TK> temp_wfc2(para_D->nloc, 0.0);
+    get_exchange_mat(para_D, exch_mat);
+    pTgemm_scalapack(para_D, temp_wfc.data(), exch_mat.data(), temp_wfc2.data(), dim, dim, dim, 'N', 'N');
 
-    if( para_wfc->get_wfc_global_nbands() == dim )
+    // rdmft::printMatrix_pointer(para_D->get_row_size(), para_D->get_col_size(), temp_wfc2.data(), "temp_wfc2 in decom_dm", 10);
+
+    for(int iloc=0; iloc<para_D->nloc; ++iloc)
     {
-        for(int iloc=0; iloc<para_wfc->nloc; ++iloc)
-        {
-            wfc[iloc] = temp_wfc2[iloc];
-        }
+        wfc[iloc] = temp_wfc2[iloc];
     }
-    else
-    {
-        for(int ib=0; ib<para_wfc->ncol_bands; ++ib)
-        {
-            const int loc_size = para_wfc->get_row_size();
-            for(int ibasis=0; ibasis<loc_size; ++ibasis)
-            {
-                wfc[ibasis + ib*loc_size] = temp_wfc2[ ibasis + ib*loc_size ];
-            }
-        }
-    }
+
+    // rdmft::printMatrix_pointer(para_D->get_row_size(), para_D->get_col_size(), wfc, "wfc in decom_dm", 10);
+
+    // recode: could instead the above code which reorder the wfc!
+    // for(int ib=0; ib<para_D->get_col_size(); ++ib)
+    // {
+    //     const int loc_size = para_D->get_row_size();
+    //     for(int ibasis=0; ibasis<loc_size; ++ibasis)
+    //     {
+    //         wfc[ibasis + ib*loc_size] = temp_wfc2[ ibasis + ib*loc_size ];
+    //     }
+    // }
+
 }
 
 

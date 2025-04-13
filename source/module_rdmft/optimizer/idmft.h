@@ -72,8 +72,12 @@ class IDMFT
 
     double diff_DM_max = 0.0;
 
+    //! DMk in NAOs representation
     // TODO: DM and related convergence judgment conditions can be moved to esolver_rdmft
     std::vector< std::vector<TK> > DM;
+
+    //! DMk in NOs representation
+    std::vector< std::vector<TK> > DM_nos_rep;
 
     // TODO: it may be a better choice to put it in esolver_rdmft, so that the mixed code can be used by multiple optimization methods
     // then the optimizer of various methods will only give new occ_num and wfc, and will not implement the function of update_elec() in the RDMFT object.
@@ -86,6 +90,8 @@ class IDMFT
     hamilt::HamiltLCAO<TK, TR>* p_hamilt_lcao = nullptr; // temp, for mixing
 
     int iter_step = 0;
+
+    bool start_mixing = false;
 
     void do_mixing(std::vector< std::vector<TK> >& DM_new, ModuleBase::matrix& occ_num_pass);
 
@@ -142,7 +148,6 @@ class IDMFT
 
     // rotate the Fock to the natural orbital representation of step 1
     void rotate_Fock();
-    bool if_rotate_Fock = true;
 
 };
 

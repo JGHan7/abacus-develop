@@ -216,15 +216,12 @@ void _diagonal_in_serial(const Parallel_2D& para_Eij_in, const std::vector<TK>& 
 
 //! realize occNum_wfc = occNum * wfc. Calling this function and we can get wfc = occNum*wfc.
 template <typename TK>
-void occNum_MulPsi(const Parallel_Orbitals* ParaV, const ModuleBase::matrix& occ_number, psi::Psi<TK>& wfc, int symbol = 0,
+void occNum_MulPsi(const Parallel_2D* ParaV, const ModuleBase::matrix& occ_number, psi::Psi<TK>& wfc, int symbol = 0,
                 const std::string XC_func_rdmft = "hf", const double alpha = 1.0)
 {
     const int nk_local = wfc.get_nk();
     const int nbands_local = wfc.get_nbands();
     const int nbasis_local = wfc.get_nbasis();
-
-    // const int nbasis = ParaV->desc[2];      // need to be deleted
-    // const int nbands = ParaV->desc_wfc[3];
 
     for (int ik = 0; ik < nk_local; ++ik)
     {
@@ -242,19 +239,19 @@ template <typename TK>
 void cal_special_DM(const Parallel_Orbitals* ParaV,
                     const ModuleBase::matrix& special_wg,
                     const psi::Psi<TK>& wfc,
-                    std::vector< std::vector<TK> >& DM_XC)
+                    std::vector< std::vector<TK> >& DM)
 {
     psi::Psi<TK> wg_wfc(wfc);
     conj_psi(wg_wfc);
     occNum_MulPsi(ParaV, special_wg, wg_wfc, 0);
 
-    // get the special DM_XC used in constructing V_exx_XC
+    // get the special DM
     for(int ik=0; ik<wfc.get_nk(); ++ik)
     {
         // after this, be careful with wfc.get_pointer(), we can use &wfc(ik,inbn,inbs) instead
         wfc.fix_k(ik);
         wg_wfc.fix_k(ik);
-        TK* DM_Kpointer = DM_XC[ik].data();
+        TK* DM_Kpointer = DM[ik].data();
 #ifdef __MPI
         elecstate::psiMulPsiMpi(wg_wfc, wfc, DM_Kpointer, ParaV->desc_wfc, ParaV->desc);
 #else
@@ -262,6 +259,34 @@ void cal_special_DM(const Parallel_Orbitals* ParaV,
 #endif            
     }
 }
+
+
+//! used while wfc's nbands = DM's basis
+template <typename TK>
+void cal_special_DM(const Parallel_2D* para_D,
+                    const ModuleBase::matrix& special_wg,
+                    const psi::Psi<TK>& wfc,
+                    std::vector< std::vector<TK> >& DM)
+{
+    psi::Psi<TK> wg_wfc(wfc);
+    conj_psi(wg_wfc);
+    occNum_MulPsi(para_D, special_wg, wg_wfc, 0);
+
+    // get the special DM
+    for(int ik=0; ik<wfc.get_nk(); ++ik)
+    {
+        // after this, be careful with wfc.get_pointer(), we can use &wfc(ik,inbn,inbs) instead
+        wfc.fix_k(ik);
+        wg_wfc.fix_k(ik);
+        TK* DM_Kpointer = DM[ik].data();
+#ifdef __MPI
+        elecstate::psiMulPsiMpi(wg_wfc, wfc, DM_Kpointer, para_D->desc, para_D->desc);
+#else
+        elecstate::psiMulPsi(wg_wfc, wfc, DM_Kpointer);
+#endif            
+    }
+}
+
 
 
 //! add psi with eta and g(eta)

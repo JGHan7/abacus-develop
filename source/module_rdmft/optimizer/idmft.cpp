@@ -81,6 +81,10 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
         this->dmk_in.resize(PARAM.globalv.nlocal*PARAM.globalv.nlocal*this->nk_total, 0.0);
         this->dmk_out.resize(this->dmk_in.size(), 0.0);
         this->mixing_dmk.init( PARAM.inp.mixing_mode, PARAM.inp.mixing_beta, PARAM.inp.mixing_ndim, this->dmk_in.size() );
+        if( PARAM.inp.rotate_fock )
+        {
+            this->DM_nos_rep.resize(nk_total, std::vector<TK>(this->para_Fij->nloc, 0.0));
+        }
     }
 
     // this->mixing_rdmft = PARAM.inp.mixing_rdmft;
@@ -91,10 +95,6 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     //         this->Fock_record[i] = std::vector<std::vector<TK>>(nk_total, std::vector<TK>( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 ));
     //     }
     // }
-
-    // temp
-    // this->if_rotate_Fock = false;
-    this->if_rotate_Fock = PARAM.inp.rotate_fock;
 
     // get the number of symmetric k-points
     this->num_symm_k.resize(this->kv->wk.size());
@@ -135,7 +135,7 @@ template <typename TK, typename TR>
 void IDMFT<TK, TR>::before_opti(const std::vector< std::vector<TK> >& DM_in, hamilt::Hamilt<TK>* p_hamilt_in)
 {
     // get the initial guess of DM
-    this->DM = DM_in;
+    this->DM = DM_in;   // could be delete now
     this->iter_step = 0;
     this->p_hamilt_lcao = dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(p_hamilt_in);
 }
@@ -148,9 +148,19 @@ double IDMFT<TK, TR>::optimize()
 
     this->get_Fock();
 
-    if( PARAM.inp.mixing_rdmft )
+    // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix ?
+    this->start_mixing = ( PARAM.inp.mixing_rdmft && this->iter_step > 0 );
+
+    if( this->start_mixing )
     {
-        rdmft::dm_local2global(this->ParaV, this->DM, this->dmk_in);
+        if( PARAM.inp.rotate_fock)
+        {
+            rdmft::dm_local2global(this->para_Fij, this->DM_nos_rep, this->dmk_in, this->nbands);
+        }
+        else
+        {
+            rdmft::dm_local2global(this->ParaV, this->DM, this->dmk_in, PARAM.globalv.nlocal);
+        }
     }
 
     for(int ik=0; ik<nk_total; ++ik)
@@ -167,20 +177,21 @@ double IDMFT<TK, TR>::optimize()
         {
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->rdmft_solver->wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
+        // else if( !this->start_mixing )
         else
         {
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
 
         // update the rotation matrix
-        if( this->if_rotate_Fock )
+        if( PARAM.inp.rotate_fock )
         {
             // test, rotation = egienvector?
             this->rotation_mat[ik] = this->nos_rep_wfc[ik];
         }
     }
 
-    if( !this->if_get_wfc1 && this->if_rotate_Fock )
+    if( !this->if_get_wfc1 && PARAM.inp.rotate_fock )
     {
         // rotate the Fock-like matrix to the first step NOs representation,
         // then new_wfc = nos_rep_wfc * NAOs_rep_wfc0 for each iteration
@@ -191,7 +202,10 @@ double IDMFT<TK, TR>::optimize()
             p_naos_rep_wfc1[i] = p_wfc[i];
         }
         this->if_get_wfc1 = true;
+
+        rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), p_naos_rep_wfc1, "naos_rep_wfc1", 10);
     }
+
 
     // optimize the occ_number
     ModuleBase::matrix occ_num_pass(nk_nospin*PARAM.inp.nspin, nbands);
@@ -202,6 +216,28 @@ double IDMFT<TK, TR>::optimize()
     rdmft::occ_num2wg(this->kv, occ_num_pass, temp_wg);
     std::vector< std::vector<TK> > DM_new(nk_total, std::vector<TK>(this->ParaV->nloc, 0.0));
     rdmft::cal_special_DM(this->ParaV, temp_wg, this->new_wfc, DM_new);
+    if( PARAM.inp.mixing_rdmft && PARAM.inp.rotate_fock )
+    {
+        // get the NOs representation of DMk
+        psi::Psi<TK> nos_wfc;
+        nos_wfc.resize(nk_total, this->para_Fij->ncol, this->para_Fij->nrow);
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            for(int iloc=0; iloc<this->para_Fij->nloc; ++iloc)
+            {
+                TK* p_nos_wfc = &nos_wfc(ik, 0, 0);
+                p_nos_wfc[iloc] = this->nos_rep_wfc[ik][iloc];
+            }
+            // for(int ib=0; ib<this->para_Fij->ncol; ++ib)
+            // {
+            //     for(int ibs=0; ibs<this->para_Fij->nrow; ++ibs)
+            //     {
+            //         nos_wfc(ik, ib, ibs) = this->nos_rep_wfc[ik][ib*this->para_Fij->nrow + ibs];
+            //     }
+            // }
+        }
+        rdmft::cal_special_DM(this->para_Fij, temp_wg, nos_wfc, this->DM_nos_rep);
+    }
 
     // diff_DM
     this->diff_DM_max = 0.0;
@@ -235,22 +271,42 @@ double IDMFT<TK, TR>::optimize()
     //     }
     // }
 
+    // rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_num_pass before mixing", 10);
 
     // if converage, don't mixing
     if( this->diff_DM_max > PARAM.inp.scf_thr )
     {
         // mixing DM, get the mixed wg and wfc
-        if( PARAM.inp.mixing_rdmft )
+        if( this->start_mixing )
         {
-            this->do_mixing(DM_new, occ_num_pass);
+            if( PARAM.inp.rotate_fock )
+            {
+                this->do_mixing(this->DM_nos_rep, occ_num_pass);
+            }
+            else
+            {
+                this->do_mixing(DM_new, occ_num_pass);
+            }
         }
     }
 
+    // rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_num_pass after mixing", 10);
+
     this->DM = DM_new;
+
+    
+
+    std::cout << "\n***\n in idmft, 0.8 \n***\n" << std::endl;
 
     // update the occupation number and wfc
     this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
+
+    std::cout << "\n***\n in idmft, 0.9 \n***\n" << std::endl;
+
     this->etotal = this->rdmft_solver->cal_Energy();
+
+    std::cout << "\n***\n in idmft, 1.0 \n***\n" << std::endl;
+    
     this->new_wfc.zero_out();
 
     this->diff_Etotal = this->etotal - this->etotal_old;
@@ -313,7 +369,7 @@ void IDMFT<TK, TR>::get_Fock()
     //     this->mixing();
     // }
 
-    if(this->if_rotate_Fock)
+    if(PARAM.inp.rotate_fock)
     {
         this->rotate_Fock();
     }
@@ -321,54 +377,63 @@ void IDMFT<TK, TR>::get_Fock()
 
 
 template <typename TK, typename TR>
-void IDMFT<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DM_new, ModuleBase::matrix& occ_num_pass)
+void IDMFT<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DMk, ModuleBase::matrix& occ_num_pass)
 {
     // mixing
-    rdmft::dm_local2global(this->ParaV, DM_new, this->dmk_out);
+    rdmft::dm_local2global(this->ParaV, DMk, this->dmk_out, PARAM.inp.rotate_fock ? this->nbands : PARAM.globalv.nlocal);
     this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
-
-    // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), this->DM[0].data(), "DM");
-    // rdmft::printMatrix_pointer(this->ParaV->get_col_size(), this->ParaV->get_row_size(), DM_new[0].data(), "DM_new");
-    // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_in.data(), "dmk_in");
-    // rdmft::printMatrix_pointer(PARAM.globalv.nlocal, PARAM.globalv.nlocal, this->dmk_out.data(), "dmk_out");
-
     this->mixing_dmk.cal_coef();
-    
-    if( 1 ) // this->iter_step >= PARAM.inp.mixing_ndim
+    this->mixing_dmk.mix_dmk(this->dmk_out.data());
+
+    // convert and decompose DMk to get wg and wfc
+    rdmft::dm_global2local(this->ParaV, this->dmk_out, DMk, PARAM.inp.rotate_fock ? this->nbands : PARAM.globalv.nlocal);
+    ModuleBase::matrix temp_wg(nk_nospin*PARAM.inp.nspin, nbands);
+    temp_wg.zero_out();
+    this->new_wfc.zero_out();
+
+    // mixing DMk in NOs representation
+    if( PARAM.inp.rotate_fock )
     {
-        this->mixing_dmk.mix_dmk(this->dmk_out.data());
-
-        // convert and decompose DM to get wg and wfc
-        this->new_wfc.zero_out();
-        ModuleBase::matrix temp_wg(nk_nospin*PARAM.inp.nspin, nbands);
-        temp_wg.zero_out();
-        rdmft::dm_global2local(this->ParaV, this->dmk_out, DM_new);
-
         for(int ik=0; ik<this->nk_total; ++ik)
         {
-            if( !this->if_rotate_Fock )
-            {
-                this->p_hamilt_lcao->updateSk(ik);
-                TK* p_sk = this->p_hamilt_lcao->getSk();
+            // decompose the DMk to obtain "wfc" and wg
+            rdmft::decom_dm(this->para_Fij,
+                            DMk[ik],
+                            &temp_wg(ik, 0),
+                            this->nos_rep_wfc[ik].data());
 
-                // decompose the DM to obtain wfc and wg
-                rdmft::decom_dm(this->ParaV,
-                                DM_new[ik], 
-                                &temp_wg(ik, 0),
-                                &this->new_wfc(ik, 0, 0),
-                                this->ParaV,
-                                p_sk);
-            }
-            // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix
-            else if( this->if_rotate_Fock && this->iter_step > 0 )
-            {
-                // rdmft::decom_dm_nos();
-            }
+            // rdmft::printMatrix_pointer(temp_wg.nr, temp_wg.nc, temp_wg.c, "temp_wg in  mixing", 10);
 
+            // rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), this->nos_rep_wfc[ik].data(), "nos_rep_wfc[0]", 10);
 
+            // get new_wfc in NAOs
+            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+
+            this->rotation_mat[ik] = this->nos_rep_wfc[ik]; // ???????????????????????????
+
+            // rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), &this->new_wfc(ik, 0, 0), "this->new_wfc", 10);
         }
-        rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
     }
+    else // mixing DMk in NAOs representation
+    {
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            this->p_hamilt_lcao->updateSk(ik);
+            TK* p_sk = this->p_hamilt_lcao->getSk();
+
+            // decompose the DMk to obtain wfc and wg
+            rdmft::decom_dm(this->ParaV,
+                            DMk[ik], 
+                            &temp_wg(ik, 0),
+                            &this->new_wfc(ik, 0, 0),
+                            this->ParaV,
+                            p_sk);
+        }
+    }
+
+    rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
+
+    // rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_num_pass in mixing", 10);
 
     double tot_occ_num = 0.0;
     for(int ik=0; ik<this->nk_total; ++ik)
