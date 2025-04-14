@@ -148,7 +148,8 @@ double IDMFT<TK, TR>::optimize()
 
     this->get_Fock();
 
-    // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix ?
+    // when mixing the DMk in certain fixed NOs
+    // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix
     this->start_mixing = ( PARAM.inp.mixing_rdmft && this->iter_step > 0 );
 
     if( this->start_mixing )
@@ -177,14 +178,15 @@ double IDMFT<TK, TR>::optimize()
         {
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->rdmft_solver->wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
-        // else if( !this->start_mixing )
         else
         {
+            // even if mixing has already started, it cannot be deleted
+            // it is used to determine whether the DM before mixing has converged
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
 
         // update the rotation matrix
-        if( PARAM.inp.rotate_fock )
+        if( PARAM.inp.rotate_fock ) // && !this->start_mixing , add this condition when only use DM to determine whether it converges
         {
             // test, rotation = egienvector?
             this->rotation_mat[ik] = this->nos_rep_wfc[ik];
@@ -202,8 +204,6 @@ double IDMFT<TK, TR>::optimize()
             p_naos_rep_wfc1[i] = p_wfc[i];
         }
         this->if_get_wfc1 = true;
-
-        rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), p_naos_rep_wfc1, "naos_rep_wfc1", 10);
     }
 
 
@@ -289,27 +289,13 @@ double IDMFT<TK, TR>::optimize()
             }
         }
     }
-
-    // rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_num_pass after mixing", 10);
-
     this->DM = DM_new;
-
-    
-
-    std::cout << "\n***\n in idmft, 0.8 \n***\n" << std::endl;
 
     // update the occupation number and wfc
     this->rdmft_solver->update_elec( &occ_num_pass, &(this->new_wfc) );
-
-    std::cout << "\n***\n in idmft, 0.9 \n***\n" << std::endl;
-
     this->etotal = this->rdmft_solver->cal_Energy();
-
-    std::cout << "\n***\n in idmft, 1.0 \n***\n" << std::endl;
-    
-    this->new_wfc.zero_out();
-
     this->diff_Etotal = this->etotal - this->etotal_old;
+    this->new_wfc.zero_out();
 
     ++this->iter_step;
 
@@ -402,16 +388,11 @@ void IDMFT<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DMk, ModuleBase::m
                             &temp_wg(ik, 0),
                             this->nos_rep_wfc[ik].data());
 
-            // rdmft::printMatrix_pointer(temp_wg.nr, temp_wg.nc, temp_wg.c, "temp_wg in  mixing", 10);
-
-            // rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), this->nos_rep_wfc[ik].data(), "nos_rep_wfc[0]", 10);
-
             // get new_wfc in NAOs
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
-            this->rotation_mat[ik] = this->nos_rep_wfc[ik]; // ???????????????????????????
-
-            // rdmft::printMatrix_pointer(ParaV->get_row_size(), ParaV->get_col_size(), &this->new_wfc(ik, 0, 0), "this->new_wfc", 10);
+            // the rotation matrix depends only on the orthogonal wfc that is actually used to update the elec_state at each step.
+            this->rotation_mat[ik] = this->nos_rep_wfc[ik];
         }
     }
     else // mixing DMk in NAOs representation
@@ -433,21 +414,31 @@ void IDMFT<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DMk, ModuleBase::m
 
     rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
 
-    // rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_num_pass in mixing", 10);
-
     double tot_occ_num = 0.0;
-    for(int ik=0; ik<this->nk_total; ++ik)
+    for(int is=0; is<PARAM.inp.nspin; ++is)
     {
-        for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+        tot_occ_num = 0.0;
+        for(int ik=0; ik<this->nk_nospin; ++ik)
         {
-            tot_occ_num += occ_num_pass(ik, ib) * this->num_symm_k[ik];
+            for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+            {
+                if( is == 0 )
+                {
+                    tot_occ_num += occ_num_pass(ik, ib) * this->num_symm_k[ik];
+                }
+                else
+                {
+                    tot_occ_num += occ_num_pass(is*this->nk_nospin + ik, ib) * this->num_symm_k[is*this->nk_nospin + ik];
+                }
+            }
         }
+
+        double occ_num_error = tot_occ_num - this->sys_nelec_spin[is];
+
+        std::cout << "\n******\nafter mixing:\nis=" << is << ", total_elec_num: " << tot_occ_num << std::endl;
+        std::cout << "is=" << is << ", mixing_occ_num_error: " << occ_num_error << "\n******\n" << std::endl;
+
     }
-    double occ_num_error = tot_occ_num - this->sys_nelec_spin[0];
-
-    std::cout << "\n******\nafter mixing:\n" << "total_elec_num: " << tot_occ_num << std::endl;
-    std::cout << "mixing_occ_num_error: " << occ_num_error << "\n******\n" << std::endl;
-
 
     // // not mixed occupation number?
     // if( std::abs(occ_num_error) > PARAM.inp.tot_nelec_thr )
