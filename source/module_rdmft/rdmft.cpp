@@ -525,14 +525,9 @@ void RDMFT<TK, TR>::cal_Ecum()
             double temp_num = this->occ_number(ik, inb);
             if( temp_num > 1e-20 && temp_num < 1.0 )
             {
-                this->idmft_entropy -= ( temp_num * std::log(temp_num) + (1-temp_num) * std::log(1-temp_num) );
+                this->idmft_entropy -= this->kv->wk[ik] * ( temp_num * std::log(temp_num) + (1-temp_num) * std::log(1-temp_num) );
             }
         }
-    }
-
-    if( PARAM.inp.nspin == 1 )
-    {
-        this->idmft_entropy *= 2;
     }
 
     this->Ecum_entropy = -(PARAM.inp.idmft_kappa * this->idmft_entropy) - PARAM.inp.idmft_beta;
