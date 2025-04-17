@@ -95,24 +95,6 @@ class IDMFT
 
     void do_mixing(std::vector< std::vector<TK> >& DM_new, ModuleBase::matrix& occ_num_pass);
 
-    // void mixing();
-
-    // bool mixing_rdmft = true;
-
-    // const int mixing_step = 2;
-
-    // //! the length of mixing_coef = mixing_step
-    // //! the index is in ascending order from step 0 to step k
-    // // std::vector<double> mixing_coef = {0.6, 0.25, 0.15};
-    // std::vector<double> mixing_coef = {0.8, 0.2};
-
-    // bool start_mixing = false;
-
-    // int iter_step = 0;
-
-    // std::map<int, std::vector< std::vector<TK> > > Fock_record;
-
-
   private:
 
     std::vector< std::vector<TK> > Fock_like_mat;

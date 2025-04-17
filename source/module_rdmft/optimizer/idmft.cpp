@@ -87,15 +87,6 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
         }
     }
 
-    // this->mixing_rdmft = PARAM.inp.mixing_rdmft;
-    // if(this->mixing_rdmft)
-    // {
-    //     for(int i=0; i<this->mixing_step; ++i)
-    //     {
-    //         this->Fock_record[i] = std::vector<std::vector<TK>>(nk_total, std::vector<TK>( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 ));
-    //     }
-    // }
-
     // get the number of symmetric k-points
     this->num_symm_k.resize(this->kv->wk.size());
     for(int iks=0; iks<this->num_symm_k.size(); ++iks)
@@ -228,13 +219,6 @@ double IDMFT<TK, TR>::optimize()
                 TK* p_nos_wfc = &nos_wfc(ik, 0, 0);
                 p_nos_wfc[iloc] = this->nos_rep_wfc[ik][iloc];
             }
-            // for(int ib=0; ib<this->para_Fij->ncol; ++ib)
-            // {
-            //     for(int ibs=0; ibs<this->para_Fij->nrow; ++ibs)
-            //     {
-            //         nos_wfc(ik, ib, ibs) = this->nos_rep_wfc[ik][ib*this->para_Fij->nrow + ibs];
-            //     }
-            // }
         }
         rdmft::cal_special_DM(this->para_Fij, temp_wg, nos_wfc, this->DM_nos_rep);
     }
@@ -345,16 +329,6 @@ void IDMFT<TK, TR>::get_Fock()
         }
     }
 
-    // if( !this->start_mixing && this->mixing_rdmft )
-    // {
-    //     if( std::abs(this->diff_Etotal)<1e-4 ) { this->start_mixing = true; }
-    // }
-    
-    // if( this->mixing_rdmft && this->start_mixing ) // !test!!!!!!!!!!!!!!
-    // {
-    //     this->mixing();
-    // }
-
     if(PARAM.inp.rotate_fock)
     {
         this->rotate_Fock();
@@ -447,50 +421,6 @@ void IDMFT<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DMk, ModuleBase::m
     // }
 
 }
-
-
-
-
-// template <typename TK, typename TR>
-// void IDMFT<TK, TR>::mixing()
-// {
-//     // store the Fock matrix of the i-step
-//     auto pair_Fock = this->Fock_record.find(this->iter_step % this->mixing_step);
-//     std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
-//     for(int ik=0; ik<this->nk_total; ++ik)
-//     {
-//         // std::fill(Fock_ith[ik].begin(), Fock_ith[ik].end(), 0.0);
-//         for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-//         {
-//             Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
-//         }
-//     }
-
-//     // when enough steps of Fock are stored, start mixing
-//     if( iter_step >= this->mixing_step-1 )
-//     {
-//         for(int ik=0; ik<this->nk_total; ++ik)
-//         {
-//             std::fill(Fock_like_mat[ik].begin(), Fock_like_mat[ik].end(), 0.0);
-//             for(int j=0; j<this->mixing_step; ++j)
-//             {
-//                 std::vector< std::vector<TK> > & Fock_jth = this->Fock_record.find( (this->iter_step + j) % this->mixing_step )->second;
-//                 for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-//                 {
-//                     this->Fock_like_mat[ik][iloc] += Fock_jth[ik][iloc] * this->mixing_coef[(j+this->mixing_step-1) % this->mixing_step];
-//                 }
-
-//             }
-
-//             for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-//             {
-//                 Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
-//             }
-//         }
-//     }
-
-//     ++this->iter_step;
-// }
 
 
 template <typename TK, typename TR>
