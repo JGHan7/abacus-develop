@@ -6,6 +6,7 @@
 #define ITER_DIAG_NOS_H
 
 #include "module_rdmft/rdmft.h"
+#include "module_rdmft/optimizer/mixing_dmk.h"
 #include <map>
 
 namespace rdmft
