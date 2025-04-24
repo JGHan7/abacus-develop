@@ -128,6 +128,7 @@ void IDMFT<TK, TR>::before_opti(const std::vector< std::vector<TK> >& DM_in, ham
     // get the initial guess of DM
     this->DM = DM_in;   // could be delete now
     this->iter_step = 0;
+    this->mixing_dmk.reset();
     this->p_hamilt_lcao = dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(p_hamilt_in);
 }
 

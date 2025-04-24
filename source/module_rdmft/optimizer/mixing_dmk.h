@@ -32,6 +32,12 @@ class Mixing_DMk
 
     void mix_dmk(TK* dmk_mixed);
 
+    void reset()
+    {
+        this->mixing->reset();
+        this->dmk_mdata.reset();
+    }
+
     std::string mixing_mode = "pulay";
     double mixing_beta = 0.8;
     int mixing_ndim = 8;
