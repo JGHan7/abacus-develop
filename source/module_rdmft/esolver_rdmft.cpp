@@ -141,7 +141,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
         {
             int small_diffE = 0;
-            this->iter_diag_orb.before_opti();
+            this->iter_diag_orb.before_opti(this->p_hamilt);
 
             double temp_diag_ethr = iter_diag_ethr;
             // if( !this->conver_initial_value && !this->dft_optimize )
@@ -171,7 +171,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 diff_etotal = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
 
                 std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
-                std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal << "\ndiff_E: " << diff_etotal << "\n******" << std::endl << std::defaultfloat;
+                std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
+                            << "\n\ndiff_E: " << diff_etotal
+                            << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+                            << "\n******" << std::endl << std::defaultfloat;
 
                 // if( std::abs(diff_etotal) < iter_diag_ethr )
                 if( std::abs(diff_etotal) < temp_diag_ethr )
@@ -182,9 +185,16 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 {
                     small_diffE = 0;
                 }
-                // if( small_diffE >= 2 && iter_orb >= 3) break; // reference: relative error < 1e-7
-                if( small_diffE >= 1 && iter_orb >= 3) break; // reference: relative error < 1e-7
-                // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
+
+                // // if( small_diffE >= 2 && iter_orb >= 3) break; // reference: relative error < 1e-7
+                // if( small_diffE >= 1 && iter_orb >= 3) break; // reference: relative error < 1e-7
+                // // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
+
+                if( std::abs(diff_etotal) < iter_diag_ethr && this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr  )
+                {
+                    break;
+                }
+
             }
 
             // 

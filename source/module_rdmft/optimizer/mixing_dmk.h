@@ -32,6 +32,11 @@ class Mixing_DMk
 
     void mix_dmk(TK* dmk_mixed);
 
+    std::vector<double>& get_coef()
+    {
+        return this->mixing->coef;
+    }
+
     void reset()
     {
         this->mixing->reset();

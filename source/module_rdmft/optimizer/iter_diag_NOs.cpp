@@ -36,53 +36,88 @@ IterDiag_NOs<TK, TR>::~IterDiag_NOs()
 template<typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in, const Parallel_2D& para_Fij_in, const Parallel_Orbitals& ParaV_in, RDMFT<TK, TR>* rdmft_solver_in)
 {
+    this->rdmft_solver = rdmft_solver_in;
     this->nk_total = nk_total_in;
+    this->nk_nospin = this->nk_total / PARAM.inp.nspin;
     this->nbands_total = PARAM.inp.nbands;
+    this->kv = this->rdmft_solver->kv;
+    int nkstot_full = nkstot_full_in;
     this->para_Fij = &para_Fij_in;
     this->ParaV = &ParaV_in;
     // identi_mat = get_identi_mat(this->para_Fij); // temporary
-    this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
-    this->naos_rep_wfc1.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
+
     this->scale_zeta = 0.01; // PARAM.inp.scale_zeta_rdmft?
     this->scale_zeta_vector.resize(nk_total);
 
     // malloc
+    this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
+    this->naos_rep_wfc1.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
     this->lambda.resize(nk_total);
     this->diag_Fii.resize(nk_total);
+    this->Fock_like_mat.resize(nk_total);
+    this->nos_rep_wfc.resize(nk_total);
+    this->diag_Fii.resize(nk_total);
     this->rotation_mat.resize(nk_total);
+    this->DM.resize(nk_total, std::vector<TK>(this->ParaV->nloc, 0.0));
     for(int ik=0; ik<nk_total; ++ik)
     {
         diag_Fii[ik].resize(nbands_total, 0.0);
         lambda[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+        this->Fock_like_mat[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+        this->nos_rep_wfc[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
 
         // or write in before_opti(), if you update the fixed NOs representation after each ONs optimization
         rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
     }
-    this->Fock_like_mat = this->lambda;
-    this->nos_rep_wfc = this->lambda;
 
     // this->mixing_rdmft = PARAM.inp.mixing_rdmft;
-    this->mixing_rdmft = false;
+    // this->mixing_rdmft = false;
 
-    if(mixing_rdmft)
-    {
-        for(int i=0; i<this->mixing_step; ++i)
-        {
-            this->Fock_record[i] = std::vector<std::vector<TK>>(nk_total, std::vector<TK>( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 ));
-        }
-    }
+    // if(mixing_rdmft)
+    // {
+    //     for(int i=0; i<this->mixing_step; ++i)
+    //     {
+    //         this->Fock_record[i] = std::vector<std::vector<TK>>(nk_total, std::vector<TK>( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 ));
+    //     }
+    // }
 
     // temp
     // this->if_rotate_Fock = false;
-    this->if_rotate_Fock = PARAM.inp.rotate_fock;
+    // this->if_rotate_Fock = PARAM.inp.rotate_fock;
 
-    this->rdmft_solver = rdmft_solver_in;
+    if( PARAM.inp.mixing_rdmft )
+    {
+        this->dmk_in.resize(PARAM.globalv.nlocal*PARAM.globalv.nlocal*this->nk_total, 0.0);
+        this->dmk_out.resize(this->dmk_in.size(), 0.0);
+        this->mixing_dmk.init( PARAM.inp.mixing_mode, PARAM.inp.mixing_beta, PARAM.inp.mixing_ndim, this->dmk_in.size() );
+        if( PARAM.inp.rotate_fock )
+        {
+            this->DM_nos_rep.resize(nk_total, std::vector<TK>(this->para_Fij->nloc, 0.0));
+        }
 
-    int nkstot_full = nkstot_full_in;
+        // test mixing diag_Fii
+        this->diag_Fii_in.resize(this->nk_total * this->nbands_total, 0.0);
+        this->diag_Fii_out.resize(this->nk_total * this->nbands_total, 0.0);
+        this->mixing_Fii.init( PARAM.inp.mixing_mode, PARAM.inp.mixing_beta, PARAM.inp.mixing_ndim, this->diag_Fii_in.size() );
+    }
 
-    sys_nelec_spin.resize(PARAM.inp.nspin);
+    // get the number of symmetric k-points
+    this->num_symm_k.resize(this->kv->wk.size());
+    for(int iks=0; iks<this->num_symm_k.size(); ++iks)
+    {
+        this->num_symm_k[iks] = this->kv->wk[iks] * nkstot_full;
+    }
+
+    this->sys_nelec_spin.resize(PARAM.inp.nspin);
     if( PARAM.inp.nspin == 1 )
     {
+        // remove the weight of spin
+        for(int iks=0; iks<this->kv->wk.size(); ++iks)
+        {
+            // this->wk_nospin[iks] /= 2.0;
+            this->num_symm_k[iks] /= 2.0;
+        }
+
         this->sys_nelec_spin[0] = (PARAM.inp.nelec / 2.0) * nkstot_full;
         std::cout << "\n******\n" << "this->sys_nelec_spin[0]: " << this->sys_nelec_spin[0] << "\n******\n" << std::endl;
     }
@@ -99,12 +134,16 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::before_opti(int* scale_factor)
+void IterDiag_NOs<TK, TR>::before_opti(hamilt::Hamilt<TK>* p_hamilt_in, int* scale_factor)
 {
     if( scale_factor != nullptr && scale_factor > 0 ) this->scale_zeta = *scale_factor;
     this->energy_drop = 0;
     this->energy_rise = 0;
+
     this->iter_step = 0;
+    this->mixing_dmk.reset();
+    this->mixing_Fii.reset(); // test !!!!!!!!!!!!!!!!!
+    this->p_hamilt_lcao = dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(p_hamilt_in);
 }
 
 
@@ -131,6 +170,31 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
     //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
     // }
+
+    // when mixing the DMk in certain fixed NOs
+    // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix
+    this->start_mixing = ( PARAM.inp.mixing_rdmft && this->iter_step > 0 );
+
+    if( this->start_mixing )
+    {
+        if( PARAM.inp.rotate_fock)
+        {
+            rdmft::dm_local2global(this->para_Fij, this->DM_nos_rep, this->dmk_in, this->nbands_total);
+        }
+        else
+        {
+            rdmft::dm_local2global(this->ParaV, this->DM, this->dmk_in, PARAM.globalv.nlocal);
+        }
+
+        // test mixing diag_Fii
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            for(int ib=0; ib<this->nbands_total; ++ib)
+            {
+                this->diag_Fii_in[ik*this->nbands_total + ib] = this->diag_Fii[ik][ib];
+            }
+        }
+    }
 
     // test T
     Parallel_2D para_wfc;
@@ -192,68 +256,93 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
         // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
         //                             this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total );
 
-        // test, rotation = egienvector?
-        this->rotation_mat[ik] = this->nos_rep_wfc[ik];
-
+        // update the rotation matrix
+        if( PARAM.inp.rotate_fock ) // && !this->start_mixing , add this condition when only use DM to determine whether it converges
+        {
+            // test, rotation = egienvector?
+            this->rotation_mat[ik] = this->nos_rep_wfc[ik];
+        }
     }
 
     // update from 1-step_wfc?
-    if( !this->if_get_wfc1 && this->if_rotate_Fock )
+    if( !this->if_get_wfc1 && PARAM.inp.rotate_fock )
     {
         // rotate the Fock-like matrix to the first step NOs representation,
-        // then new_wfc = nos_rep_wfc * ( nos_rep_wfc1 * NAOs_rep_wfc0) for each iteration
-
-        // get NAOs_rep_wfc1 = nos_rep_wfc1 * NAOs_rep_wfc0
-        TK* p_wfc = &rdmft_solver_in.wfc(0, 0, 0);
+        // then new_wfc = nos_rep_wfc * NAOs_rep_wfc0 for each iteration
+        TK* p_wfc = &this->rdmft_solver->wfc(0, 0, 0);
         TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
-        for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_wfc[i]; }
-
-        // // test, maybe right than above !!!
-        // // get NAOs_rep_wfc1 = nos_rep_wfc1 * NAOs_rep_wfc0
-        // TK* p_wfc = &this->new_wfc(0, 0, 0);
-        // TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
-        // for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_wfc[i]; }
-
-        // TK* p_new_wfc = &( rdmft_solver_in.wfc(0, 0, 0) );
-        // TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
-        // for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
-
+        for(int i=0; i<this->naos_rep_wfc1.size(); ++i)
+        {
+            p_naos_rep_wfc1[i] = p_wfc[i];
+        }
         this->if_get_wfc1 = true;
-        // std::cout << "\n******\n" << "iterDiag: 0.3, once" << "\n******\n" << std::endl;
     }
 
 
-    rdmft_solver_in.update_elec( nullptr, &(this->new_wfc) );
-    this->etotal = rdmft_solver_in.cal_Energy();
+    // cal DM_out
+    ModuleBase::matrix temp_wg(this->rdmft_solver->wg);
+    std::vector< std::vector<TK> > DM_new(nk_total, std::vector<TK>(this->ParaV->nloc, 0.0));
+    rdmft::cal_special_DM(this->ParaV, temp_wg, this->new_wfc, DM_new);
+    if( PARAM.inp.mixing_rdmft && PARAM.inp.rotate_fock )
+    {
+        // get the NOs representation of DMk
+        psi::Psi<TK> nos_wfc;
+        nos_wfc.resize(nk_total, this->para_Fij->ncol, this->para_Fij->nrow);
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            for(int iloc=0; iloc<this->para_Fij->nloc; ++iloc)
+            {
+                TK* p_nos_wfc = &nos_wfc(ik, 0, 0);
+                p_nos_wfc[iloc] = this->nos_rep_wfc[ik][iloc];
+            }
+        }
+        rdmft::cal_special_DM(this->para_Fij, temp_wg, nos_wfc, this->DM_nos_rep);
+    }
 
-    double diff_e = this->etotal - this->etotal_old;
-    if(diff_e < 0) { ++this->energy_drop; }
+    // diff_DM
+    this->diff_DM_max = 0.0;
+    for(int ik=0; ik<nk_total; ++ik)
+    {
+        for(int iloc=0; iloc<DM_new[ik].size(); ++iloc)
+        {
+            double diff_DM = std::abs( this->DM[ik][iloc] - DM_new[ik][iloc] );
+            if( diff_DM > this->diff_DM_max )
+            {
+                this->diff_DM_max = diff_DM;
+            }
+        }
+    }
+    rdmft::reduce_all_max(this->diff_DM_max);
+
+    // if converage, don't mixing
+    if( this->diff_DM_max > PARAM.inp.scf_thr )
+    {
+        // mixing DM, get the mixed wg and wfc
+        if( this->start_mixing )
+        {
+            if( PARAM.inp.rotate_fock )
+            {
+                this->do_mixing(this->DM_nos_rep);
+            }
+            else
+            {
+                this->do_mixing(DM_new);
+            }
+        }
+    }
+    this->DM = DM_new;
+
+    this->rdmft_solver->update_elec( nullptr, &(this->new_wfc) );
+    this->etotal = this->rdmft_solver->cal_Energy();
+    this->diff_Etotal = this->etotal - this->etotal_old;
+    this->new_wfc.zero_out();
+    
+    ++this->iter_step;
+    
+    if(this->diff_Etotal < 0) { ++this->energy_drop; }
     else { ++this->energy_rise; }
 
-    // if( !this->if_get_wfc1 && this->if_rotate_Fock )
-    // {
-    //     // rotate the Fock-like matrix to the first step NOs representation,
-    //     // then new_wfc = nos_rep_wfc * ( nos_rep_wfc1 * NAOs_rep_wfc0) for each iteration
-
-    //     // get NAOs_rep_wfc1 = nos_rep_wfc1 * NAOs_rep_wfc0
-    //     TK* p_new_wfc = &this->new_wfc(0, 0, 0);
-    //     TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
-    //     for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
-
-    //     // TK* p_new_wfc = &( rdmft_solver_in.wfc(0, 0, 0) );
-    //     // TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
-    //     // for(int i=0; i<this->new_wfc.size(); ++i) { p_naos_rep_wfc1[i] = p_new_wfc[i]; }
-
-    //     this->if_get_wfc1 = true;
-    //     // std::cout << "\n******\n" << "iterDiag: 0.3, once" << "\n******\n" << std::endl;
-    // }
-
-
-    this->new_wfc.zero_out();
-
-    this->diff_Etotal = diff_e;
-
-    return diff_e;
+    return this->diff_Etotal;
 }
 
 
@@ -289,7 +378,7 @@ void IterDiag_NOs<TK, TR>::get_start_guess(RDMFT<TK, TR>& rdmft_solver_in, const
         // rdmft::printMatrix_pointer(1, nbands_total, this->diag_Fii[ik].data(), "diag of symm_lambda", 5);
     }
 
-    // if( !this->if_get_wfc1 && this->if_rotate_Fock )
+    // if( !this->if_get_wfc1 && PARAM.inp.rotate_fock )
     // {
     //     // rotate the Fock-like matrix to the first step NOs representation,
     //     // then new_wfc = nos_rep_wfc * ( nos_rep_wfc1 * NAOs_rep_wfc0) for each iteration
@@ -535,15 +624,15 @@ void IterDiag_NOs<TK, TR>::get_Fock()
     // get the max value of std::abs(Fij) in a global sense
     rdmft::reduce_all_max(this->max_off_diag_F);
 
-    if( !this->start_mixing && this->mixing_rdmft )
-    {
-        if( std::abs(this->diff_Etotal)<1e-4 ) { this->start_mixing = true; }
-    }
+    // if( !this->start_mixing && PARAM.inp.mixing_rdmft )
+    // {
+    //     if( std::abs(this->diff_Etotal)<1e-4 ) { this->start_mixing = true; }
+    // }
     
-    if( this->mixing_rdmft && this->start_mixing ) // !test!!!!!!!!!!!!!!
-    {
-        this->mixing();
-    }
+    // if( PARAM.inp.mixing_rdmft && this->start_mixing ) // !test!!!!!!!!!!!!!!
+    // {
+    //     this->mixing();
+    // }
 
     // if(PARAM.inp.scale_fock)
     if( this->scale_F )
@@ -551,7 +640,7 @@ void IterDiag_NOs<TK, TR>::get_Fock()
         this->scale_Fock();
     }
 
-    if(if_rotate_Fock)
+    if( PARAM.inp.rotate_fock )
     {
         this->rotate_Fock();
     }
@@ -682,62 +771,169 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
 
 
 template <typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::mixing()
+void IterDiag_NOs<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DMk)
 {
-    // if(iter_step < this->mixing_step-1)
+    // // mixing
+    // rdmft::dm_local2global(this->ParaV, DMk, this->dmk_out, PARAM.inp.rotate_fock ? this->nbands_total : PARAM.globalv.nlocal);
+    // this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
+    // this->mixing_dmk.cal_coef();
+    // this->mixing_dmk.mix_dmk(this->dmk_out.data());
+
+    // // test mixing diag_Fii
+    // for(int ik=0; ik<this->nk_total; ++ik)
     // {
-    //     // store the Fock matrix of the previous (mixing_step-1) step
-    //     auto pair_Fock = this->Fock_record.find(this->iter_step);
-    //     if( pair_Fock != Fock_record.end() )
+    //     for(int ib=0; ib<this->nbands_total; ++ib)
     //     {
-    //         std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
-    //         for(int ik=0; ik<this->nk_total; ++ik)
-    //         {
-    //             for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-    //             {
-    //                 Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
-    //             }
-    //         }
+    //         this->diag_Fii_out[ik*this->nbands_total + ib] = this->diag_Fii[ik][ib];
+    //     }
+    // }
+    // this->mixing_Fii.push_data(this->diag_Fii_in.data(), this->diag_Fii_out.data());
+    
+    // // calculate the mixing coefficient of Fii independently, or use the mixing coefficient of DMk
+    // // this->mixing_Fii.cal_coef();
+    // this->mixing_Fii.get_coef() = this->mixing_dmk.get_coef();
+
+    // this->mixing_Fii.mix_dmk(this->diag_Fii_out.data());
+    // for(int ik=0; ik<this->nk_total; ++ik)
+    // {
+    //     for(int ib=0; ib<this->nbands_total; ++ib)
+    //     {
+    //         this->diag_Fii[ik][ib] = this->diag_Fii_out[ik*this->nbands_total + ib];
     //     }
     // }
 
-    // store the Fock matrix of the i-step
-    auto pair_Fock = this->Fock_record.find(this->iter_step % this->mixing_step);
-    std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
-    for(int ik=0; ik<this->nk_total; ++ik)
-    {
-        // std::fill(Fock_ith[ik].begin(), Fock_ith[ik].end(), 0.0);
-        for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-        {
-            Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
-        }
-    }
 
-    // else
-    if( iter_step >= this->mixing_step-1 )
+    // convert and decompose DMk to get wg and wfc
+    rdmft::dm_global2local(this->ParaV, this->dmk_out, DMk, PARAM.inp.rotate_fock ? this->nbands_total : PARAM.globalv.nlocal);
+    ModuleBase::matrix temp_wg(nk_nospin*PARAM.inp.nspin, this->nbands_total);
+    temp_wg.zero_out();
+    this->new_wfc.zero_out();
+
+    // mixing DMk in NOs representation
+    if( PARAM.inp.rotate_fock )
     {
         for(int ik=0; ik<this->nk_total; ++ik)
         {
-            std::fill(Fock_like_mat[ik].begin(), Fock_like_mat[ik].end(), 0.0);
-            for(int j=0; j<this->mixing_step; ++j)
-            {
-                std::vector< std::vector<TK> > & Fock_jth = this->Fock_record.find( (this->iter_step + j) % this->mixing_step )->second;
-                for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-                {
-                    this->Fock_like_mat[ik][iloc] += Fock_jth[ik][iloc] * this->mixing_coef[(j+this->mixing_step-1) % this->mixing_step];
-                }
+            // decompose the DMk to obtain "wfc" and wg
+            rdmft::decom_dm(this->para_Fij,
+                            DMk[ik],
+                            &temp_wg(ik, 0),
+                            this->nos_rep_wfc[ik].data());
 
-            }
+            // get new_wfc in NAOs
+            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
-            for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-            {
-                Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
-            }
+            // the rotation matrix depends only on the orthogonal wfc that is actually used to update the elec_state at each step.
+            this->rotation_mat[ik] = this->nos_rep_wfc[ik];
+        }
+    }
+    else // mixing DMk in NAOs representation
+    {
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            this->p_hamilt_lcao->updateSk(ik);
+            TK* p_sk = this->p_hamilt_lcao->getSk();
+
+            // decompose the DMk to obtain wfc and wg
+            rdmft::decom_dm(this->ParaV,
+                            DMk[ik], 
+                            &temp_wg(ik, 0),
+                            &this->new_wfc(ik, 0, 0),
+                            this->ParaV,
+                            p_sk);
         }
     }
 
-    ++this->iter_step;
+    // could be deleted, because iterDiag does not optimize occ_number
+    // just verify
+    ModuleBase::matrix occ_num_pass(nk_nospin*PARAM.inp.nspin, this->nbands_total);
+    rdmft::wg2occ_num(this->kv, temp_wg, occ_num_pass);
+    double tot_occ_num = 0.0;
+    for(int is=0; is<PARAM.inp.nspin; ++is)
+    {
+        tot_occ_num = 0.0;
+        for(int ik=0; ik<this->nk_nospin; ++ik)
+        {
+            for(int ib=0; ib<this->nbands_total; ++ib)
+            {
+                if( is == 0 )
+                {
+                    tot_occ_num += occ_num_pass(ik, ib) * this->num_symm_k[ik];
+                }
+                else
+                {
+                    tot_occ_num += occ_num_pass(is*this->nk_nospin + ik, ib) * this->num_symm_k[is*this->nk_nospin + ik];
+                }
+            }
+        }
+
+        double occ_num_error = tot_occ_num - this->sys_nelec_spin[is];
+
+        std::cout << "\n******\nafter mixing:\nis=" << is << ", total_elec_num: " << tot_occ_num << std::endl;
+        std::cout << "is=" << is << ", mixing_occ_num_error: " << occ_num_error << "\n******\n" << std::endl;
+
+    }
 }
+
+
+
+// template <typename TK, typename TR>
+// void IterDiag_NOs<TK, TR>::mixing()
+// {
+//     // if(iter_step < this->mixing_step-1)
+//     // {
+//     //     // store the Fock matrix of the previous (mixing_step-1) step
+//     //     auto pair_Fock = this->Fock_record.find(this->iter_step);
+//     //     if( pair_Fock != Fock_record.end() )
+//     //     {
+//     //         std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
+//     //         for(int ik=0; ik<this->nk_total; ++ik)
+//     //         {
+//     //             for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+//     //             {
+//     //                 Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
+//     //             }
+//     //         }
+//     //     }
+//     // }
+
+//     // store the Fock matrix of the i-step
+//     auto pair_Fock = this->Fock_record.find(this->iter_step % this->mixing_step);
+//     std::vector< std::vector<TK> > & Fock_ith = pair_Fock->second;
+//     for(int ik=0; ik<this->nk_total; ++ik)
+//     {
+//         // std::fill(Fock_ith[ik].begin(), Fock_ith[ik].end(), 0.0);
+//         for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+//         {
+//             Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
+//         }
+//     }
+
+//     // else
+//     if( iter_step >= this->mixing_step-1 )
+//     {
+//         for(int ik=0; ik<this->nk_total; ++ik)
+//         {
+//             std::fill(Fock_like_mat[ik].begin(), Fock_like_mat[ik].end(), 0.0);
+//             for(int j=0; j<this->mixing_step; ++j)
+//             {
+//                 std::vector< std::vector<TK> > & Fock_jth = this->Fock_record.find( (this->iter_step + j) % this->mixing_step )->second;
+//                 for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+//                 {
+//                     this->Fock_like_mat[ik][iloc] += Fock_jth[ik][iloc] * this->mixing_coef[(j+this->mixing_step-1) % this->mixing_step];
+//                 }
+
+//             }
+
+//             for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+//             {
+//                 Fock_ith[ik][iloc] = this->Fock_like_mat[ik][iloc];
+//             }
+//         }
+//     }
+
+//     ++this->iter_step;
+// }
 
 
 template <typename TK, typename TR>

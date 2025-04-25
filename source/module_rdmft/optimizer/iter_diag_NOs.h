@@ -8,6 +8,7 @@
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/mixing_dmk.h"
 #include <map>
+#include "module_hamilt_lcao/hamilt_lcaodft/hamilt_lcao.h" // temp
 
 namespace rdmft
 {
@@ -27,7 +28,7 @@ class IterDiag_NOs
     //! use initial values ​​to form a first guess for iterative diagonalization
     void get_start_guess(RDMFT<TK, TR>& rdmft_solver_in, const bool conver_initial_value = false); // delete conver_initial_value in the future?
 
-    void before_opti(int* scale_factor = nullptr);
+    void before_opti(hamilt::Hamilt<TK>* p_hamilt_in = nullptr, int* scale_factor = nullptr);
 
     //! optimizing natural orbitals
     double optimize_orb(RDMFT<TK, TR>& rdmft_solver_in);
@@ -36,6 +37,8 @@ class IterDiag_NOs
     //! the mixing of Fock matrices broke this functionality
     //! TODO: modify it to a separate function implementation, not dependent on get_Fock()
     double check_hermi_lambda() { return this->max_off_diag_F; }
+
+    double get_diff_DM_max() { return this->diff_DM_max; }
 
     const Parallel_2D* para_Fij = nullptr;
 
@@ -52,37 +55,78 @@ class IterDiag_NOs
 
   protected:
 
+    const K_Vectors* kv;
+
     int nk_total = 0;
 
+    int nk_nospin = 0;
+
     int nbands_total = 0;
+
+    //! the number of symmetric k-points
+    std::vector<double> num_symm_k;
 
     std::vector<double> sys_nelec_spin;
 
     RDMFT<TK, TR>* rdmft_solver = nullptr;
 
-    void mixing();
+    double diff_Etotal = 0.0;
 
-    bool mixing_rdmft = true;
+    double diff_DM_max = 0.0;
+
+    //! DMk in NAOs representation
+    // TODO: DM and related convergence judgment conditions can be moved to esolver_rdmft
+    std::vector< std::vector<TK> > DM;
+
+    //! DMk in NOs representation
+    std::vector< std::vector<TK> > DM_nos_rep;
+
+    // TODO: it may be a better choice to put it in esolver_rdmft, so that the mixed code can be used by multiple optimization methods
+    // then the optimizer of various methods will only give new occ_num and wfc, and will not implement the function of update_elec() in the RDMFT object.
+    Mixing_DMk<TK> mixing_dmk;
+
+    std::vector<TK> dmk_in;
+
+    std::vector<TK> dmk_out;
+
+    // test: mixing the diag_Fii
+    Mixing_DMk<double> mixing_Fii;
+
+    std::vector<double> diag_Fii_in;
+
+    std::vector<double> diag_Fii_out;
+
+    hamilt::HamiltLCAO<TK, TR>* p_hamilt_lcao = nullptr; // temp, for mixing
+
+    int iter_step = 0;
+
+    bool start_mixing = false;
+
+    void do_mixing(std::vector< std::vector<TK> >& DM_new);
+
+    // void mixing();
+
+    // bool mixing_rdmft = true;
+
+    // // const int mixing_step = 3;
+
+    // // //! the length of mixing_coef = mixing_step
+    // // //! the index is in ascending order from step 0 to step k
+    // // std::vector<double> mixing_coef = {0.15, 0.25, 0.6};
 
     // const int mixing_step = 3;
 
     // //! the length of mixing_coef = mixing_step
     // //! the index is in ascending order from step 0 to step k
-    // std::vector<double> mixing_coef = {0.15, 0.25, 0.6};
+    // std::vector<double> mixing_coef = {0.6, 0.25, 0.15};
 
-    const int mixing_step = 3;
+    // bool start_mixing = false;
 
-    //! the length of mixing_coef = mixing_step
-    //! the index is in ascending order from step 0 to step k
-    std::vector<double> mixing_coef = {0.6, 0.25, 0.15};
+    // int iter_step = 0;
 
-    bool start_mixing = false;
+    // std::map<int, std::vector< std::vector<TK> > > Fock_record;
 
-    int iter_step = 0;
 
-    std::map<int, std::vector< std::vector<TK> > > Fock_record;
-
-    double diff_Etotal = 0.0;
 
   private:
 
