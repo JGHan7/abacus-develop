@@ -70,21 +70,6 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
         rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
     }
 
-    // this->mixing_rdmft = PARAM.inp.mixing_rdmft;
-    // this->mixing_rdmft = false;
-
-    // if(mixing_rdmft)
-    // {
-    //     for(int i=0; i<this->mixing_step; ++i)
-    //     {
-    //         this->Fock_record[i] = std::vector<std::vector<TK>>(nk_total, std::vector<TK>( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 ));
-    //     }
-    // }
-
-    // temp
-    // this->if_rotate_Fock = false;
-    // this->if_rotate_Fock = PARAM.inp.rotate_fock;
-
     if( PARAM.inp.mixing_rdmft )
     {
         this->dmk_in.resize(PARAM.globalv.nlocal*PARAM.globalv.nlocal*this->nk_total, 0.0);
@@ -141,8 +126,11 @@ void IterDiag_NOs<TK, TR>::before_opti(hamilt::Hamilt<TK>* p_hamilt_in, int* sca
     this->energy_rise = 0;
 
     this->iter_step = 0;
-    this->mixing_dmk.reset();
-    this->mixing_Fii.reset(); // test !!!!!!!!!!!!!!!!!
+    if( PARAM.inp.mixing_rdmft )
+    {
+        this->mixing_dmk.reset();
+        this->mixing_Fii.reset(); // test !!!!!!!!!!!!!!!!!
+    }
     this->p_hamilt_lcao = dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(p_hamilt_in);
 }
 
@@ -156,20 +144,6 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
     // this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
 
     this->get_Fock();
-
-    // // diag(Fock)
-    // for(int ik=0; ik<nk_total; ++ik)
-    // {
-    //     // std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
-    //     // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
-
-    //     // get Fii and new_wfc in NOs
-    //     rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
-    //                                 this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
-    //     // get new_wfc in NAOs
-    //     rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
-
-    // }
 
     // when mixing the DMk in certain fixed NOs
     // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix
@@ -196,12 +170,6 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
         }
     }
 
-    // test T
-    Parallel_2D para_wfc;
-    #ifdef __MPI
-        para_wfc.set(this->ParaV->desc[2], nbands_total, this->ParaV->nb, this->ParaV->blacs_ctxt); // maybe in default, PARAM.inp.nb2d = 0, can't be used
-    #endif
-
     for(int ik=0; ik<nk_total; ++ik)
     {
         std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
@@ -210,51 +178,18 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
         // get Fii and new_wfc in NOs
         rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
                                     this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
-        // rdmft::printMatrix_pointer(para_Fij->get_row_size(), para_Fij->get_col_size(), this->Fock_like_mat[ik].data(), "Fock mat", 10); // test
-        
-        // rdmft::printMatrix_pointer(1, nbands_total, this->diag_Fii[ik].data(), "diag of Fock-like mat", 5);
-
-        // // get new_wfc in NAOs
-        // rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
-
 
         if( !this->if_get_wfc1 )
         {
             // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
-
-            // // test T
-            // rdmft::pTgemm_scalapack( &para_wfc, &(rdmft_solver_in.wfc(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)),
-            //                             this->ParaV->desc[2], nbands_total, nbands_total, 'N', 'N', this->para_Fij, &para_wfc );
         }
         else
         {
             // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
             // right?
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
-
-            // // test
-            // rdmft::pTgemm_scalapack( &para_wfc, &(this->naos_rep_wfc1(ik, 0, 0)), this->nos_rep_wfc[ik].data(), &(this->new_wfc(ik, 0, 0)), 
-            //                             this->ParaV->desc[2], nbands_total, nbands_total, 'N', 'N', this->para_Fij, &para_wfc );
-
-            // std::vector<TK> mat_temp = this->rotation_mat[ik];
-            // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
-            //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
         }
-        
-        // the right one?
-        // get rotation_mat, rotation_mat_t-step = G_t * G_t-1 * ... * G_1
-        // rdmft::pTgemm_scalapack( this->para_Fij, this->rotation_mat[ik].data(), this->nos_rep_wfc[ik].data(),
-        //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
-
-        // std::vector<TK> mat_temp = this->rotation_mat[ik];
-        // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->nos_rep_wfc[ik].data(),
-        //                             this->rotation_mat[ik].data(), nbands_total, nbands_total, nbands_total );
-
-        // // test T, the right one?
-        // std::vector<TK> mat_temp = this->rotation_mat[ik];
-        // rdmft::pTgemm_scalapack( this->para_Fij, mat_temp.data(), this->rotation_mat[ik].data(),
-        //                             this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total );
 
         // update the rotation matrix
         if( PARAM.inp.rotate_fock ) // && !this->start_mixing , add this condition when only use DM to determine whether it converges
@@ -277,7 +212,6 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
         }
         this->if_get_wfc1 = true;
     }
-
 
     // cal DM_out
     ModuleBase::matrix temp_wg(this->rdmft_solver->wg);
