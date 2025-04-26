@@ -206,6 +206,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
             rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
             
+            // temporary
+            this->print_info();
+
             // double sys_nelec_now = 0.0;
             // for(int i=0; i<rdmft_solver.occ_number.nr*rdmft_solver.occ_number.nc; ++i)
             // {
@@ -256,7 +259,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             // this->idmft.opti_occ_num();
 
             // temporary
-            this->print_info_idmft();
+            this->print_info();
 
             if( std::abs(diff_etotal) < iter_diag_ethr && this->idmft.get_diff_DM_max() < PARAM.inp.scf_thr  )
             {
@@ -265,7 +268,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         }
     }
 
-    // this->print_info_idmft();
+    // this->print_info();
 
     // std::cout << std::scientific << std::setprecision(1) << std::endl;
     // rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
@@ -395,7 +398,7 @@ double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT<TK, TR>::print_info_idmft()
+void ESolver_RDMFT<TK, TR>::print_info()
 {
     if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
@@ -412,7 +415,16 @@ void ESolver_RDMFT<TK, TR>::print_info_idmft()
     }
     else
     {
-        ;
+        for(int ik=0; ik < rdmft_solver.nk_total; ++ik)
+        {
+            std::cout << "\n\nik: " << ik << std::endl; // << std::fixed << std::setprecision(10);
+            std::cout << "---------------------------------------\nnbands      " << "occ_number      " << std::endl; 
+            for(int ib=0; ib < rdmft_solver.nbands_total; ++ib)
+            {
+                std::cout << ib << "           " << rdmft_solver.occ_number(ik, ib) << "        " << std::endl;
+            }
+            std::cout << "---------------------------------------\n" << std::endl;
+        }
     }
 }
 

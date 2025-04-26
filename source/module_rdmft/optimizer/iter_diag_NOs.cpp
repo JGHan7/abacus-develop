@@ -707,11 +707,11 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
 template <typename TK, typename TR>
 void IterDiag_NOs<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DMk)
 {
-    // // mixing
-    // rdmft::dm_local2global(this->ParaV, DMk, this->dmk_out, PARAM.inp.rotate_fock ? this->nbands_total : PARAM.globalv.nlocal);
-    // this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
-    // this->mixing_dmk.cal_coef();
-    // this->mixing_dmk.mix_dmk(this->dmk_out.data());
+    // mixing
+    rdmft::dm_local2global(this->ParaV, DMk, this->dmk_out, PARAM.inp.rotate_fock ? this->nbands_total : PARAM.globalv.nlocal);
+    this->mixing_dmk.push_data(this->dmk_in.data(), this->dmk_out.data());
+    this->mixing_dmk.cal_coef();
+    this->mixing_dmk.mix_dmk(this->dmk_out.data());
 
     // // test mixing diag_Fii
     // for(int ik=0; ik<this->nk_total; ++ik)
