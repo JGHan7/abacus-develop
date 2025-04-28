@@ -190,7 +190,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 // if( small_diffE >= 1 && iter_orb >= 3) break; // reference: relative error < 1e-7
                 // // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
 
-                if( std::abs(diff_etotal) < iter_diag_ethr && this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr  )
+                // if( std::abs(diff_etotal) < iter_diag_ethr && this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr )
+                if( this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr )
                 {
                     break;
                 }
@@ -261,7 +262,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             // temporary
             this->print_info();
 
-            if( std::abs(diff_etotal) < iter_diag_ethr && this->idmft.get_diff_DM_max() < PARAM.inp.scf_thr  )
+            // if( std::abs(diff_etotal) < iter_diag_ethr && this->idmft.get_diff_DM_max() < PARAM.inp.scf_thr )
+            if( this->idmft.get_diff_DM_max() < PARAM.inp.scf_thr )
             {
                 break;
             }

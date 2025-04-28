@@ -6,8 +6,7 @@
 #define MIXING_DMK_H
 
 #include "module_rdmft/rdmft.h"
-#include "module_base/module_mixing/pulay_mixing.h"
-// #include "module_base/module_mixing/broyden_mixing.h"
+#include "module_base/module_mixing/mixing.h"
 
 namespace rdmft
 {

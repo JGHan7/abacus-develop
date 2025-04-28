@@ -4,6 +4,8 @@
 //==========================================================
 
 #include "module_rdmft/optimizer/mixing_dmk.h"
+#include "module_base/module_mixing/pulay_mixing.h"
+#include "module_base/module_mixing/broyden_mixing.h"
 #include "module_rdmft/rdmft_tools.h"
 #include "module_base/module_container/base/third_party/blas.h"
 
@@ -44,6 +46,11 @@ void Mixing_DMk<TK>::init(const std::string& mixing_mode_in,
         delete this->mixing;
         this->mixing = new Base_Mixing::Pulay_Mixing(this->mixing_ndim, this->mixing_beta);
     }
+    // else if(this->mixing_mode == "broyden") // test
+    // {
+    //     delete this->mixing;
+    //     this->mixing = new Base_Mixing::Broyden_Mixing(this->mixing_ndim, this->mixing_beta);
+    // }
     else
     {
         ModuleBase::WARNING_QUIT("DMk_Mixing", "This Mixing mode is not implemended in rdmft.");
