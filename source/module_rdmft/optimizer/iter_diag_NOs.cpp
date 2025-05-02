@@ -49,11 +49,14 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
     this->scale_zeta = 0.01; // PARAM.inp.scale_zeta_rdmft?
     this->scale_zeta_vector.resize(nk_total);
 
+    dEee_docc_num.create(nk_total, nbands_total);
+
     // malloc
     this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
     this->naos_rep_wfc1.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
     this->lambda.resize(nk_total);
     this->diag_Fii.resize(nk_total);
+    this->diag_num.resize(nk_total);
     this->Fock_like_mat.resize(nk_total);
     this->nos_rep_wfc.resize(nk_total);
     this->diag_Fii.resize(nk_total);
@@ -62,6 +65,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
     for(int ik=0; ik<nk_total; ++ik)
     {
         diag_Fii[ik].resize(nbands_total, 0.0);
+        diag_num[ik].resize(nbands_total, 0.0);
         lambda[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
         this->Fock_like_mat[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
         this->nos_rep_wfc[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
@@ -544,8 +548,8 @@ void IterDiag_NOs<TK, TR>::get_Fock()
                 }
             }
         }
-        // here or other place? 
-        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
+        // // here or other place? 
+        // std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
 
         if(PARAM.inp.print_fock)
         {
@@ -567,6 +571,87 @@ void IterDiag_NOs<TK, TR>::get_Fock()
     // {
     //     this->mixing();
     // }
+
+    // // test !!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // if( std::abs(this->max_off_diag_F / this->diag_Fii[0][0]) > 1.0 )
+    // {
+    //     for(int ik=0; ik<this->nk_total; ++ik)
+    //     {
+    //         int nrow = para_Fij->get_row_size();
+    //         for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+    //         {
+    //             const int ic_global = para_Fij->local2global_col(ic);
+    //             for(int ir=0; ir<nrow; ++ir)
+    //             {
+    //                 int ir_global = para_Fij->local2global_row(ir);
+
+    //                 if( ic_global == ir_global )
+    //                 {
+    //                     // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
+    //                     this->Fock_like_mat[ik][ir+ic*nrow] = 0.0;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+    this->rdmft_solver->cal_E_grad_occ_num();
+
+    // test !!!!!!!!!!!!!!!!
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        for(int ib=0; ib<diag_num[ik].size(); ++ib)
+        {
+            double num = this->rdmft_solver->occ_number(ik, ib);
+            if( std::abs(1.0 - num) < 1e-16 )
+            {
+                num = 1.0 - 1e-16;
+            }
+            else if( num < 1e-20 )
+            {
+                num = 1e-20;
+            }
+            
+            // diag_num[ik][ib] = -std::log(num) + std::log(1.0-num);
+            diag_num[ik][ib] = this->diag_Fii[ik][ib] - 
+                                ( this->rdmft_solver->occNum_wfc_Vee_wfc(ik, ib) - this->dEee_docc_num(ik, ib) ) * this->rdmft_solver->occ_number(ik, ib);
+            this->dEee_docc_num(ik, ib) = this->rdmft_solver->occNum_wfc_Vee_wfc(ik, ib);
+        }
+
+        double factor = std::abs( this->diag_Fii[ik][0] / diag_num[ik][0] );
+        int nrow = para_Fij->get_row_size();
+        for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+        {
+            const int ic_global = para_Fij->local2global_col(ic);
+            for(int ir=0; ir<nrow; ++ir)
+            {
+                int ir_global = para_Fij->local2global_row(ir);
+
+                if( ic_global == ir_global )
+                {
+                    // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
+                    // this->Fock_like_mat[ik][ir+ic*nrow] = diag_num[ik][ic_global] * factor;
+                    this->Fock_like_mat[ik][ir+ic*nrow] = diag_num[ik][ic_global];
+                }
+            }
+        }
+
+        rdmft::printMatrix_pointer(this->nk_total, diag_num[ik].size(), diag_num[ik].data(), "diag_num[ik] from ni", 10);
+        rdmft::printMatrix_pointer(this->nk_total, diag_num[ik].size(), this->rdmft_solver->occNum_wfc_Vee_wfc.c, "dEee/dni", 10);
+
+        // for(int ib=0; ib<diag_num[ik].size(); ++ib)
+        // {
+        //     diag_num[ik][ib] *= factor;
+        // }
+        rdmft::printMatrix_pointer(this->nk_total, diag_num[ik].size(), this->diag_Fii[ik].data(), "diag_Fii", 10);
+        // rdmft::printMatrix_pointer(this->nk_total, diag_num[ik].size(), diag_num[ik].data(), "diag_num[ik] from ni, * factor", 10);
+        
+
+        // here or other place? 
+        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
+
+    }
+
 
     // if(PARAM.inp.scale_fock)
     if( this->scale_F )

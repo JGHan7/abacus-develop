@@ -137,6 +137,12 @@ class IterDiag_NOs
     // eigenvalues ​​of the Fock matrix, ascending order
     std::vector< std::vector<double> > diag_Fii;
 
+    // diagonal elements of the Fock matrix depend on ONs
+    std::vector< std::vector<double> > diag_num;
+
+    // test
+    ModuleBase::matrix dEee_docc_num;
+
     // wfc under the representation of natural orbitals
     std::vector< std::vector<TK> > nos_rep_wfc;
 

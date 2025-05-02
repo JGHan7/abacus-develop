@@ -77,6 +77,7 @@ class RDMFT
     //! gradients of total energy with respect to the natural occupation numbers and wfc
     ModuleBase::matrix occNum_wfcHamiltWfc;
     psi::Psi<TK> occNum_HamiltWfc;
+    ModuleBase::matrix occNum_wfc_Vee_wfc; // test !!!!!!!!!!!!!!
 
     //! H_ni_nj represents the Hamiltonian in KS-orbital/nature-orbital representation
     bool iter_diag = false;

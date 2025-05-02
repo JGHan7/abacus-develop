@@ -111,6 +111,7 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
     wg.create(nk_total, nbands_total);
     wk_fun_occNum.create(nk_total, nbands_total);
     occNum_wfcHamiltWfc.create(nk_total, nbands_total);
+    occNum_wfc_Vee_wfc.create(nk_total, nbands_total); // test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     Etotal_n_k.create(nk_total, nbands_total);
     wfcHwfc_TV.create(nk_total, nbands_total);
     wfcHwfc_hartree.create(nk_total, nbands_total);
@@ -376,6 +377,12 @@ void RDMFT<TK, TR>::cal_E_grad_occ_num()
     add_occNum(*(this->kv), occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
     Parallel_Reduce::reduce_all(occNum_wfcHamiltWfc.c, occNum_wfcHamiltWfc.nr * occNum_wfcHamiltWfc.nc);
     // rdmft::printMatrix_pointer(occNum_wfcHamiltWfc.nr, occNum_wfcHamiltWfc.nc, &occNum_wfcHamiltWfc(0, 0), "E_gradient_occNum");
+
+    // test !!!!!!!!!!!!!!!!!
+    ModuleBase::matrix temp_num(nk_total, nbands_total);
+    temp_num.zero_out();
+    add_occNum(*(this->kv), occ_number, temp_num, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfc_Vee_wfc, XC_func_rdmft, alpha_power);
+    Parallel_Reduce::reduce_all(occNum_wfc_Vee_wfc.c, occNum_wfc_Vee_wfc.nr * occNum_wfc_Vee_wfc.nc);
 }
 
 

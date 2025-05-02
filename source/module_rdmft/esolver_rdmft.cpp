@@ -191,7 +191,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 // // if( iter_orb > 200 ) this->iter_diag_orb.scale_zeta *= 0.1; // test 
 
                 // if( std::abs(diff_etotal) < iter_diag_ethr && this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr )
-                if( this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr )
+                if( this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr && iter_orb >= 3 )
                 {
                     break;
                 }
