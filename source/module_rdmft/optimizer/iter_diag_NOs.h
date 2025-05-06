@@ -128,6 +128,38 @@ class IterDiag_NOs
 
 
 
+    // ******* used by ADAM ******* //
+
+    // double learn_rate = 0.01;
+
+    // double scaling_lr = 0.4;
+
+    // double beta1 = 0.7;
+
+    // double beta2 = 0.9;
+
+    std::vector< std::vector<TK> > grad;
+
+    std::vector< std::vector<TK> > moment_m;
+
+    std::vector< std::vector<double> > moment_v;
+
+    std::vector< std::vector<double> > vhat_max;
+
+    std::vector<TK> m_hat;
+
+    std::vector<double> v_hat;
+
+    std::vector<TK> skew_hermi_mat;
+
+    std::vector<TK> adam_rotation;
+
+    // refactor diag(skew_hermi_mat) to optimizer_tools.h
+    void get_adam_rotation(std::vector<TK>& skew_hermi_m);
+
+    // ******* used by ADAM ******* //
+
+
   private:
 
     std::vector< std::vector<TK> > lambda;

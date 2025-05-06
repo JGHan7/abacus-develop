@@ -90,6 +90,26 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
         this->mixing_Fii.init( PARAM.inp.mixing_mode, PARAM.inp.mixing_beta, PARAM.inp.mixing_ndim, this->diag_Fii_in.size() );
     }
 
+    if( PARAM.inp.rdmft_orb_opti == "adam" )
+    {
+        this->grad.resize(nk_total);
+        this->moment_m.resize(nk_total);
+        this->moment_v.resize(nk_total);
+        this->vhat_max.resize(nk_total);
+        for(int ik=0; ik<nk_total; ++ik)
+        {
+            this->grad[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+            this->moment_m[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+            this->moment_v[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+            this->vhat_max[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+        }
+
+        this->m_hat.resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+        this->v_hat.resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+        this->skew_hermi_mat.resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+        this->adam_rotation.resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+    }
+
     // get the number of symmetric k-points
     this->num_symm_k.resize(this->kv->wk.size());
     for(int iks=0; iks<this->num_symm_k.size(); ++iks)
@@ -136,6 +156,15 @@ void IterDiag_NOs<TK, TR>::before_opti(hamilt::Hamilt<TK>* p_hamilt_in, int* sca
         this->mixing_Fii.reset(); // test !!!!!!!!!!!!!!!!!
     }
     this->p_hamilt_lcao = dynamic_cast<hamilt::HamiltLCAO<TK, TR>*>(p_hamilt_in);
+
+    // use the passed in orbital or KS-orbital as the initial natural orbital
+    if( PARAM.inp.rdmft_orb_opti == "adam" )
+    {
+        for(int ik=0; ik<nk_total; ++ik)
+        {
+            rdmft::get_identi_mat( para_Fij, this->nos_rep_wfc[ik] );
+        }
+    }
 }
 
 
@@ -147,74 +176,111 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
     this->get_lambda(rdmft_solver_in.wg, rdmft_solver_in.wk_fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
     // this->get_lambda(rdmft_solver_in.occ_number, rdmft_solver_in.fun_occNum, rdmft_solver_in.Hij_no_exx, rdmft_solver_in.Hij_exx);
 
-    this->get_Fock();
-
-    // when mixing the DMk in certain fixed NOs
-    // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix
-    this->start_mixing = ( PARAM.inp.mixing_rdmft && this->iter_step > 0 );
-
-    if( this->start_mixing )
+    if( PARAM.inp.rdmft_orb_opti == "iter_diag" )
     {
-        if( PARAM.inp.rotate_fock)
-        {
-            rdmft::dm_local2global(this->para_Fij, this->DM_nos_rep, this->dmk_in, this->nbands_total);
-        }
-        else
-        {
-            rdmft::dm_local2global(this->ParaV, this->DM, this->dmk_in, PARAM.globalv.nlocal);
-        }
+        this->get_Fock();
 
-        // test mixing diag_Fii
-        for(int ik=0; ik<this->nk_total; ++ik)
+        // when mixing the DMk in certain fixed NOs
+        // the condition of iter_step should be consistent with which step's NOs is used as the representation of the Fock matrix
+        this->start_mixing = ( PARAM.inp.mixing_rdmft && this->iter_step > 0 );
+
+        if( this->start_mixing )
         {
-            for(int ib=0; ib<this->nbands_total; ++ib)
+            if( PARAM.inp.rotate_fock)
             {
-                this->diag_Fii_in[ik*this->nbands_total + ib] = this->diag_Fii[ik][ib];
+                rdmft::dm_local2global(this->para_Fij, this->DM_nos_rep, this->dmk_in, this->nbands_total);
+            }
+            else
+            {
+                rdmft::dm_local2global(this->ParaV, this->DM, this->dmk_in, PARAM.globalv.nlocal);
+            }
+
+            // test mixing diag_Fii
+            for(int ik=0; ik<this->nk_total; ++ik)
+            {
+                for(int ib=0; ib<this->nbands_total; ++ib)
+                {
+                    this->diag_Fii_in[ik*this->nbands_total + ib] = this->diag_Fii[ik][ib];
+                }
             }
         }
-    }
 
-    for(int ik=0; ik<nk_total; ++ik)
-    {
-        std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
-        std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
-
-        // get Fii and new_wfc in NOs
-        rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
-                                    this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
-
-        if( !this->if_get_wfc1 )
+        for(int ik=0; ik<nk_total; ++ik)
         {
-            // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
+            std::fill( nos_rep_wfc[ik].begin(), nos_rep_wfc[ik].end(), 0.0 );
+            std::fill(diag_Fii[ik].begin(), diag_Fii[ik].end(), 0.0);
+
+            // get Fii and new_wfc in NOs
+            rdmft::pdiag_scalapack(this->para_Fij, this->nbands_total, this->Fock_like_mat[ik].data(),
+                                        this->diag_Fii[ik].data(), this->nos_rep_wfc[ik].data());
+
+            if( !this->if_get_wfc1 )
+            {
+                // std::cout << "\n******\n" << "iterDiag: 0.1, once" << "\n******\n" << std::endl;
+                rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+            }
+            else
+            {
+                // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
+                // right?
+                rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+            }
+
+            // update the rotation matrix
+            if( PARAM.inp.rotate_fock ) // && !this->start_mixing , add this condition when only use DM to determine whether it converges
+            {
+                // test, rotation = egienvector?
+                this->rotation_mat[ik] = this->nos_rep_wfc[ik];
+            }
+        }
+
+        // update from 1-step_wfc?
+        if( !this->if_get_wfc1 && PARAM.inp.rotate_fock )
+        {
+            // rotate the Fock-like matrix to the first step NOs representation,
+            // then new_wfc = nos_rep_wfc * NAOs_rep_wfc0 for each iteration
+            TK* p_wfc = &this->rdmft_solver->wfc(0, 0, 0);
+            TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
+            for(int i=0; i<this->naos_rep_wfc1.size(); ++i)
+            {
+                p_naos_rep_wfc1[i] = p_wfc[i];
+            }
+            this->if_get_wfc1 = true;
+        }
+
+    }
+    else if( PARAM.inp.rdmft_orb_opti == "adam" )
+    {
+
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {   
+            std::fill(this->grad[ik].begin(), this->grad[ik].end(), 0.0);
+
+            // the factor is 1.0, 2.0, or 4.0 ?
+            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), 2.0);
+
+            for(int i=0; i<this->grad[ik].size(); ++i)
+            {
+                this->moment_m[ik][i] = PARAM.inp.adam_beta1 * this->moment_m[ik][i] + (1.0 - PARAM.inp.adam_beta1) * this->grad[ik][i];
+                this->moment_v[ik][i] = PARAM.inp.adam_beta2 * this->moment_v[ik][i] + (1.0 - PARAM.inp.adam_beta2) * std::norm(this->grad[ik][i]);
+                this->m_hat[i] = this->moment_m[ik][i] / (1.0 - PARAM.inp.adam_beta1);
+                this->v_hat[i] = this->moment_v[ik][i] / (1.0 - PARAM.inp.adam_beta2);
+                this->vhat_max[ik][i] = std::max(this->vhat_max[ik][i], this->v_hat[i]);
+                this->skew_hermi_mat[i] = PARAM.inp.adam_learn_rate * this->m_hat[i] / std::sqrt( this->vhat_max[ik][i] + 1e-16 );
+            }
+
+            // adam_rotation = exp( skew_hermi_mat )
+            this->get_adam_rotation(this->skew_hermi_mat);
+
+            // NOs = NOs * adam_rotation
+            std::vector<TK> temp_mat = this->nos_rep_wfc[ik];
+            rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), this->adam_rotation.data(),
+                                    this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+
+            // new_wfc = new_NOs * this->rdmft_solver.wfc
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
         }
-        else
-        {
-            // std::cout << "\n******\n" << "iterDiag: 0.2, many" << "\n******\n" << std::endl;
-            // right?
-            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], this->naos_rep_wfc1(ik, 0, 0), this->new_wfc(ik, 0, 0) );
-        }
 
-        // update the rotation matrix
-        if( PARAM.inp.rotate_fock ) // && !this->start_mixing , add this condition when only use DM to determine whether it converges
-        {
-            // test, rotation = egienvector?
-            this->rotation_mat[ik] = this->nos_rep_wfc[ik];
-        }
-    }
-
-    // update from 1-step_wfc?
-    if( !this->if_get_wfc1 && PARAM.inp.rotate_fock )
-    {
-        // rotate the Fock-like matrix to the first step NOs representation,
-        // then new_wfc = nos_rep_wfc * NAOs_rep_wfc0 for each iteration
-        TK* p_wfc = &this->rdmft_solver->wfc(0, 0, 0);
-        TK* p_naos_rep_wfc1 = &this->naos_rep_wfc1(0, 0, 0);
-        for(int i=0; i<this->naos_rep_wfc1.size(); ++i)
-        {
-            p_naos_rep_wfc1[i] = p_wfc[i];
-        }
-        this->if_get_wfc1 = true;
     }
 
     // cal DM_out
@@ -787,6 +853,62 @@ void IterDiag_NOs<TK, TR>::rotate_Fock()
         }
     }
 }
+
+
+template <typename TK, typename TR>
+void IterDiag_NOs<TK, TR>::get_adam_rotation(std::vector<TK>& skew_hermi_m)
+{
+    // hermi_mat A = i * M
+    std::vector<std::complex<double>> hermi_mat(skew_hermi_m.size());
+    std::complex<double> imag_one(0.0, 1.0);
+    for(int i=0; i<skew_hermi_m.size(); ++i)
+    {
+        hermi_mat[i] = imag_one * skew_hermi_m[i];
+    }
+
+    std::vector<double> diag_elem(this->nbands_total, 0.0);
+    std::vector<std::complex<double>> exp_diag(para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0);
+    std::vector<std::complex<double>> egi_vector(para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0);
+
+    // A = V * diag_e * V^dagger
+    rdmft::pdiag_scalapack( this->para_Fij, this->nbands_total, hermi_mat.data(), diag_elem.data(), egi_vector.data() );
+
+    std::complex<double> imag_nega_one(0.0, -1.0);
+    int nrow = this->para_Fij->get_row_size();
+    for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+    {
+        const int ic_global = this->para_Fij->local2global_col(ic);
+        for(int ir=0; ir<nrow; ++ir)
+        {
+            int ir_global = this->para_Fij->local2global_row(ir);
+            if( ic_global == ir_global )
+            {
+                exp_diag[ir+ic*nrow] = std::exp( imag_nega_one * diag_elem[ic_global] );
+            }
+        }
+    }
+
+    // adam_rotation = exp(skew_hermi_m) = V * exp(-i * diag_e) * V^dagger
+    std::vector<std::complex<double>> temp_mat(para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0);
+    rdmft::pTgemm_scalapack( this->para_Fij, egi_vector.data(), exp_diag.data(),
+                            temp_mat.data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+    rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), egi_vector.data(),
+                            exp_diag.data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+    if constexpr (std::is_same<TK, std::complex<double>>::value)
+    {
+        this->adam_rotation = exp_diag;
+    }
+    else
+    {
+        for(int i=0; i<exp_diag.size(); ++i)
+        {
+            this->adam_rotation[i] = std::real( exp_diag[i] );
+        }
+    }
+}
+
+
+
 
 
 template <typename TK, typename TR>

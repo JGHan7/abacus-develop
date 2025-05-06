@@ -665,6 +665,10 @@ struct Input_para
     double idmft_kappa = 0.1;
     double idmft_beta = 0.0;
     bool read_occ_num = false;
+    double adam_learn_rate = 0.01;
+    double adam_scaling_lr = 0.4;
+    double adam_beta1 = 0.7;
+    double adam_beta2 = 0.9;
 
     // ==============   #Parameters (22.EXX PW) =====================
     // EXX for planewave basis, rhx0820 2025-03-10

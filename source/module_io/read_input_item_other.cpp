@@ -658,21 +658,33 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("rdmft_orb_opti");
+        item.annotation = "optimization method of natural orbitals in rdmft";
+        read_sync_string(input.rdmft_orb_opti);
+        this->add_item(item);
+    }
+    {
         Input_Item item("rotate_fock");
         item.annotation = "rotate the Fock to the natural orbital representation of step 1";
         read_sync_bool(input.rotate_fock);
+        item.reset_value = [](const Input_Item& item, Parameter& para) {
+            if( para.input.rdmft_orb_opti == "adam")
+            {
+                para.input.rotate_fock = false;
+            }
+        };
         this->add_item(item);
     }
     {
         Input_Item item("mixing_rdmft");
         item.annotation = "linear mixing of Fock matrix";
         read_sync_bool(input.mixing_rdmft);
-        this->add_item(item);
-    }
-    {
-        Input_Item item("rdmft_orb_opti");
-        item.annotation = "optimization method of natural orbitals in rdmft";
-        read_sync_string(input.rdmft_orb_opti);
+        item.reset_value = [](const Input_Item& item, Parameter& para) {
+            if( para.input.rdmft_orb_opti == "adam")
+            {
+                para.input.mixing_rdmft = false;
+            }
+        };
         this->add_item(item);
     }
     {
@@ -685,6 +697,30 @@ void ReadInput::item_others()
         Input_Item item("idmft_beta");
         item.annotation = "beta parameter in i-DMFT";
         read_sync_double(input.idmft_beta);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("adam_learn_rate");
+        item.annotation = "learning rate in adam which used by rdmft";
+        read_sync_double(input.adam_learn_rate);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("adam_scaling_lr");
+        item.annotation = "scaling factor of learning rate in adam which used by rdmft";
+        read_sync_double(input.adam_scaling_lr);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("adam_beta1");
+        item.annotation = "parameter of first moment in adam which used by rdmft";
+        read_sync_double(input.adam_beta1);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("adam_beta2");
+        item.annotation = "parameter of second moment in adam which used by rdmft";
+        read_sync_double(input.adam_beta2);
         this->add_item(item);
     }
 
