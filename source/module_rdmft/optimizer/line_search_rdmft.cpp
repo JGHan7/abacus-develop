@@ -178,12 +178,15 @@ void LineSearch<TK, TR>::strong_wolfe()
     double trial_phi = 0.0;
     double trial_dphi = 0.0;
 
-    int times = 0;
-    while(1)
+    for(int times=0; times<=20; ++times)
     {
-        ++times;
-
         std::cout << "\n" << "in strong_wolfe(), while: " << times << ", step_size: " << this->step_size << "\n" << std::endl;
+        
+        if( this->step_size > this->max_step_size )
+        {
+            std::cout << "\n******\n" << "in strong wolfe, step_size > max_step_size" << "\n******\n" << std::endl;
+            break;
+        }
 
         if(times != 1)
         {
@@ -249,19 +252,11 @@ void LineSearch<TK, TR>::strong_wolfe()
         phi_old = trial_phi;
         dphi_old = trial_dphi;
 
-        if( this->step_size > this->max_step_size )
-        {
-            std::cout << "\n******\n" << "in strong wolfe, step_size > max_step_size" << "\n******\n" << std::endl;
-            break;
-        }
-
-        if( times>=20 )
+        if( times==20 )
         {
             std::cout << "\n******\n" << "strong wolfe times too big: " << times << "\n******\n" << std::endl;
-            break;
         }
     }
-
 }
 
 

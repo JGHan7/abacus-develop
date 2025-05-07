@@ -259,7 +259,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
             std::fill(this->grad[ik].begin(), this->grad[ik].end(), 0.0);
 
             // the factor is 1.0, 2.0, or 4.0 ?
-            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), 2.0);
+            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), 4.0);
 
             for(int i=0; i<this->grad[ik].size(); ++i)
             {

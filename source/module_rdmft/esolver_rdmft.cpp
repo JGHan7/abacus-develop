@@ -33,7 +33,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_all_runners(ucell, inp);
 
     // initialize rdmft
-    if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "idmft" )
+    if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "idmft" || PARAM.inp.rdmft_orb_opti == "adam" )
     {
         rdmft_solver.init(this->GG,
                             this->GK,
@@ -64,7 +64,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
                             false);
     }
 
-    if( PARAM.inp.rdmft_orb_opti == "iter_diag" )
+    if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "adam" )
     {
         this->iter_diag_orb.init(rdmft_solver.nk_total, this->kv.get_nkstot_full(), rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
         this->ls_opti_occ_num.init(this->kv, &this->rdmft_solver);
@@ -241,7 +241,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     }
     else if( PARAM.inp.rdmft_orb_opti == "adam" )
     {
-        int init_maxniter = 30;
+        int init_maxniter = 20;
         init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
 
         double diff_E = 1.0;
@@ -283,7 +283,11 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             }
             Etotal = this->rdmft_solver.Etotal;
 
-            if(dft_optimize) break;
+            if(dft_optimize)
+            {
+                init_maxniter = PARAM.inp.maxniter_orb;
+                continue;
+            }
 
             for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
             {
@@ -413,6 +417,13 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
         this->opti_occ_num(this->dft_optimize);
 
         std::cout << "\n******\n" << "after ESolver_RDMF::get_start_guess() !!!!!!" << "\n******\n" << std::endl;
+    }
+    else if( PARAM.inp.rdmft_orb_opti == "adam" )
+    {
+        // get start guess occ_number and optimize once
+        this->opti_occ_num(this->dft_optimize, true);
+        
+        std::cout << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
     }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
