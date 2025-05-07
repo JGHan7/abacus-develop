@@ -497,6 +497,12 @@ void ReadInput::item_others()
 
     // RDMFT, added by jghan, 2024-10-16
     {
+        Input_Item item("rdmft_orb_opti");
+        item.annotation = "optimization method of natural orbitals in rdmft";
+        read_sync_string(input.rdmft_orb_opti);
+        this->add_item(item);
+    }
+    {
         Input_Item item("rdmft");
         item.annotation = "whether to perform rdmft calculation, default is false";
         read_sync_bool(input.rdmft);
@@ -521,6 +527,18 @@ void ReadInput::item_others()
             if( (para.input.rdmft_power_alpha < 0) || (para.input.rdmft_power_alpha > 1) )
             {
                 ModuleBase::WARNING_QUIT("ReadInput", "rdmft_power_alpha should be greater than 0.0 and less than 1.0");
+            }
+        };
+        this->add_item(item);
+    }
+    {
+        Input_Item item("maxniter_orb");
+        item.annotation = "maximum number of iterations to optimize the natural orbitals";
+        read_sync_int(input.maxniter_orb);
+        item.reset_value = [](const Input_Item& item, Parameter& para) {
+            if( para.input.rdmft_orb_opti == "iter_diag")
+            {
+                para.input.maxniter_orb = para.input.scf_nmax;
             }
         };
         this->add_item(item);
@@ -655,12 +673,6 @@ void ReadInput::item_others()
         Input_Item item("print_BFGS_Hk");
         item.annotation = "print BFGS-Hk matrix in occupation numbers optimization";
         read_sync_bool(input.print_BFGS_Hk);
-        this->add_item(item);
-    }
-    {
-        Input_Item item("rdmft_orb_opti");
-        item.annotation = "optimization method of natural orbitals in rdmft";
-        read_sync_string(input.rdmft_orb_opti);
         this->add_item(item);
     }
     {

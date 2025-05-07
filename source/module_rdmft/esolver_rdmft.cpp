@@ -31,8 +31,6 @@ template <typename TK, typename TR>
 void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para& inp)
 {
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_all_runners(ucell, inp);
-    this->maxniter_occ_num = PARAM.inp.maxniter_occ_num;
-    this->maxniter_orb = PARAM.inp.scf_nmax;
 
     // initialize rdmft
     if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "idmft" )
@@ -138,7 +136,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         double diff_etotal = 1.0;
         double diff_occ_num_max = 1.0;
 
-        for(int iter_occ_num=1; iter_occ_num <= this->maxniter_occ_num; ++iter_occ_num)
+        for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
         {
             int small_diffE = 0;
             this->iter_diag_orb.before_opti(this->p_hamilt);
@@ -152,7 +150,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             //     }
             // }
 
-            for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
+            for(int iter_orb=1; iter_orb <= PARAM.inp.maxniter_orb; ++iter_orb)
             {
                 // delete or save?
                 if(this->dft_optimize)
@@ -241,10 +239,88 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         }
 
     }
+    else if( PARAM.inp.rdmft_orb_opti == "adam" )
+    {
+        int init_maxniter = 30;
+        init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
+
+        double diff_E = 1.0;
+        double final_diff_E = 1.0;
+        double diff_occ_num_max = 1.0;
+        double Etotal = this->rdmft_solver.Etotal;
+
+        for(int iter=0; iter<PARAM.inp.scf_nmax; ++iter)
+        {
+            this->iter_diag_orb.before_opti(this->p_hamilt);
+            for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
+            {
+                // delete or save?
+                if(this->dft_optimize)
+                {
+                    this->update_occ_num_dft(this->rdmft_solver);
+                }
+
+                // optimize natural orbitals
+                diff_E = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
+
+                std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
+                std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
+                            << "\n\ndiff_E: " << diff_E
+                            << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+                            << "\n******" << std::endl << std::defaultfloat;
+
+                if( this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr && iter_orb >= 3 )
+                {
+                    break;
+                }
+            }
+
+            final_diff_E = this->rdmft_solver.Etotal - Etotal;
+            if( final_diff_E > 0 )
+            {
+                this->iter_diag_orb.modify_learn_rate();
+                init_maxniter += 10;
+            }
+            Etotal = this->rdmft_solver.Etotal;
+
+            if(dft_optimize) break;
+
+            for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
+            {
+                // optimize natural occupation numbers
+                diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
+                std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
+                rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
+
+                if( diff_occ_num_max < this->occ_num_thr )
+                {
+                    break;
+                }
+            }
+
+            final_diff_E = this->rdmft_solver.Etotal - Etotal;
+            if( final_diff_E > -1e-6 )
+            {
+                init_maxniter += 10;
+            }
+            Etotal = this->rdmft_solver.Etotal;
+
+            double max_off_diag_F = this->iter_diag_orb.check_hermi_lambda();
+            if( max_off_diag_F < this->lambda_thr )
+            {
+                break;
+            }
+            else
+            {
+                std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
+            }
+        }
+
+    }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
         // this->idmft.solve_zero_occ_num();
-        for(int iter_orb=1; iter_orb <= this->maxniter_orb; ++iter_orb)
+        for(int iter_orb=1; iter_orb <= PARAM.inp.maxniter_orb; ++iter_orb)
         {
             double diff_etotal = this->idmft.optimize();
 
@@ -276,7 +352,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     // rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
     // std::cout << std::defaultfloat;
 
-    std::cout << "\n******\n" << "maxniter of NOs in rdmft is: " << this->maxniter_orb << "\n******\n" << std::endl;
+    std::cout << "\n******\n" << "maxniter of NOs in rdmft is: " << PARAM.inp.maxniter_orb << "\n******\n" << std::endl;
     std::cout << "\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n\n\n" << std::endl;
 }
 

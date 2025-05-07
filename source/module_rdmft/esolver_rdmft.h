@@ -39,9 +39,9 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     double opti_occ_num(bool dft_type = false, bool first_time = false);
 
-    int maxniter_occ_num;     // maximum iter steps for ONs
+    // int maxniter_occ_num;     // maximum iter steps for ONs
 
-    int maxniter_orb;         // maximum iter steps for NOs
+    // int maxniter_orb;         // maximum iter steps for NOs
 
     double iter_diag_ethr;    // energy threshold, in iterDiag of NOs
 

@@ -34,9 +34,7 @@ class IterDiag_NOs
     double optimize_orb(RDMFT<TK, TR>& rdmft_solver_in);
 
     //! check the Hermitian property of lambda for all k points
-    //! the mixing of Fock matrices broke this functionality
-    //! TODO: modify it to a separate function implementation, not dependent on get_Fock()
-    double check_hermi_lambda() { return this->max_off_diag_F; }
+    double check_hermi_lambda();
 
     double get_diff_DM_max() { return this->diff_DM_max; }
 
@@ -156,6 +154,14 @@ class IterDiag_NOs
 
     // refactor diag(skew_hermi_mat) to optimizer_tools.h
     void get_adam_rotation(std::vector<TK>& skew_hermi_m);
+
+    double learn_rate = 0.0;
+
+  public:
+    void modify_learn_rate()
+    {
+      this->learn_rate *= PARAM.inp.adam_scaling_lr;
+    }
 
     // ******* used by ADAM ******* //
 

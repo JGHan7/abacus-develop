@@ -108,6 +108,8 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
         this->v_hat.resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
         this->skew_hermi_mat.resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
         this->adam_rotation.resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
+
+        this->learn_rate = PARAM.inp.adam_learn_rate;
     }
 
     // get the number of symmetric k-points
@@ -266,7 +268,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
                 this->m_hat[i] = this->moment_m[ik][i] / (1.0 - PARAM.inp.adam_beta1);
                 this->v_hat[i] = this->moment_v[ik][i] / (1.0 - PARAM.inp.adam_beta2);
                 this->vhat_max[ik][i] = std::max(this->vhat_max[ik][i], this->v_hat[i]);
-                this->skew_hermi_mat[i] = PARAM.inp.adam_learn_rate * this->m_hat[i] / std::sqrt( this->vhat_max[ik][i] + 1e-16 );
+                this->skew_hermi_mat[i] = this->learn_rate * this->m_hat[i] / std::sqrt( this->vhat_max[ik][i] + 1e-16 );
             }
 
             // adam_rotation = exp( skew_hermi_mat )
@@ -1016,6 +1018,41 @@ void IterDiag_NOs<TK, TR>::do_mixing(std::vector< std::vector<TK> >& DMk)
     }
 }
 
+
+
+template <typename TK, typename TR>
+double IterDiag_NOs<TK, TR>::check_hermi_lambda()
+{
+    this->get_lambda(this->rdmft_solver->wg, this->rdmft_solver->wk_fun_occNum, this->rdmft_solver->Hij_no_exx, this->rdmft_solver->Hij_exx);
+
+    this->max_off_diag_F = 0.0;
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        // get Fock_like_mat = lambda_ij -lambda*_ji
+        std::fill(this->Fock_like_mat[ik].begin(), this->Fock_like_mat[ik].end(), 0.0);
+        antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->Fock_like_mat[ik].data(), 1.0);
+
+        int nrow = para_Fij->get_row_size();
+        for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+        {
+            const int ic_global = para_Fij->local2global_col(ic);
+            for(int ir=0; ir<nrow; ++ir)
+            {
+                int ir_global = para_Fij->local2global_row(ir);
+                if( ic_global >= ir_global )
+                {
+                    double norm_Fij = std::abs( this->Fock_like_mat[ik][ir+ic*nrow] );
+                    this->max_off_diag_F = std::max(this->max_off_diag_F, norm_Fij);
+                }
+            }
+        }
+    }
+
+    // get the max value of std::abs(Fij) in a global sense
+    rdmft::reduce_all_max(this->max_off_diag_F);
+
+    return this->max_off_diag_F;
+}
 
 
 // template <typename TK, typename TR>
