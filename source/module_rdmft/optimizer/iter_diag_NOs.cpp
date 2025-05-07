@@ -259,7 +259,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
             std::fill(this->grad[ik].begin(), this->grad[ik].end(), 0.0);
 
             // the factor is 1.0, 2.0, or 4.0 ?
-            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), 4.0);
+            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), 2.0);
 
             for(int i=0; i<this->grad[ik].size(); ++i)
             {
@@ -278,6 +278,12 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
             std::vector<TK> temp_mat = this->nos_rep_wfc[ik];
             rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), this->adam_rotation.data(),
                                     this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+            // rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), this->adam_rotation.data(),
+            //                         this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+            // rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), temp_mat.data(),
+            //                         this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+            // rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), temp_mat.data(),
+            //                         this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
 
             // new_wfc = new_NOs * this->rdmft_solver.wfc
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
