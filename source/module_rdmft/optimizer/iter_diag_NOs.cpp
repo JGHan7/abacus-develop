@@ -268,8 +268,15 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
                 this->m_hat[i] = this->moment_m[ik][i] / (1.0 - PARAM.inp.adam_beta1);
                 this->v_hat[i] = this->moment_v[ik][i] / (1.0 - PARAM.inp.adam_beta2);
                 this->vhat_max[ik][i] = std::max(this->vhat_max[ik][i], this->v_hat[i]);
-                this->skew_hermi_mat[i] = this->learn_rate * this->m_hat[i] / std::sqrt( this->vhat_max[ik][i] + 1e-16 );
+                this->skew_hermi_mat[i] = - this->learn_rate * this->m_hat[i] / std::sqrt( this->vhat_max[ik][i] + 1e-16 );
             }
+
+            // rdmft::printMatrix_pointer(nbands_total, nbands_total, this->v_hat.data(), "v_hat", 10);
+            // rdmft::printMatrix_pointer(nbands_total, nbands_total, this->vhat_max[ik].data(), "vhat_max[ik]", 10);
+            // rdmft::printMatrix_pointer(nbands_total, nbands_total, this->skew_hermi_mat.data(), "skew_hermi_mat", 10);
+
+            // vhat_max is obtained by std::max(), which will affect the skew-Hermitian properties of the matrix y (i.e. skew_hermi_mat)
+            // v_hat and vhat_max must > 0, sostd::max() don't affect the skew-Hermitian properties of the matrix y
 
             // adam_rotation = exp( skew_hermi_mat )
             this->get_adam_rotation(this->skew_hermi_mat);
@@ -287,6 +294,35 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
 
             // new_wfc = new_NOs * this->rdmft_solver.wfc
             rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+            
+            // rdmft::GkPsi( this->para_Fij, this->ParaV, this->adam_rotation[0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+
+
+
+            std::vector<TK> U_Udagger(this->adam_rotation.size(), 0.0);
+            std::vector<TK> Udagger_U(this->adam_rotation.size(), 0.0);
+            std::vector<TK> iden_mat(this->adam_rotation.size(), 0.0);
+            rdmft::get_identi_mat(this->para_Fij, iden_mat);
+
+            // test: verify the unitarity of the rotation matrix
+            rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), this->adam_rotation.data(),
+                                        U_Udagger.data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+            rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), this->adam_rotation.data(),
+                                        Udagger_U.data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
+            for(int iloc=0; iloc<Udagger_U.size(); ++iloc)
+            {
+                TK ver1 = U_Udagger[iloc] - iden_mat[iloc];
+                TK ver2 = iden_mat[iloc] - Udagger_U[iloc];
+                if( std::abs(ver1) > 1e-13 )
+                {
+                    std::cout << "\n******\n" << "false: the unitarity of the rotation matrix. U_Udagger, ik = " << ik  << ", diff = " << ver1 << "\n******\n" << std::endl;
+                }
+                if( std::abs(ver2) > 1e-13 )
+                {
+                    std::cout << "\n******\n" << "false: the unitarity of the rotation matrix. Udagger_U, ik = " << ik  << ", diff = " << ver2 << "\n******\n" << std::endl;
+                }
+            }
+
         }
 
     }

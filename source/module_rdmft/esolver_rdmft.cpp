@@ -242,8 +242,6 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     else if( PARAM.inp.rdmft_orb_opti == "adam" )
     {
         int init_maxniter = 20;
-        init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
-
         double diff_E = 1.0;
         double final_diff_E = 1.0;
         double diff_occ_num_max = 1.0;
@@ -251,6 +249,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
         for(int iter=0; iter<PARAM.inp.scf_nmax; ++iter)
         {
+            init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
             this->iter_diag_orb.before_opti(this->p_hamilt);
             for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
             {
@@ -319,6 +318,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
             }
         }
+
+        this->print_info();
 
     }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
