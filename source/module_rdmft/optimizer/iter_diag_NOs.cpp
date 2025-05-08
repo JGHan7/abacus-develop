@@ -12,6 +12,7 @@
 #include "module_base/parallel_reduce.h"
 // #include "module_base/blas_connector.h"
 // #include "module_base/scalapack_connector.h"
+#include "module_base/lapack_connector.h" // temp
 
 // #include "module_psi/psi.h"
 
@@ -293,35 +294,35 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
             //                         this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
 
             // new_wfc = new_NOs * this->rdmft_solver.wfc
-            rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+            // rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
             
-            // rdmft::GkPsi( this->para_Fij, this->ParaV, this->adam_rotation[0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+            rdmft::GkPsi( this->para_Fij, this->ParaV, this->adam_rotation[0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
 
 
 
-            std::vector<TK> U_Udagger(this->adam_rotation.size(), 0.0);
-            std::vector<TK> Udagger_U(this->adam_rotation.size(), 0.0);
-            std::vector<TK> iden_mat(this->adam_rotation.size(), 0.0);
-            rdmft::get_identi_mat(this->para_Fij, iden_mat);
+            // std::vector<TK> U_Udagger(this->adam_rotation.size(), 0.0);
+            // std::vector<TK> Udagger_U(this->adam_rotation.size(), 0.0);
+            // std::vector<TK> iden_mat(this->adam_rotation.size(), 0.0);
+            // rdmft::get_identi_mat(this->para_Fij, iden_mat);
 
-            // test: verify the unitarity of the rotation matrix
-            rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), this->adam_rotation.data(),
-                                        U_Udagger.data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
-            rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), this->adam_rotation.data(),
-                                        Udagger_U.data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
-            for(int iloc=0; iloc<Udagger_U.size(); ++iloc)
-            {
-                TK ver1 = U_Udagger[iloc] - iden_mat[iloc];
-                TK ver2 = iden_mat[iloc] - Udagger_U[iloc];
-                if( std::abs(ver1) > 1e-13 )
-                {
-                    std::cout << "\n******\n" << "false: the unitarity of the rotation matrix. U_Udagger, ik = " << ik  << ", diff = " << ver1 << "\n******\n" << std::endl;
-                }
-                if( std::abs(ver2) > 1e-13 )
-                {
-                    std::cout << "\n******\n" << "false: the unitarity of the rotation matrix. Udagger_U, ik = " << ik  << ", diff = " << ver2 << "\n******\n" << std::endl;
-                }
-            }
+            // // test: verify the unitarity of the rotation matrix
+            // rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), this->adam_rotation.data(),
+            //                             U_Udagger.data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+            // rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), this->adam_rotation.data(),
+            //                             Udagger_U.data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
+            // for(int iloc=0; iloc<Udagger_U.size(); ++iloc)
+            // {
+            //     TK ver1 = U_Udagger[iloc] - iden_mat[iloc];
+            //     TK ver2 = iden_mat[iloc] - Udagger_U[iloc];
+            //     if( std::abs(ver1) > 1e-13 )
+            //     {
+            //         std::cout << "\n******\n" << "false: the unitarity of the rotation matrix. U_Udagger, ik = " << ik  << ", diff = " << ver1 << "\n******\n" << std::endl;
+            //     }
+            //     if( std::abs(ver2) > 1e-13 )
+            //     {
+            //         std::cout << "\n******\n" << "false: the unitarity of the rotation matrix. Udagger_U, ik = " << ik  << ", diff = " << ver2 << "\n******\n" << std::endl;
+            //     }
+            // }
 
         }
 
@@ -949,6 +950,53 @@ void IterDiag_NOs<TK, TR>::get_adam_rotation(std::vector<TK>& skew_hermi_m)
             this->adam_rotation[i] = std::real( exp_diag[i] );
         }
     }
+
+
+
+
+    // std::vector<std::complex<double>> diag_mat(para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0);
+    // for(int ic=0; ic<para_Fij->get_col_size(); ++ic)
+    // {
+    //     const int ic_global = this->para_Fij->local2global_col(ic);
+    //     for(int ir=0; ir<nrow; ++ir)
+    //     {
+    //         int ir_global = this->para_Fij->local2global_row(ir);
+    //         if( ic_global == ir_global )
+    //         {
+    //             diag_mat[ir+ic*nrow] = imag_nega_one * diag_elem[ic_global];
+    //         }
+    //     }
+    // }
+
+    // std::fill(temp_mat.begin(), temp_mat.end(), 0.0);
+    // std::fill(exp_diag.begin(), exp_diag.end(), 0.0);
+    // rdmft::pTgemm_scalapack( this->para_Fij, egi_vector.data(), diag_mat.data(),
+    //                         temp_mat.data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+    // rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), egi_vector.data(),
+    //                         exp_diag.data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
+
+    // bool pass = true;
+    // for(int iloc=0; iloc<exp_diag.size(); ++iloc)
+    // {
+    //     std::complex<double> ver1 = exp_diag[iloc] - skew_hermi_m[iloc];
+    //     if( std::abs(ver1) > 1e-13 )
+    //     {
+    //         pass = false;
+    //         std::cout << "\n******\n" << "false: the unitarity of get_adam_rotation(), iloc: " << iloc << "\n******\n" << std::endl;
+    //     }
+    // }
+
+    // if(!pass)
+    // {
+    //     std::cout << "\n******\n" << "get_adam_rotation() is error" << "\n******\n" << std::endl;
+    //     rdmft::printMatrix_pointer(nbands_total, nbands_total, exp_diag.data(), "V * egivalue * V^dagger", 10);
+    //     rdmft::printMatrix_pointer(nbands_total, nbands_total, skew_hermi_m.data(), "skew_hermi_m", 10);
+    // }
+    // else
+    // {
+    //     std::cout << "\n******\n" << "get_adam_rotation() is correct" << "\n******\n" << std::endl;
+    // }
+
 }
 
 
