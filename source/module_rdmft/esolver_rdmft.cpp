@@ -242,6 +242,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     else if( PARAM.inp.rdmft_orb_opti == "adam" )
     {
         int init_maxniter = 20;
+        if(dft_optimize)
+        {
+            init_maxniter = PARAM.inp.maxniter_orb;
+        }
         double diff_E = 1.0;
         double final_diff_E = 1.0;
         double diff_occ_num_max = 1.0;
@@ -282,10 +286,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             }
             Etotal = this->rdmft_solver.Etotal;
 
-            if(dft_optimize)
+            if( dft_optimize )
             {
-                init_maxniter = PARAM.inp.maxniter_orb;
-                continue;
+                break;
             }
 
             for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
@@ -311,6 +314,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             double max_off_diag_F = this->iter_diag_orb.check_hermi_lambda();
             if( max_off_diag_F < this->lambda_thr )
             {
+                std::cout << "\n******\n\nConvergence!\n\nmax_off_diag_F < lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
                 break;
             }
             else

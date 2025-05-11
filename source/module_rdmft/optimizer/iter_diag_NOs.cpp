@@ -152,6 +152,12 @@ void IterDiag_NOs<TK, TR>::before_opti(hamilt::Hamilt<TK>* p_hamilt_in, int* sca
     this->energy_drop = 0;
     this->energy_rise = 0;
 
+    // if( PARAM.inp.rotate_fock )
+    // {
+    //     rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
+    //     this->if_get_wfc1 = false;
+    // }
+
     this->iter_step = 0;
     if( PARAM.inp.mixing_rdmft )
     {
@@ -254,13 +260,21 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
     }
     else if( PARAM.inp.rdmft_orb_opti == "adam" )
     {
-
         for(int ik=0; ik<this->nk_total; ++ik)
-        {   
+        {
             std::fill(this->grad[ik].begin(), this->grad[ik].end(), 0.0);
 
             // the factor is 1.0, 2.0, or 4.0 ?
-            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), 2.0);
+            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), this->kv->wk[ik]); // ? 1.0, 2.0, 4.0?
+
+
+
+
+
+
+
+
+
 
             for(int i=0; i<this->grad[ik].size(); ++i)
             {
@@ -273,8 +287,6 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
             }
 
             // rdmft::printMatrix_pointer(nbands_total, nbands_total, this->v_hat.data(), "v_hat", 10);
-            // rdmft::printMatrix_pointer(nbands_total, nbands_total, this->vhat_max[ik].data(), "vhat_max[ik]", 10);
-            // rdmft::printMatrix_pointer(nbands_total, nbands_total, this->skew_hermi_mat.data(), "skew_hermi_mat", 10);
 
             // vhat_max is obtained by std::max(), which will affect the skew-Hermitian properties of the matrix y (i.e. skew_hermi_mat)
             // v_hat and vhat_max must > 0, sostd::max() don't affect the skew-Hermitian properties of the matrix y
@@ -286,18 +298,14 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
             std::vector<TK> temp_mat = this->nos_rep_wfc[ik];
             rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), this->adam_rotation.data(),
                                     this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
-            // rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), this->adam_rotation.data(),
-            //                         this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'C' );
-            // rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), temp_mat.data(),
-            //                         this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
-            // rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), temp_mat.data(),
-            //                         this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'C', 'N' );
 
             // new_wfc = new_NOs * this->rdmft_solver.wfc
             // rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
             
-            rdmft::GkPsi( this->para_Fij, this->ParaV, this->adam_rotation[0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
-
+            // rdmft::GkPsi( this->para_Fij, this->ParaV, this->adam_rotation[0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
+            
+            rdmft::pTgemm_scalapack( this->para_Fij, &(this->rdmft_solver->wfc(ik, 0, 0)), this->adam_rotation.data(),
+                                        &(this->new_wfc(ik, 0, 0)), nbands_total, nbands_total, nbands_total, 'N', 'N' );
 
 
             // std::vector<TK> U_Udagger(this->adam_rotation.size(), 0.0);
