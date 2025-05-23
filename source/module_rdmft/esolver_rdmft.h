@@ -14,6 +14,8 @@
 #include "module_rdmft/optimizer/bfgs_opti_ONs.h"
 #include "module_rdmft/optimizer/idmft.h"
 
+#include "module_rdmft/optimizer/ft_rdmft.h"
+
 
 namespace rdmft
 {
@@ -70,6 +72,9 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     //! 
     rdmft::IDMFT<TK, TR> idmft;
+
+    //! 
+    rdmft::FT_RDMFT<TK, TR> ft_rdmft;
 
     // rdmft::EBI ebi;
 

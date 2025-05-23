@@ -51,6 +51,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
     this->para_Fij = &para_Fij_in;
     this->ParaV = &ParaV_in;
     this->rdmft_solver = rdmft_solver_in;
+    this->kappa = PARAM.inp.idmft_kappa;
 
     // malloc
     this->new_wfc.resize(nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
@@ -490,7 +491,7 @@ void IDMFT<TK, TR>::solving_mu()
         // find low_mu and high_mu
         int times = 0;
         double sign_kappa = 1.0;
-        if( PARAM.inp.idmft_kappa < 0 ) { sign_kappa = -1.0; }
+        if( this->kappa < 0 ) { sign_kappa = -1.0; }
 
         while( error_old * error_new > 0 || times <= 1 )
         {
@@ -561,7 +562,7 @@ double IDMFT<TK, TR>::cal_occ_num(const int is)
         for(int ib=0; ib<PARAM.inp.nbands; ++ib)
         {
             
-            this->occ_number[is][ik*nbands + ib] = 1.0 / ( 1 + std::exp( ( this->diag_Fii[ is*this->nk_nospin + ik][ib] - this->mu[is] ) / PARAM.inp.idmft_kappa ) ) ;
+            this->occ_number[is][ik*nbands + ib] = 1.0 / ( 1 + std::exp( ( this->diag_Fii[ is*this->nk_nospin + ik][ib] - this->mu[is] ) / this->kappa ) ) ;
 
             tot_occ_num += this->occ_number[is][ik*nbands + ib] * this->num_symm_k[is*this->nk_nospin + ik];
         }

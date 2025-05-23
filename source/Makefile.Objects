@@ -779,3 +779,4 @@ OBJS_RDMFT=rdmft.o\
         ebi_constraint.o\
         idmft.o\
         mixing_dmk.o\
+        ft_rdmft.o\

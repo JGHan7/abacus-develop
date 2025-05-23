@@ -49,7 +49,14 @@ class IDMFT
 
     double get_diff_DM_max() { return this->diff_DM_max; }
 
+    double get_mu(const int is) { return this->mu[is]; }
+
+    // tempeture kappa
+    double kappa = 0.0;
+
   protected:
+
+    virtual void get_Fock();
 
     const K_Vectors* kv;
 
@@ -95,7 +102,7 @@ class IDMFT
 
     void do_mixing(std::vector< std::vector<TK> >& DM_new, ModuleBase::matrix& occ_num_pass);
 
-  private:
+  // private:
 
     std::vector< std::vector<TK> > Fock_like_mat;
 
@@ -117,8 +124,6 @@ class IDMFT
 
 
     double etotal = 0.0, etotal_old = 0.0;
-
-    void get_Fock();
 
     void solving_mu();
 

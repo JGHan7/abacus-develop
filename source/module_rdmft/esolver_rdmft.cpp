@@ -33,7 +33,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_all_runners(ucell, inp);
 
     // initialize rdmft
-    if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "idmft" || PARAM.inp.rdmft_orb_opti == "adam" )
+    if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "idmft" || PARAM.inp.rdmft_orb_opti == "adam" || PARAM.inp.rdmft_orb_opti == "ft_rdmft" )
     {
         rdmft_solver.init(this->GG,
                             this->GK,
@@ -89,6 +89,10 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {
         this->idmft.init(rdmft_solver.nk_total, this->kv, rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
+    }
+    else if( PARAM.inp.rdmft_orb_opti == "ft_rdmft" )
+    {
+        this->ft_rdmft.init(rdmft_solver.nk_total, this->kv, rdmft_solver.para_Eij, this->pv, &this->rdmft_solver, this->pelec->ekb);
     }
 
     this->DM.resize(rdmft_solver.nk_total, std::vector<TK>(this->pv.nloc, 0.0));
@@ -354,6 +358,41 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             }
         }
     }
+    else if( PARAM.inp.rdmft_orb_opti == "ft_rdmft" )
+    {
+        for(int iter_kappa=1; iter_kappa <= PARAM.inp.maxniter_occ_num; ++iter_kappa)
+        {
+            // this->ft_rdmft.solve_zero_occ_num();
+            for(int iter_orb=1; iter_orb <= PARAM.inp.maxniter_orb; ++iter_orb)
+            {
+                double diff_etotal = this->ft_rdmft.optimize();
+
+                std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
+                std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
+                            << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
+                            << "\n\ndiff_E: " << diff_etotal
+                            << "\ndiff_DM_max: " << this->ft_rdmft.get_diff_DM_max()
+                            << "\n******" << std::endl << std::defaultfloat;
+
+                // this->ft_rdmft.opti_occ_num();
+
+                // temporary
+                this->print_info();
+
+                // if( std::abs(diff_etotal) < iter_diag_ethr && this->ft_rdmft.get_diff_DM_max() < PARAM.inp.scf_thr )
+                if( this->ft_rdmft.get_diff_DM_max() < PARAM.inp.scf_thr )
+                {
+                    break;
+                }
+            }
+
+            std::cout << "\n" << "iter_kappa: " << iter_kappa << "\n" << std::endl;
+            this->ft_rdmft.optimize_kappa();
+            if( std::abs(this->ft_rdmft.dE_dk) < 1e-5 ) { break; }
+
+        }
+
+    }
 
     // this->print_info();
 
@@ -438,6 +477,14 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
             this->idmft.before_opti(this->DM, this->p_hamilt);
         }
     }
+    else if( PARAM.inp.rdmft_orb_opti == "ft_rdmft" )
+    {
+        if( PARAM.inp.mixing_rdmft )
+        {
+            rdmft::cal_special_DM(&this->pv, this->rdmft_solver.wg, this->rdmft_solver.wfc, this->DM);
+            this->ft_rdmft.before_opti(this->DM, this->p_hamilt);
+        }
+    }
 }
 
 
@@ -503,6 +550,20 @@ void ESolver_RDMFT<TK, TR>::print_info()
             for(int ib=0; ib < rdmft_solver.nbands_total; ++ib)
             {
                 std::cout << ib << "           " << rdmft_solver.occ_number(ik, ib) << "        " << this->idmft.get_energy_level()[ik][ib] << std::endl;
+            }
+            std::cout << "---------------------------------------\n" << std::endl;
+        }
+    }
+    else if( PARAM.inp.rdmft_orb_opti == "ft_rdmft" )
+    {
+        std::cout << "\n" << "kappa = " << this->ft_rdmft.kappa << std::endl;
+        for(int ik=0; ik < rdmft_solver.nk_total; ++ik)
+        {
+            std::cout << "\n\nik: " << ik << std::endl; // << std::fixed << std::setprecision(10);
+            std::cout << "---------------------------------------\nnbands      " << "occ_number      " << "energy level(Rydberg)" << std::endl; 
+            for(int ib=0; ib < rdmft_solver.nbands_total; ++ib)
+            {
+                std::cout << ib << "           " << rdmft_solver.occ_number(ik, ib) << "        " << this->ft_rdmft.get_energy_level()[ik][ib] << std::endl;
             }
             std::cout << "---------------------------------------\n" << std::endl;
         }
