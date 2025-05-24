@@ -510,13 +510,15 @@ void IDMFT<TK, TR>::solving_mu()
                 this->mu[is] -= 1.0 * sign_kappa;
             }
 
+            std::cout << "\nerror_new: " << error_new << "\nlow_mu: " << low_mu << "\nhigh_mu: " << high_mu << "\n" << std::endl;
+
         }
 
         double solve_mu_times = 0;
         double total_elec_num = 0.0;
         double occ_num_error = 0.0;
         // use dichotomy
-        while( solve_mu_times < 200 )
+        while( solve_mu_times < 300 )
         {
             ++solve_mu_times;
             this->mu[is] = (low_mu + high_mu) / 2.0;
@@ -537,11 +539,11 @@ void IDMFT<TK, TR>::solving_mu()
             }
         }
 
-        if( solve_mu_times >= 200 )
+        if( solve_mu_times >= 300 )
         {
             std::cout << "\n" << "solve_mu_times is too big: " << solve_mu_times << "\n" << std::endl;
             std::cout << "\n" << "electron number is not conserved !!!!!!!!!!! " << "\n" << std::endl;
-            assert( solve_mu_times <= 200 );
+            assert( solve_mu_times <= 300 );
         }
 
         std::cout << "\n" << "mu: " << this->mu[is] << std::endl;

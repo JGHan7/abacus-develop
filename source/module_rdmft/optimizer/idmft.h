@@ -54,7 +54,7 @@ class IDMFT
     // tempeture kappa
     double kappa = 0.0;
 
-  protected:
+  // protected:
 
     virtual void get_Fock();
 

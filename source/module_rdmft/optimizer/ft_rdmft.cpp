@@ -44,13 +44,61 @@ void FT_RDMFT<TK, TR>::get_Fock()
     for(int ik=0; ik<this->Fock_like_mat.size(); ++ik)
     {
         std::fill(this->Fock_like_mat[ik].begin(), this->Fock_like_mat[ik].end(), 0.0);
-        for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
-        {
-            this->Fock_like_mat[ik][iloc] = (this->rdmft_solver->Hij_no_exx[ik][iloc] + this->rdmft_solver->Hij_exx[ik][iloc]); // * wk_nospin[ik] ,no need to multiply k-point weight and spin weight
-        }
-    
 
+        // // idmft: Fock matrix
+        // for(int iloc=0; iloc<this->Fock_like_mat[ik].size(); ++iloc)
+        // {
+        //     this->Fock_like_mat[ik][iloc] = (this->rdmft_solver->Hij_no_exx[ik][iloc] + this->rdmft_solver->Hij_exx[ik][iloc]); // * wk_nospin[ik] ,no need to multiply k-point weight and spin weight
+        // }
+
+        // iterDiag: Fock-like matrix
+        std::vector<TK> lambda = this->Fock_like_mat[ik];
+        std::fill(lambda.begin(), lambda.end(), 0.0);
         int nrow = this->para_Fij->get_row_size();
+        for(int ic=0; ic<this->para_Fij->get_col_size(); ++ic)
+        {
+            // use wg or occ_number??? occ_num!
+            const double occ_num_local = this->rdmft_solver->wg(ik, this->para_Fij->local2global_col(ic));
+            const double fun_occNum_local = this->rdmft_solver->wk_fun_occNum(ik, this->para_Fij->local2global_col(ic));
+
+            for(int ir=0; ir<nrow; ++ir)
+            {
+                lambda[ir + ic*nrow] = this->rdmft_solver->Hij_no_exx[ik][ir + ic*nrow]*occ_num_local 
+                                                + this->rdmft_solver->Hij_exx[ik][ir + ic*nrow]*fun_occNum_local;
+            }
+        }
+
+        antisymm_mat(this->para_Fij, this->nbands, lambda.data(), this->Fock_like_mat[ik].data(), 1.0);
+        // int nrow = this->para_Fij->get_row_size();
+        for(int ic=0; ic<this->para_Fij->get_col_size(); ++ic)
+        {
+            const int ic_global = this->para_Fij->local2global_col(ic);
+            for(int ir=0; ir<nrow; ++ir)
+            {
+                int ir_global = this->para_Fij->local2global_row(ir);
+
+                if( ic_global == ir_global )
+                {
+                    // // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
+                    // this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global];
+                }
+                else
+                {
+                    // double norm_Fij = std::abs( this->Fock_like_mat[ik][ir+ic*nrow] );
+                    // this->max_off_diag_F = std::max(this->max_off_diag_F, norm_Fij);
+
+                    if(ic_global > ir_global) 
+                    {
+                        // the upper triangle
+                        this->Fock_like_mat[ik][ir+ic*nrow] = -( this->Fock_like_mat[ik][ir+ic*nrow] );
+                    }
+
+                }
+            }
+        }
+
+
+        // int nrow = this->para_Fij->get_row_size();
         for(int ic=0; ic<this->para_Fij->get_col_size(); ++ic)
         {
             const int ic_global = this->para_Fij->local2global_col(ic);
@@ -62,10 +110,22 @@ void FT_RDMFT<TK, TR>::get_Fock()
                 {
                     // use the eigenvalues ​​of the last diag(F) to form the diagonal elements of this F
                     // 
-                    this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global] + this->rdmft_solver->occNum_wfcHamiltWfc(ik, ic_global);
+                    double num = this->rdmft_solver->occ_number(ik, ic_global);
+                    if( std::abs(1.0 - num) < 1e-16 )
+                    {
+                        num = 1.0 - 1e-16;
+                    }
+                    else if( num < 1e-20 )
+                    {
+                        num = 1e-20;
+                    }
+
+                    // this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global] + this->rdmft_solver->occNum_wfcHamiltWfc(ik, ic_global);
+                    this->Fock_like_mat[ik][ir+ic*nrow] = this->rdmft_solver->occNum_wfcHamiltWfc(ik, ic_global) + this->kappa * std::log( (1 - num)/num );
                 }
             }
         }
+
     }
 
     std::cout << "\n\n******\n" << "new get_Fock()" << "\n******\n" << std::endl;
@@ -107,6 +167,11 @@ void FT_RDMFT<TK, TR>::optimize_kappa()
 
     // could use line search combining CG, BFGS methods, etc.
     this->kappa += -this->dE_dk;
+
+    if( this->kappa < 0 )
+    {
+        this->kappa = 1e-6;
+    }
 
     std::cout << "\n" << "optimize kappa: \ndelta_kappa = " << -this->dE_dk << "\nnew kappa = " << this->kappa << "\n" << std::endl;
 

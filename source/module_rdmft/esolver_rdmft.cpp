@@ -379,6 +379,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 // temporary
                 this->print_info();
 
+                rdmft::printMatrix_pointer(this->rdmft_solver.nk_total, this->rdmft_solver.nbands_total, this->ft_rdmft.occ_number[0].data(), "occ_number in idmft", 10);
+
                 // if( std::abs(diff_etotal) < iter_diag_ethr && this->ft_rdmft.get_diff_DM_max() < PARAM.inp.scf_thr )
                 if( this->ft_rdmft.get_diff_DM_max() < PARAM.inp.scf_thr )
                 {
@@ -388,7 +390,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
             std::cout << "\n" << "iter_kappa: " << iter_kappa << "\n" << std::endl;
             this->ft_rdmft.optimize_kappa();
-            if( std::abs(this->ft_rdmft.dE_dk) < 1e-5 ) { break; }
+            if( std::abs(this->ft_rdmft.dE_dk) < 1e-7 || std::abs(this->ft_rdmft.kappa) < 1e-5 ) { break; }
 
         }
 
