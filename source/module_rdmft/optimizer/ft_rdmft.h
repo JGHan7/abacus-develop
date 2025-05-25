@@ -8,6 +8,7 @@
 
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/idmft.h"
+#include "module_rdmft/optimizer/bfgs_opti_ONs.h"
 
 
 namespace rdmft
@@ -30,12 +31,29 @@ class FT_RDMFT: public rdmft::IDMFT<TK,TR>
     virtual void get_Fock() override;
 
     
-    double dE_dk = 0.0;
+    double dE_dk_sum = 0.0;
+
+    std::vector<double> dE_dk;
+
+    std::vector<double> pk;
+
+    std::vector<double> kappa_tensor;
+
+    double average_k = 0.0;
+
+    double max_diff_kappa = 0.0;
+
+    rdmft::BFGS_ONs<double> bfgs_opti_k;
+
+
 
     void optimize_kappa();
 
+    // temp parameter
+    bool first_opti_k = true;
 
 
+    virtual double cal_occ_num(const int is) override;
 
 
 };

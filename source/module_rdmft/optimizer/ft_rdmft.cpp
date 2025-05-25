@@ -31,6 +31,12 @@ void FT_RDMFT<TK, TR>::init(const int nk_total_in,
             this->diag_Fii[ik][ib] = ekb_in(ik, ib);
         }
     }
+
+    this->dE_dk.resize(this->nk_total*this->nbands, 0.0);
+    this->pk.resize(this->nk_total*this->nbands, 0.0);
+    this->bfgs_opti_k.init(this->nk_total, this->nbands);
+    this->kappa_tensor.resize(this->nk_total*this->nbands, this->kappa);
+
 }
 
 
@@ -40,6 +46,7 @@ void FT_RDMFT<TK, TR>::get_Fock()
 
     // modify digaonal elements of the Fock matrix
     this->rdmft_solver->cal_E_grad_occ_num();
+    ModuleBase::matrix dE_docc_num = this->rdmft_solver->occNum_wfcHamiltWfc;
 
     for(int ik=0; ik<this->Fock_like_mat.size(); ++ik)
     {
@@ -115,13 +122,24 @@ void FT_RDMFT<TK, TR>::get_Fock()
                     {
                         num = 1.0 - 1e-16;
                     }
-                    else if( num < 1e-20 )
+                    else if( num < 1e-20 ) // 1e-12?
                     {
                         num = 1e-20;
                     }
 
+                    // test
+                    if( num < 1e-5 && GlobalC::exx_info.info_global.cal_exx && PARAM.inp.rdmft_power_alpha != 1.0 )
+                    {
+                        dE_docc_num(ik, ic_global) = 0.0;
+                    }
+
                     // this->Fock_like_mat[ik][ir+ic*nrow] = this->diag_Fii[ik][ic_global] + this->rdmft_solver->occNum_wfcHamiltWfc(ik, ic_global);
-                    this->Fock_like_mat[ik][ir+ic*nrow] = this->rdmft_solver->occNum_wfcHamiltWfc(ik, ic_global) + this->kappa * std::log( (1 - num)/num );
+                    // this->Fock_like_mat[ik][ir+ic*nrow] = this->rdmft_solver->occNum_wfcHamiltWfc(ik, ic_global) + this->kappa * std::log( (1 - num)/num );
+
+            // this->kappa or this->kappa_tensor[ij] ???????!!!!!!!!!!!!!!!!!!!!!!
+
+                    // this->Fock_like_mat[ik][ir+ic*nrow] = dE_docc_num(ik, ic_global) + this->kappa * std::log( (1 - num)/num );
+                    this->Fock_like_mat[ik][ir+ic*nrow] = dE_docc_num(ik, ic_global) + this->kappa_tensor[ik*this->nbands + ic_global] * std::log( (1 - num)/num );
                 }
             }
         }
@@ -142,9 +160,14 @@ void FT_RDMFT<TK, TR>::get_Fock()
 template <typename TK, typename TR>
 void FT_RDMFT<TK, TR>::optimize_kappa()
 {
-    this->dE_dk = 0.0;
+    this->dE_dk_sum = 0.0;
+    this->dE_dk.resize(this->dE_dk.size(), 0.0);
     this->rdmft_solver->cal_E_grad_occ_num();
+    
     const ModuleBase::matrix& occ_num = this->rdmft_solver->occ_number;
+    ModuleBase::matrix wk_wfc_Vnoexx_wfc(this->nk_total, this->nbands);
+    ModuleBase::matrix wk_wfc_Vexx_wfc(this->nk_total, this->nbands);
+    this->rdmft_solver->get_wk_wfcHwfc(wk_wfc_Vnoexx_wfc, wk_wfc_Vexx_wfc);
 
     for(int ik=0; ik<this->nk_total; ++ik)
     {
@@ -155,25 +178,60 @@ void FT_RDMFT<TK, TR>::optimize_kappa()
             {
                 num_ik_ib = 1.0 - 1e-16;
             }
-            else if( num_ik_ib < 1e-20 )
+            else if( num_ik_ib < 1e-12 )
             {
-                num_ik_ib = 1e-20;
+                num_ik_ib = 1e-12;
             }
 
-            double num = num_ik_ib * (1 - num_ik_ib) * std::log( (1 - num_ik_ib)/num_ik_ib );
-            this->dE_dk += this->rdmft_solver->occNum_wfcHamiltWfc(ik, ib) * num / this->kappa;
+            // double num = num_ik_ib * (1 - num_ik_ib) * std::log( (1 - num_ik_ib)/num_ik_ib );
+            // this->dE_dk_sum += this->rdmft_solver->occNum_wfcHamiltWfc(ik, ib) * num / this->kappa;
+            // this->dE_dk[ik*this->nbands + ib] = this->rdmft_solver->occNum_wfcHamiltWfc(ik, ib) * num / this->kappa_tensor[ik*this->nbands + ib];
+
+            double alpha = PARAM.inp.rdmft_power_alpha;
+            double factor_no_exx = num_ik_ib * (1 - num_ik_ib) * std::log( (1 - num_ik_ib)/num_ik_ib );
+            double factor_exx = alpha * std::pow(num_ik_ib, alpha) * (1 - num_ik_ib) * std::log( (1 - num_ik_ib)/num_ik_ib );
+            // this->dE_dk[ik*this->nbands + ib] = ( wk_wfc_Vnoexx_wfc(ik, ib)*factor_no_exx + wk_wfc_Vexx_wfc(ik, ib)*factor_exx )/ this->kappa_tensor[ik*this->nbands + ib];
+            this->dE_dk[ik*this->nbands + ib] = ( wk_wfc_Vnoexx_wfc(ik, ib)*factor_no_exx + wk_wfc_Vexx_wfc(ik, ib)*factor_exx )/ this->average_k;
         }
     }
-
-    // could use line search combining CG, BFGS methods, etc.
-    this->kappa += -this->dE_dk;
 
     if( this->kappa < 0 )
     {
         this->kappa = 1e-6;
     }
 
-    std::cout << "\n" << "optimize kappa: \ndelta_kappa = " << -this->dE_dk << "\nnew kappa = " << this->kappa << "\n" << std::endl;
+    if( first_opti_k )
+    {
+        this->bfgs_opti_k.get_pk(this->dE_dk, this->kappa_tensor, this->pk, first_opti_k);
+        this->first_opti_k =false;
+    }
+    else
+    {
+        this->bfgs_opti_k.get_pk(this->dE_dk, this->kappa_tensor, this->pk);
+    }
+
+
+
+    // could use line search combining CG, BFGS methods, etc.
+    // this->kappa += -this->dE_dk_sum;
+    this->average_k = 0.0;
+    this->max_diff_kappa = 0.0;
+    for(int i=0; i<this->kappa_tensor.size(); ++i)
+    {
+        this->kappa_tensor[i] += this->pk[i];
+        if( this->kappa_tensor[i] < 0 )
+        {
+            this->kappa_tensor[i] = 1e-6;
+        }
+        this->average_k += this->kappa_tensor[i];
+        this->max_diff_kappa = std::max(this->max_diff_kappa, std::abs(this->pk[i]));
+    }
+    this->average_k /= this->kappa_tensor.size();
+
+    // std::cout << "\n" << "optimize kappa: \ndelta_kappa = " << -this->dE_dk_sum << "\nnew kappa = " << this->kappa << "\n" << std::endl;
+    rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->rdmft_solver->occNum_wfcHamiltWfc.c, "dE_dn", 10);
+    rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->pk.data(), "pk", 10);
+    rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->kappa_tensor.data(), "new kappa-tensor", 10);
 
     // optimize the occ_number
     ModuleBase::matrix occ_num_pass(this->nk_total, this->nbands);
@@ -189,7 +247,24 @@ void FT_RDMFT<TK, TR>::optimize_kappa()
 
 
 
+template <typename TK, typename TR>
+double FT_RDMFT<TK, TR>::cal_occ_num(const int is)
+{
+    double tot_occ_num = 0.0;
 
+    for(int ik=0; ik<this->nk_nospin; ++ik)
+    {
+        for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+        {
+            
+            this->occ_number[is][ik*this->nbands + ib] = 1.0 / ( 1 + std::exp( ( this->diag_Fii[ is*this->nk_nospin + ik][ib] - this->mu[is] ) / this->kappa_tensor[(is*this->nk_nospin + ik)*this->nbands + ib] ) ) ;
+
+            tot_occ_num += this->occ_number[is][ik*this->nbands + ib] * this->num_symm_k[is*this->nk_nospin + ik];
+        }
+    }
+
+    return tot_occ_num;
+}
 
 
 

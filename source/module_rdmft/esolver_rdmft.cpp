@@ -363,7 +363,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         for(int iter_kappa=1; iter_kappa <= PARAM.inp.maxniter_occ_num; ++iter_kappa)
         {
             // this->ft_rdmft.solve_zero_occ_num();
-            for(int iter_orb=1; iter_orb <= PARAM.inp.maxniter_orb; ++iter_orb)
+            for(int iter_orb=1; iter_orb <= PARAM.inp.scf_nmax; ++iter_orb)
             {
                 double diff_etotal = this->ft_rdmft.optimize();
 
@@ -390,8 +390,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
             std::cout << "\n" << "iter_kappa: " << iter_kappa << "\n" << std::endl;
             this->ft_rdmft.optimize_kappa();
-            if( std::abs(this->ft_rdmft.dE_dk) < 1e-7 || std::abs(this->ft_rdmft.kappa) < 1e-5 ) { break; }
-
+            // if( std::abs(this->ft_rdmft.dE_dk_sum) < 1e-7 || std::abs(this->ft_rdmft.kappa) < 1e-5 ) { break; }
+            if( this->ft_rdmft.max_diff_kappa < 1e-6 ) {break;}
         }
 
     }

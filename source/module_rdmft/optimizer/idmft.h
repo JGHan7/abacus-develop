@@ -127,7 +127,7 @@ class IDMFT
 
     void solving_mu();
 
-    double cal_occ_num(const int is);
+    virtual double cal_occ_num(const int is);
 
     std::vector< std::vector<double> > occ_number;
 

@@ -499,6 +499,11 @@ void IDMFT<TK, TR>::solving_mu()
             error_old = error_new;
             error_new = this->cal_occ_num(is) - this->sys_nelec_spin[is];
 
+            // std::cout << "\n" << "mu: " << this->mu[is] << std::endl;
+            // rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->diag_Fii[0].data(), "diag_Fii", 10);
+            // rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->occ_number[0].data(), "occ_number", 10);
+            // std::cout << "\nerror_new: " << error_new << "\nlow_mu: " << low_mu << "\nhigh_mu: " << high_mu << "\n" << std::endl;
+
             if( error_new < 0 )
             {
                 low_mu = this->mu[is];
@@ -509,8 +514,6 @@ void IDMFT<TK, TR>::solving_mu()
                 high_mu = this->mu[is];
                 this->mu[is] -= 1.0 * sign_kappa;
             }
-
-            std::cout << "\nerror_new: " << error_new << "\nlow_mu: " << low_mu << "\nhigh_mu: " << high_mu << "\n" << std::endl;
 
         }
 

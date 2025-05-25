@@ -371,18 +371,59 @@ void RDMFT<TK, TR>::cal_E_grad_wfc()
 template <typename TK, typename TR>
 void RDMFT<TK, TR>::cal_E_grad_occ_num()
 {
+
+    ModuleBase::matrix occ_num = (occ_number);
+
+    // test!!!!!!!!!!!
+    if( GlobalC::exx_info.info_global.cal_exx && PARAM.inp.rdmft_power_alpha != 1.0 )
+    {
+        for(int ik=0; ik<occ_num.nr; ++ik)
+        {
+            for(int ib=0; ib<occ_num.nc; ++ib)
+            {
+                if( occ_num(ik, ib) < this->min_occ_num )
+                {
+                    occ_num(ik, ib) = this->min_occ_num;
+                }
+            }
+        }
+    }
+
     // gradient calculation does not take i-DMFT into account !
 
     // get the gradient of energy with respect to the natural occupation numbers, i.e., Wk_occNum_wfcHamiltWfc
-    add_occNum(*(this->kv), occ_number, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
+    add_occNum(*(this->kv), occ_num, wfcHwfc_TV, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfcHamiltWfc, XC_func_rdmft, alpha_power);
     Parallel_Reduce::reduce_all(occNum_wfcHamiltWfc.c, occNum_wfcHamiltWfc.nr * occNum_wfcHamiltWfc.nc);
     // rdmft::printMatrix_pointer(occNum_wfcHamiltWfc.nr, occNum_wfcHamiltWfc.nc, &occNum_wfcHamiltWfc(0, 0), "E_gradient_occNum");
 
     // test !!!!!!!!!!!!!!!!!
     ModuleBase::matrix temp_num(nk_total, nbands_total);
     temp_num.zero_out();
-    add_occNum(*(this->kv), occ_number, temp_num, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfc_Vee_wfc, XC_func_rdmft, alpha_power);
+    add_occNum(*(this->kv), occ_num, temp_num, wfcHwfc_hartree, wfcHwfc_dft_XC, wfcHwfc_exx_XC, occNum_wfc_Vee_wfc, XC_func_rdmft, alpha_power);
     Parallel_Reduce::reduce_all(occNum_wfc_Vee_wfc.c, occNum_wfc_Vee_wfc.nr * occNum_wfc_Vee_wfc.nc);
+}
+
+
+template <typename TK, typename TR>
+void RDMFT<TK, TR>::get_wk_wfcHwfc(ModuleBase::matrix& wk_wfc_Vnoexx_wfc, ModuleBase::matrix& wk_wfc_Vexx_wfc)
+{
+    wk_wfc_Vnoexx_wfc.zero_out();
+    wk_wfc_Vexx_wfc.zero_out();
+    wk_wfc_Vnoexx_wfc += (wfcHwfc_TV);
+    wk_wfc_Vnoexx_wfc += (wfcHwfc_hartree);
+    wk_wfc_Vnoexx_wfc += (wfcHwfc_dft_XC);
+    wk_wfc_Vexx_wfc += (wfcHwfc_exx_XC);
+
+    for(int ik=0; ik<occ_number.nr; ++ik)
+    {
+        for(int inb=0; inb<occ_number.nc; ++inb) 
+        { 
+            wk_wfc_Vnoexx_wfc *= this->kv->wk[ik];
+            wk_wfc_Vexx_wfc *= this->kv->wk[ik];
+        }
+    }
+    Parallel_Reduce::reduce_all(wk_wfc_Vnoexx_wfc.c, wk_wfc_Vnoexx_wfc.nr * wk_wfc_Vnoexx_wfc.nc);
+    Parallel_Reduce::reduce_all(wk_wfc_Vexx_wfc.c, wk_wfc_Vexx_wfc.nr * wk_wfc_Vexx_wfc.nc);
 }
 
 
@@ -532,7 +573,7 @@ void RDMFT<TK, TR>::cal_Ecum()
         for(int inb=0; inb < this->occ_number.nc; ++inb)
         {
             double temp_num = this->occ_number(ik, inb);
-            if( temp_num > 1e-20 && temp_num < 1.0 )
+            if( temp_num > 1e-20 && temp_num < 1.0 ) // 1e-12?
             {
                 this->idmft_entropy -= this->kv->wk[ik] * ( temp_num * std::log(temp_num) + (1-temp_num) * std::log(1-temp_num) );
             }

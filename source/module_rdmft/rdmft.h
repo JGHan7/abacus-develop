@@ -73,6 +73,7 @@ class RDMFT
     ModuleBase::matrix wg;
     ModuleBase::matrix wk_fun_occNum;
     ModuleBase::matrix fun_occNum; // temporary
+    const double min_occ_num = 1e-10;
 
     //! gradients of total energy with respect to the natural occupation numbers and wfc
     ModuleBase::matrix occNum_wfcHamiltWfc;
@@ -143,6 +144,9 @@ class RDMFT
 
     // just for debug, print in different processes
     std::string process_file;
+
+    // used for ft_rdmft
+    void get_wk_wfcHwfc(ModuleBase::matrix& wk_wfc_Vnoexx_wfc, ModuleBase::matrix& wk_wfc_Vexx_wfc);
 
 
   protected:
