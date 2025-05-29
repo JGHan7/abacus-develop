@@ -36,6 +36,7 @@ void FT_RDMFT<TK, TR>::init(const int nk_total_in,
     this->pk.resize(this->nk_total*this->nbands, 0.0);
     this->bfgs_opti_k.init(this->nk_total, this->nbands);
     this->kappa_tensor.resize(this->nk_total*this->nbands, this->kappa);
+    this->average_k = this->kappa;
 
 }
 
@@ -139,7 +140,8 @@ void FT_RDMFT<TK, TR>::get_Fock()
             // this->kappa or this->kappa_tensor[ij] ???????!!!!!!!!!!!!!!!!!!!!!!
 
                     // this->Fock_like_mat[ik][ir+ic*nrow] = dE_docc_num(ik, ic_global) + this->kappa * std::log( (1 - num)/num );
-                    this->Fock_like_mat[ik][ir+ic*nrow] = dE_docc_num(ik, ic_global) + this->kappa_tensor[ik*this->nbands + ic_global] * std::log( (1 - num)/num );
+                    // this->Fock_like_mat[ik][ir+ic*nrow] = dE_docc_num(ik, ic_global) + this->kappa_tensor[ik*this->nbands + ic_global] * std::log( (1 - num)/num );
+                    this->Fock_like_mat[ik][ir+ic*nrow] = dE_docc_num(ik, ic_global) + this->average_k * std::log( (1 - num)/num );
                 }
             }
         }
@@ -190,8 +192,7 @@ void FT_RDMFT<TK, TR>::optimize_kappa()
             double alpha = PARAM.inp.rdmft_power_alpha;
             double factor_no_exx = num_ik_ib * (1 - num_ik_ib) * std::log( (1 - num_ik_ib)/num_ik_ib );
             double factor_exx = alpha * std::pow(num_ik_ib, alpha) * (1 - num_ik_ib) * std::log( (1 - num_ik_ib)/num_ik_ib );
-            // this->dE_dk[ik*this->nbands + ib] = ( wk_wfc_Vnoexx_wfc(ik, ib)*factor_no_exx + wk_wfc_Vexx_wfc(ik, ib)*factor_exx )/ this->kappa_tensor[ik*this->nbands + ib];
-            this->dE_dk[ik*this->nbands + ib] = ( wk_wfc_Vnoexx_wfc(ik, ib)*factor_no_exx + wk_wfc_Vexx_wfc(ik, ib)*factor_exx )/ this->average_k;
+            this->dE_dk[ik*this->nbands + ib] = ( wk_wfc_Vnoexx_wfc(ik, ib)*factor_no_exx + wk_wfc_Vexx_wfc(ik, ib)*factor_exx )/ this->kappa_tensor[ik*this->nbands + ib];
         }
     }
 
@@ -214,22 +215,33 @@ void FT_RDMFT<TK, TR>::optimize_kappa()
 
     // could use line search combining CG, BFGS methods, etc.
     // this->kappa += -this->dE_dk_sum;
-    this->average_k = 0.0;
     this->max_diff_kappa = 0.0;
     for(int i=0; i<this->kappa_tensor.size(); ++i)
     {
-        this->kappa_tensor[i] += this->pk[i];
-        if( this->kappa_tensor[i] < 0 )
-        {
-            this->kappa_tensor[i] = 1e-6;
-        }
-        this->average_k += this->kappa_tensor[i];
         this->max_diff_kappa = std::max(this->max_diff_kappa, std::abs(this->pk[i]));
     }
-    this->average_k /= this->kappa_tensor.size();
+
+    this->average_k = 0.0;
+    int num_kappa = this->kappa_tensor.size();
+    for(int i=0; i<this->kappa_tensor.size(); ++i)
+    {
+        this->kappa_tensor[i] += this->pk[i] / ( this->max_diff_kappa * 0.2 );
+        if( this->kappa_tensor[i] < 0 )
+        {
+            this->kappa_tensor[i] = 1e-4; // how much is proper?
+            num_kappa -= 1;
+        }
+        else
+        {
+            this->average_k += this->kappa_tensor[i];
+        }
+    }
+    // this->average_k /= this->kappa_tensor.size();
+    this->average_k /= num_kappa;
 
     // std::cout << "\n" << "optimize kappa: \ndelta_kappa = " << -this->dE_dk_sum << "\nnew kappa = " << this->kappa << "\n" << std::endl;
     rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->rdmft_solver->occNum_wfcHamiltWfc.c, "dE_dn", 10);
+    rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->dE_dk.data(), "dE_dkappa", 10);
     rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->pk.data(), "pk", 10);
     rdmft::printMatrix_pointer(this->nk_total, this->nbands, this->kappa_tensor.data(), "new kappa-tensor", 10);
 
