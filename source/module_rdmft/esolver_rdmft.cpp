@@ -255,6 +255,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         double diff_occ_num_max = 1.0;
         double Etotal = this->rdmft_solver.Etotal;
 
+        int tot_orb_iter = 0;
+        int tot_occ_num_iter = 0;
+        int tot_exteral_iter = 0;
+
         for(int iter=0; iter<PARAM.inp.scf_nmax; ++iter)
         {
             init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
@@ -279,8 +283,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 if( this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr && iter_orb >= 3 )
                 {
                     break;
+                    tot_orb_iter += iter_orb;
                 }
             }
+            tot_orb_iter += init_maxniter;
 
             final_diff_E = this->rdmft_solver.Etotal - Etotal;
             if( final_diff_E > 0 )
@@ -305,8 +311,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 if( diff_occ_num_max < this->occ_num_thr )
                 {
                     break;
+                    tot_occ_num_iter += iter_occ_num;
                 }
             }
+            tot_occ_num_iter += PARAM.inp.maxniter_occ_num;
 
             final_diff_E = this->rdmft_solver.Etotal - Etotal;
             if( final_diff_E > -1e-6 )
@@ -325,9 +333,16 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             {
                 std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
             }
+
+            tot_exteral_iter = iter; // temp
         }
 
         this->print_info();
+
+        std::cout << "\n******\nexternal iter = " << tot_exteral_iter 
+                    << "\ntotal orbital iter = " << tot_orb_iter 
+                    << "\ntotal occ_num iter = " << tot_occ_num_iter
+                    << "\n******\n" << std::endl;
 
     }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
