@@ -49,6 +49,14 @@ void LineSearch<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in)
 
 
 template<typename TK, typename TR>
+void LineSearch<TK, TR>::before_opti()
+{
+    this->Etotal.clear();
+    this->iter = 0;
+    this->Etotal.push_back(this->rdmft_solver->Etotal);
+}
+
+template<typename TK, typename TR>
 void LineSearch<TK, TR>::get_start_guess()
 {
     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
@@ -79,13 +87,35 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     {
         this->get_start_guess();
         std::cout << "\n******\n" << "start_guess: ls, 0.0" << "\n******\n" << std::endl;
+
+        this->Etotal.clear();
+        this->Etotal.push_back(this->rdmft_solver->Etotal);
+
+        // return 0.0; // test !!!!!!!!!!
     }
+
+    std::cout << "\n******\n" << "iter in occ_num: " << iter << "\n" << std::endl;
+
+    // // test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // this->phi_0 = this->cal_phi(this->var_x);
 
     // rdmft cal dE_docc_num, EBI convert dE_docc_num to dE_dx
     this->cal_dE_dx(this->dE_dx);
 
     this->cal_pk_dphi0(start_guess);
     std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
+    // if( std::abs(this->dphi_0) < 1e-8 )
+    // {
+    //     std::cout << "\n" << "dphi_0 is too small !!!!!!!  occ_num convergence ? " << "\n" << std::endl;
+    //     return 0.0;
+    // }
+
+    if( this->iter != 0 )
+    {
+        this->init_step = 1.01 * 2.0 * ( this->Etotal.back() - this->Etotal[this->Etotal.size() - 2] ) / this->dphi_0;
+        // this->init_step = std::min(1.0, this->init_step);
+        std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+    }
 
     std::vector<double> var_x_old = this->var_x;
 
@@ -98,9 +128,14 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     {
         this->wolfe();
     }
-    else
+    else if(this->ls_condition == "exact")
     {
-        this->strong_wolfe();
+        this->exact_ls();
+    }
+    else // fixed step
+    {
+        this->step_size = PARAM.inp.ls_fixed_step;
+        // this->strong_wolfe();
     }
 
     // update x_k+1 = x_k + step_size * p_k
@@ -116,16 +151,14 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     }
 
     // double temp_num = a_equal_b(var_x_old, this->var_x);
-
     // Parallel_Reduce::reduce_all(temp_num);
-
     // if( std::abs( temp_num ) > 1e-12 )
     // {
     //     std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
     //     return 0.0;
     // }
 
-    std::cout << "\n******\n" << "ls, do_line_search: strong_wolfe, 1.0" << "\n******\n" << std::endl;
+    // std::cout << "\n******\n" << "ls, do_line_search: strong_wolfe, 1.0" << "\n******\n" << std::endl;
 
     // convert x_k+1 to occ_num, rdmft_solver update occ_num, Hk, etc.
     this->phi_0 = this->cal_phi(this->var_x);   // has be calculated in swolfe() or zoom() ?
@@ -139,19 +172,183 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     // std::abs( diff_occ_num )
     ModuleBase::matrix temp_occ( this->ebi.get_occ_number() );
     std::vector<double> diff_occ_num(this->rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
+    std::vector<double> diff_rate(this->rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
     for(int ik=0; ik<temp_occ.nr; ++ik)
     {
         for(int ib=0; ib<temp_occ.nc; ++ib)
         {
             diff_occ_num[ ik*PARAM.inp.nbands + ib ] = std::abs( this->occ_number(ik, ib) - temp_occ(ik, ib) )
                                                         * (this->ebi.get_num_symm_k())[ik];
+            diff_rate[ ik*PARAM.inp.nbands + ib ] = std::abs( diff_occ_num[ ik*PARAM.inp.nbands + ib ] / this->occ_number(ik, ib) );
         }
     }
     this->occ_number = temp_occ;
 
     auto diff_occ_num_max = std::max_element(diff_occ_num.begin(), diff_occ_num.end());
+    auto num = std::max_element(diff_rate.begin(), diff_rate.end());
+    this->diff_rate_max = *num;
+    
+
+    rdmft::printMatrix_pointer(temp_occ.nr, temp_occ.nc, diff_occ_num.data(), "after opti, diff_occ_num", 5);
+    
+    this->Etotal.push_back(this->phi_0);
+    ++this->iter;
 
     return *diff_occ_num_max;
+}
+
+
+template<typename TK, typename TR>
+void LineSearch<TK, TR>::exact_ls()
+{
+    double step_low = 0.0;
+    double step_high = 0.0;
+
+    // trial_x = x_k(or this->var_x) + trial_step_size * p_k
+    std::vector<double> trial_x(this->var_x.size() ,0.0);
+    std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
+    double trial_phi = 0.0;
+    double trial_dphi = 0.0;
+
+    // the inital value of step_size is a hard problem and get (step_low, step_high) is not always correct, the following are just for debugging !!!!!!!
+    this->step_size = 0.001;
+    for(int times=0; times<60; ++times)
+    {
+        for(int i=0; i<trial_x.size(); ++i)
+        {
+            trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
+        }
+        trial_phi = this->cal_phi(trial_x);
+
+        if( trial_phi - this->Etotal.back() > 0 )
+        {
+            this->step_size *= 0.5;
+            std::cout << "\n" << "initial step size needs to be reduced : " << this->step_size << std::endl;
+            continue;
+        }
+        else
+        {
+            // If 0.001 is not a very small step size in some cases
+            // then this strategy needs to be improved
+            if( times>0 )
+            {
+                return;
+            }
+            break;
+        }
+    }
+
+    bool find_zoom = false;
+    for(int times=0; times<60; ++times)
+    {
+        for(int i=0; i<trial_x.size(); ++i)
+        {
+            trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
+        }
+        trial_phi = this->cal_phi(trial_x);
+
+        // if( trial_phi - this->Etotal.back() > 0 )
+        // {
+        //     this->step_size *= 0.5;
+        //     std::cout << "\n" << "this->step_size: " << this->step_size << std::endl;
+        //     continue;
+        // }
+
+        trial_dphi = this->cal_dphi(trial_dE_dx);
+
+        if( trial_dphi > 0 )
+        {
+            step_high = this->step_size;
+            find_zoom = true;
+            break;
+        }
+        else
+        {
+            step_low = this->step_size;
+            if( times<10 )
+            {
+                this->step_size *= 1.5;
+            }
+            else
+            {
+                this->step_size *= 1.1;
+            }
+            std::cout << "\n" << "step_low: " << step_low << std::endl;
+        }
+    }
+
+
+    std::cout << "\n" << "step_low: " << step_low << "\nstep_high: " << step_high << "\ndphi_0: " << this->dphi_0 << std::endl;
+
+    if(find_zoom)
+    {
+        // (step_low + step_high)/2.0
+        for(int it=0; it<200; ++it)
+        {
+            this->step_size = ( step_low + step_high ) / 2.0;
+            for(int i=0; i<trial_x.size(); ++i)
+            {
+                trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
+            }
+            trial_phi = this->cal_phi(trial_x);
+            trial_dphi = this->cal_dphi(trial_dE_dx);
+
+            if( trial_dphi > 0 )
+            {
+                step_high = this->step_size;
+            }
+            else
+            {
+                step_low = this->step_size;
+            }
+
+            if( std::abs( step_high - step_low ) < 1e-3 )
+            {
+                break;
+            }
+
+            if( it == 199 )
+            {
+                std::cout << "\n******\n" << "exact line search, times too big: " << it << "\n******\n" << std::endl;
+            }
+        }
+        std::cout << "\n" << "step_size by exact line search: " << this->step_size << "\n" << std::endl;
+        std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+    }
+
+    if( !find_zoom || ( trial_phi - this->Etotal.back() ) > 0 )
+    {
+        this->step_size = 1.0;
+        for(int it=0; it<30; ++it)
+        {
+            for(int i=0; i<trial_x.size(); ++i)
+            {
+                trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
+            }
+            trial_phi = this->cal_phi(trial_x);
+            
+            if( trial_phi - this->Etotal.back() > 0 )
+            {
+                this->step_size *= 0.5;
+            }
+            else
+            {
+                std::cout << "\n" << "The energy must drop in small steps: " << this->step_size << "\n" << std::endl;
+                std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+                break;
+            }
+
+            if( it == 29 )
+            {
+                std::cout << "\n" << "!!!!!!!! The is something wrong in exact line search: Optimization completed?" << this->step_size << "\n" << std::endl;
+                this->step_size = 0.0;
+                // assert(0);
+            }
+        }
+    }
+
+
+
 }
 
 
@@ -162,7 +359,7 @@ void LineSearch<TK, TR>::strong_wolfe()
 
     // big problem here, in theory, step_size_0 should -> 0 !!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // initial step_size before each iteration
-    this->step_size = (1.0 < this->max_step_size) ? 1.0 : this->max_step_size/2.0;
+    this->step_size = (0.02 < this->max_step_size) ? 0.02 : this->max_step_size/2.0;
     // this->step_size = (0.1 < this->max_step_size) ? 0.1 : this->max_step_size/2.0;
 
     // 0: represents the relevant quantity under x_k, that is, var_x
@@ -295,6 +492,8 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
             incr_alpha = diff_alpha * this->ls_armijo_c2;
         }
         this->step_size = alpha_lo + incr_alpha;
+
+        std::cout << "\n" << "in ZOOM(), while(), incr_alpha: " << incr_alpha << "\n" << std::endl;
 
 
         for(int i=0; i<trial_x.size(); ++i)

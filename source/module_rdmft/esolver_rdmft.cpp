@@ -105,6 +105,14 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     this->occ_num_thr = PARAM.inp.occ_num_thr; // how much is proper?
     this->lambda_thr = PARAM.inp.lambda_thr;
 
+    if( PARAM.inp.rdmft_orb_opti == "test" )
+    {
+        this->data_x.resize(this->dim_x, 0.0);
+        this->df_dx.resize(this->dim_x, 0.0);
+        this->bfgs_opti_x.init(1, this->dim_x);
+        this->pk.resize(this->dim_x, 0.0);
+    }
+
 }
 
 
@@ -245,7 +253,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     }
     else if( PARAM.inp.rdmft_orb_opti == "adam" )
     {
-        int init_maxniter = 20;
+        int init_maxniter = 10;
         if(dft_optimize)
         {
             init_maxniter = PARAM.inp.maxniter_orb;
@@ -301,6 +309,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 break;
             }
 
+            if(!this->dft_optimize) { this->ls_opti_occ_num.before_opti(); }
             for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
             {
                 // optimize natural occupation numbers
@@ -308,7 +317,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
                 rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
 
-                if( diff_occ_num_max < this->occ_num_thr )
+                if( diff_occ_num_max < this->occ_num_thr || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01) )
                 {
                     break;
                     tot_occ_num_iter += iter_occ_num;
@@ -409,6 +418,35 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             if( this->ft_rdmft.max_diff_kappa < 1e-6 ) {break;}
         }
 
+    }
+    else if( PARAM.inp.rdmft_orb_opti == "test" )
+    {   
+        bool first_time = true;
+        double f_value = 0.0;
+        for(int i=0; i<PARAM.inp.scf_nmax; ++i)
+        {
+            f_value = this->fx(this->data_x);
+            this->df_dx = this->grad_f(this->data_x);
+            double norm_grad_x = this->norm_grad(this->df_dx);
+
+            std::cout << "\n\n******\niter: " << i << "\nf(x):  " << f_value << "\nnorm_grad: " << norm_grad_x << std::endl;
+            rdmft::printMatrix_pointer(1, this->data_x.size(), this->data_x.data(), "x");
+            rdmft::printMatrix_pointer(1, this->data_x.size(), this->df_dx.data(), "df_dx");
+
+
+            if( norm_grad_x < 1e-8 ) { break; }
+            
+            this->bfgs_opti_x.get_pk(this->df_dx, this->data_x, this->pk, first_time);
+            rdmft::printMatrix_pointer(1, this->data_x.size(), this->pk.data(), "pk");
+            std::cout << "\n******\n\n" << std::endl;
+
+            for(int j=0; j<this->data_x.size(); ++j)
+            {
+                this->data_x[j] += PARAM.inp.ls_fixed_step * this->pk[j];
+            }
+
+            first_time = false;
+        }
     }
 
     // this->print_info();

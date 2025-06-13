@@ -27,6 +27,13 @@ class LineSearch
     //! use an approximate line search method to find a suitable step size
     double do_line_search(const bool start_guess = false);
 
+    void before_opti();
+
+    std::vector<double> Etotal;
+    int iter = 0;
+    // temp
+    double diff_rate_max = 1.0;
+
     // temp?
     std::vector<double>* get_var_x() { return &this->var_x; }
 
@@ -48,6 +55,9 @@ class LineSearch
 
     //! Strong Wolfe condition, get the appropriate step length
     void strong_wolfe();
+
+    //! exact line search, get the most appropriate step length, just be used to test or solve simple problem
+    void exact_ls();
 
     //! Wolfe condition
     void wolfe();
@@ -80,6 +90,8 @@ class LineSearch
 
     //! step_size, alpha: x_k+1 = x_k + alpha * p_k
     double step_size = 1.0;
+
+    double init_step = 0.0;
 
     //! phi(alpha) = E(x_k + alpha * p_k), phi_0 = E(x_k)
     double phi_0 = 0.0;

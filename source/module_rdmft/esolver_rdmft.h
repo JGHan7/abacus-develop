@@ -70,6 +70,35 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
     rdmft::LineSearch<TK, TR> ls_opti_occ_num;
 
+    //! just for test
+    rdmft::BFGS_ONs<double> bfgs_opti_x;
+    int dim_x = 2;
+    std::vector<double> data_x;
+    std::vector<double> df_dx;
+    std::vector<double> pk;
+    // the only minimum point is (−3.2, 2.8), f0=13.8
+    double fx(std::vector<double>& x)
+    {
+        double f = std::pow(x[0]-1, 2) + std::pow(x[1]+2, 2) + 3 * x[0] *x[1];
+        return f;
+    }
+    std::vector<double> grad_f(std::vector<double>& x)
+    {
+        std::vector<double> df_dx(x.size(), 0.0);
+        df_dx[0] = 2*(x[0]-1) + 3*x[1];
+        df_dx[1] = 2*(x[1]+2) + 3*x[0];
+        return df_dx;
+    }
+    double norm_grad(std::vector<double>& df_dx)
+    {
+        double num = 0.0;
+        for(int i=0; i<df_dx.size(); ++i)
+        {
+          num += std::pow(df_dx[i], 2);
+        }
+        return std::sqrt(num);
+    }
+
     //! 
     rdmft::IDMFT<TK, TR> idmft;
 

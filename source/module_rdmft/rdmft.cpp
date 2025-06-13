@@ -374,20 +374,22 @@ void RDMFT<TK, TR>::cal_E_grad_occ_num()
 
     ModuleBase::matrix occ_num = (occ_number);
 
-    // test!!!!!!!!!!!
-    if( GlobalC::exx_info.info_global.cal_exx && PARAM.inp.rdmft_power_alpha != 1.0 )
-    {
-        for(int ik=0; ik<occ_num.nr; ++ik)
-        {
-            for(int ib=0; ib<occ_num.nc; ++ib)
-            {
-                if( occ_num(ik, ib) < this->min_occ_num )
-                {
-                    occ_num(ik, ib) = this->min_occ_num;
-                }
-            }
-        }
-    }
+    // Be careful, practice has shown that the impact is great !!!!!!!!
+    // When using it, ensure that the same standard is used in the optimized part
+    // test
+    // if( GlobalC::exx_info.info_global.cal_exx && PARAM.inp.rdmft_power_alpha != 1.0 )
+    // {
+    //     for(int ik=0; ik<occ_num.nr; ++ik)
+    //     {
+    //         for(int ib=0; ib<occ_num.nc; ++ib)
+    //         {
+    //             if( occ_num(ik, ib) < this->min_occ_num )
+    //             {
+    //                 occ_num(ik, ib) = this->min_occ_num;
+    //             }
+    //         }
+    //     }
+    // }
 
     // gradient calculation does not take i-DMFT into account !
 

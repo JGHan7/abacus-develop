@@ -616,6 +616,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("ls_fixed_step");
+        item.annotation = "fixed step when optimizie occupation numbers";
+        read_sync_double(input.ls_fixed_step);
+        this->add_item(item);
+    }
+    {
         Input_Item item("ls_wolfe_c1");
         item.annotation = "the first parameter of the wolfe condition";
         read_sync_double(input.ls_wolfe_c1);

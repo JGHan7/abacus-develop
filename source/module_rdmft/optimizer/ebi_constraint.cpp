@@ -277,14 +277,14 @@ void EBI::update_x_occ_num(const std::vector<double>& x_in)
         }
     }
 
-    std::cout << "\n" << "before solving_mu()" << "\n" << std::endl;
-    rdmft::printMatrix_pointer(nk_nospin*PARAM.inp.nspin, nbands, x_in.data(), "trial_x", 10);
+    // std::cout << "\n" << "before solving_mu()" << "\n" << std::endl;
+    // rdmft::printMatrix_pointer(nk_nospin*PARAM.inp.nspin, nbands, x_in.data(), "trial_x", 10);
 
     // get the new mu and occ_number
     this->solving_mu();
     // return this->get_occ_number();
 
-    rdmft::printMatrix_pointer(nk_nospin, nbands, this->occ_number[0].data(), "spin=1, occ_number", 10);
+    rdmft::printMatrix_pointer(nk_nospin, nbands, this->occ_number[0].data(), "spin=1, occ_number", 5);
 
     // rdmft::printMatrix_pointer(nk_nospin*PARAM.inp.nspin, nbands, x_in.data(), "trial_x", 10);
 }
@@ -341,15 +341,15 @@ void EBI::solving_mu()
                 break;
             }
 
-            std::cout << "\n******\nsolve_mu_times: " << this->solve_mu_times << "\nis: " << is << std::endl;
+            // std::cout << "\n******\nsolve_mu_times: " << this->solve_mu_times << "\nis: " << is << std::endl;
 
             f_der = this->cal_f_der(this->mu[is], is);
             double f1_divided_f2 = std::abs( f_der[0]/f_der[1] );
 
             if( this->solve_mu_times > 0 ) // 50
             {
-                std::cout << "mu: " << this->mu[is] << ", f_der1: " << f_der[0] << ", f_der2: " << f_der[1] << ", f1_divided_f2: " << f1_divided_f2 << ", occ_num_error: " 
-                            << std::scientific << std::setprecision(10) << occ_num_error << "\n******" << std::endl << std::defaultfloat;
+                // std::cout << "mu: " << this->mu[is] << ", f_der1: " << f_der[0] << ", f_der2: " << f_der[1] << ", f1_divided_f2: " << f1_divided_f2 << ", occ_num_error: " 
+                //             << std::scientific << std::setprecision(10) << occ_num_error << "\n******" << std::endl << std::defaultfloat;
             }
 
             double sign = 0.0;
@@ -475,9 +475,9 @@ void EBI::solving_mu()
 
         }
 
-        std::cout << "******\n" << "solving_mu, mu[" << is << "]: " << this->mu[is] << "\n" << std::endl;
+        // std::cout << "******\n" << "solving_mu, mu[" << is << "]: " << this->mu[is] << "\n" << std::endl;
         double trial_occ_num = this->cal_occ_num(is);
-        std::cout << "spin: " << is <<", total_trial_occ_num: " <<  trial_occ_num  << "\n******" << std::endl;
+        // std::cout << "spin: " << is <<", total_trial_occ_num: " <<  trial_occ_num  << "\n******" << std::endl;
     }
 
     //test
@@ -575,7 +575,7 @@ std::vector<double> EBI::cal_f_der(double mu_in, int is)
 
     if( this->solve_mu_times > 0 ) // 50
     {
-        std::cout << "\nsum[0]: " << sum[0] << ", sum[1]: " << sum[1] << ", sum[2]: " << sum[2] << std::endl;
+        // std::cout << "\nsum[0]: " << sum[0] << ", sum[1]: " << sum[1] << ", sum[2]: " << sum[2] << std::endl;
     }
 
     f_der[0] = ( sum[0] - this->sys_nelec_spin[is] ) * sum[1];

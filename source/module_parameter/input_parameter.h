@@ -646,7 +646,7 @@ struct Input_para
     bool scale_fock = false;
     double scale_zeta = 0.01;
     double iter_diag_ethr = 1e-8;
-    double occ_num_thr = 1e-5;
+    double occ_num_thr = 1e-4;
     double lambda_thr = 1e-4;
     double solve_mu_thr = 1e-10;
     double tot_nelec_thr = 1e-10;
@@ -657,6 +657,7 @@ struct Input_para
     double max_step_size = 1000.0;
     double min_step_size = 1e-10;
     std::string ls_condition = "swolfe";
+    double ls_fixed_step = 0.001;
     double level_shifting = 0.0;
     bool print_fock = false;
     bool print_BFGS_Hk = false;
