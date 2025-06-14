@@ -65,6 +65,9 @@ class LineSearch
     //! used in Strong Wolfe condition, get the appropriate step length
     void zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low);
 
+    //! calculate the new x based on the current step size
+    void update_x(std::vector<double>& x_new);
+
     //! calculate phi(alpha) = E(x_k + alpha * p_k) and return it. x_new = x_k + alpha*p_k
     virtual double cal_phi(const std::vector<double>& x_new);
 

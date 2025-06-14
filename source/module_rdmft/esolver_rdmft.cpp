@@ -267,8 +267,10 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         int tot_occ_num_iter = 0;
         int tot_exteral_iter = 0;
 
-        for(int iter=0; iter<PARAM.inp.scf_nmax; ++iter)
+        for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
         {
+            tot_exteral_iter = iter; // temp
+
             init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
             this->iter_diag_orb.before_opti(this->p_hamilt);
             for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
@@ -343,10 +345,16 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
             }
 
-            tot_exteral_iter = iter; // temp
         }
 
         this->print_info();
+
+        std::cout << "\n******\n" << std::fixed << std::setprecision(10);
+        std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
+                    << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
+                    // << "\n\ndiff_E: " << diff_etotal
+                    // << "\ndiff_DM_max: " << this->idmft.get_diff_DM_max()
+                    << "\n******" << std::endl << std::defaultfloat;
 
         std::cout << "\n******\nexternal iter = " << tot_exteral_iter 
                     << "\ntotal orbital iter = " << tot_orb_iter 

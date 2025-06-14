@@ -51,9 +51,10 @@ void LineSearch<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in)
 template<typename TK, typename TR>
 void LineSearch<TK, TR>::before_opti()
 {
-    this->Etotal.clear();
+    // this->Etotal.clear();
     this->iter = 0;
-    this->Etotal.push_back(this->rdmft_solver->Etotal);
+    // this->Etotal.push_back(this->rdmft_solver->Etotal);
+    this->phi_0 = this->rdmft_solver->Etotal;
 }
 
 template<typename TK, typename TR>
@@ -88,8 +89,9 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
         this->get_start_guess();
         std::cout << "\n******\n" << "start_guess: ls, 0.0" << "\n******\n" << std::endl;
 
-        this->Etotal.clear();
-        this->Etotal.push_back(this->rdmft_solver->Etotal);
+        // this->Etotal.clear();
+        this->phi_0 = this->rdmft_solver->Etotal;
+        // this->Etotal.push_back(this->rdmft_solver->Etotal);
 
         // return 0.0; // test !!!!!!!!!!
     }
@@ -110,12 +112,12 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     //     return 0.0;
     // }
 
-    if( this->iter != 0 )
-    {
-        this->init_step = 1.01 * 2.0 * ( this->Etotal.back() - this->Etotal[this->Etotal.size() - 2] ) / this->dphi_0;
-        // this->init_step = std::min(1.0, this->init_step);
-        std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
-    }
+    // if( this->iter != 0 )
+    // {
+    //     this->init_step = 1.01 * 2.0 * ( this->Etotal.back() - this->Etotal[this->Etotal.size() - 2] ) / this->dphi_0;
+    //     // this->init_step = std::min(1.0, this->init_step);
+    //     std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+    // }
 
     std::vector<double> var_x_old = this->var_x;
 
@@ -191,7 +193,7 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
 
     rdmft::printMatrix_pointer(temp_occ.nr, temp_occ.nc, diff_occ_num.data(), "after opti, diff_occ_num", 5);
     
-    this->Etotal.push_back(this->phi_0);
+    // this->Etotal.push_back(this->phi_0);
     ++this->iter;
 
     return *diff_occ_num_max;
@@ -201,51 +203,85 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
 template<typename TK, typename TR>
 void LineSearch<TK, TR>::exact_ls()
 {
-    double step_low = 0.0;
-    double step_high = 0.0;
-
     // trial_x = x_k(or this->var_x) + trial_step_size * p_k
     std::vector<double> trial_x(this->var_x.size() ,0.0);
     std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
     double trial_phi = 0.0;
     double trial_dphi = 0.0;
+    double armijo_step = 0.0;
 
     // the inital value of step_size is a hard problem and get (step_low, step_high) is not always correct, the following are just for debugging !!!!!!!
-    this->step_size = 0.001;
+    this->step_size = 0.01;
+    bool small_step = false;
     for(int times=0; times<60; ++times)
     {
-        for(int i=0; i<trial_x.size(); ++i)
+        if( this->step_size < 1e-6 )
         {
-            trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
+            std::cout << "\n" << "occNum optimization completed?" << this->step_size << std::endl;
+            this->step_size = 0.0;
+            return;
         }
-        trial_phi = this->cal_phi(trial_x);
 
-        if( trial_phi - this->Etotal.back() > 0 )
+        this->update_x(trial_x);
+        trial_phi = this->cal_phi(trial_x);
+        if( trial_phi - this->phi_0 > 0 )
         {
             this->step_size *= 0.5;
+            small_step = true;
             std::cout << "\n" << "initial step size needs to be reduced : " << this->step_size << std::endl;
             continue;
         }
         else
         {
-            // If 0.001 is not a very small step size in some cases
+            // If 0.1 is not a very small step size in some cases
             // then this strategy needs to be improved
-            if( times>0 )
-            {
-                return;
-            }
+            // if( times>0 )
+            // {
+            //     std::cout << "\n" << "very small steps are required to reduce the energy, step_size: " << this->step_size << std::endl;
+            //     return;
+            // }
             break;
         }
     }
 
+    // use armijo condition to ensure energy decrease
+    if( !small_step )
+    {
+        // if small_step is true, are armjio or exactLS still necessary???
+        this->step_size = 10.0;
+    }
+    double factor = 0.75;
+    // for(int it=0; it<30; ++it)
+    while(1)
+    {
+        std::cout << "\n" << "in Armijo, step size: " << this->step_size << std::endl;
+        this->update_x(trial_x);
+        trial_phi = this->cal_phi(trial_x);
+        if( trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0 )
+        {
+            this->step_size *= factor;
+        }
+        else
+        {
+            armijo_step = this->step_size;
+            std::cout << "\n" << "Armijo step size: " << armijo_step << std::endl;
+            break;
+        }
+    }
+
+
+    double step_low = 0.0;
+    double step_high = 0.0;
+
+    // to find zoom to use dichotomy
+    // might also update armijo_step!!!
     bool find_zoom = false;
+    double factor1 = 0.0;
     for(int times=0; times<60; ++times)
     {
-        for(int i=0; i<trial_x.size(); ++i)
-        {
-            trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
-        }
-        trial_phi = this->cal_phi(trial_x);
+        // this->update_x(trial_x);
+        // std::cout << "\n" << "step_size now: " << this->step_size << std::endl;
+        // trial_phi = this->cal_phi(trial_x);
 
         // if( trial_phi - this->Etotal.back() > 0 )
         // {
@@ -267,29 +303,59 @@ void LineSearch<TK, TR>::exact_ls()
             step_low = this->step_size;
             if( times<10 )
             {
-                this->step_size *= 1.5;
+                factor1 = 1.5;
+                this->step_size *= factor1;
             }
             else
             {
-                this->step_size *= 1.1;
+                factor1 = 1.1;
+                this->step_size *= factor1;
             }
             std::cout << "\n" << "step_low: " << step_low << std::endl;
         }
+
+        std::cout << "\n" << "step_size now: " << this->step_size << std::endl;
+        this->update_x(trial_x);
+        trial_phi = this->cal_phi(trial_x);
+
+        if( trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0 )
+        {
+            this->step_size /= factor1;
+            armijo_step = this->step_size;
+            std::cout << "\n" << "find zoom failed! the energy must drop in armijo steps, update as: " << this->step_size << "\n" << std::endl;
+            return;
+        }
+        else
+        {
+            armijo_step = this->step_size;
+        }
+        
+        // Under the strict control of Armijo condition, is it possible for the situation here to occur?
+        for(int ik=0; ik<this->rdmft_solver->nk_total; ++ik)
+        {
+            if( this->rdmft_solver->occ_number(ik, 0) < 0.2 )
+            {
+                this->step_size /= factor1;
+                armijo_step = this->step_size;
+                std::cout << "\n" << "exactLS failed! the energy must drop in armijo steps, update as:: " << this->step_size << "\n" << std::endl;
+                return;
+            }
+        }
+
     }
 
-
+    std::cout << "\n" << "Armijo step size: " << armijo_step << std::endl;
     std::cout << "\n" << "step_low: " << step_low << "\nstep_high: " << step_high << "\ndphi_0: " << this->dphi_0 << std::endl;
 
+    // if find_zoom failed, the step_size now satisfies Armijo condition
     if(find_zoom)
     {
         // (step_low + step_high)/2.0
         for(int it=0; it<200; ++it)
         {
             this->step_size = ( step_low + step_high ) / 2.0;
-            for(int i=0; i<trial_x.size(); ++i)
-            {
-                trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
-            }
+            std::cout << "\n" << "in dichotomy, step size: " << this->step_size << std::endl;
+            this->update_x(trial_x);
             trial_phi = this->cal_phi(trial_x);
             trial_dphi = this->cal_dphi(trial_dE_dx);
 
@@ -313,39 +379,39 @@ void LineSearch<TK, TR>::exact_ls()
             }
         }
         std::cout << "\n" << "step_size by exact line search: " << this->step_size << "\n" << std::endl;
-        std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+        // std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
     }
 
-    if( !find_zoom || ( trial_phi - this->Etotal.back() ) > 0 )
-    {
-        this->step_size = 1.0;
-        for(int it=0; it<30; ++it)
-        {
-            for(int i=0; i<trial_x.size(); ++i)
-            {
-                trial_x[i] = this->var_x[i] + this->step_size * this->search_direction[i];
-            }
-            trial_phi = this->cal_phi(trial_x);
+    // if( !find_zoom || ( trial_phi - this->phi_0 ) > 0 )
+    // {
+    //     // this->step_size = 1.0;
+    //     // for(int it=0; it<30; ++it)
+    //     // {
+    //     //     this->update_x(trial_x);
+    //     //     trial_phi = this->cal_phi(trial_x);
             
-            if( trial_phi - this->Etotal.back() > 0 )
-            {
-                this->step_size *= 0.5;
-            }
-            else
-            {
-                std::cout << "\n" << "The energy must drop in small steps: " << this->step_size << "\n" << std::endl;
-                std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
-                break;
-            }
+    //     //     if( trial_phi - this->Etotal.back() > 0 )
+    //     //     {
+    //     //         this->step_size *= 0.5;
+    //     //     }
+    //     //     else
+    //     //     {
+    //     //         std::cout << "\n" << "The energy must drop in small steps: " << this->step_size << "\n" << std::endl;
+    //     //         std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+    //     //         break;
+    //     //     }
 
-            if( it == 29 )
-            {
-                std::cout << "\n" << "!!!!!!!! The is something wrong in exact line search: Optimization completed?" << this->step_size << "\n" << std::endl;
-                this->step_size = 0.0;
-                // assert(0);
-            }
-        }
-    }
+    //     //     if( it == 29 )
+    //     //     {
+    //     //         std::cout << "\n" << "!!!!!!!! The is something wrong in exact line search: Optimization completed?" << this->step_size << "\n" << std::endl;
+    //     //         this->step_size = 0.0;
+    //     //         // assert(0);
+    //     //     }
+    //     // }
+
+    //     this->step_size = armijo_step;
+    //     std::cout << "\n" << "exactLS failed! the energy must drop in armijo steps: " << this->step_size << "\n" << std::endl;
+    // }
 
 
 
@@ -547,6 +613,16 @@ void LineSearch<TK, TR>::wolfe()
 
 }
 
+
+template<typename TK, typename TR>
+void LineSearch<TK, TR>::update_x(std::vector<double>& x_new)
+{
+    std::fill(x_new.begin(), x_new.end(), 0.0);
+    for(int i=0; i<x_new.size(); ++i)
+    {
+        x_new[i] = this->var_x[i] + this->step_size * this->search_direction[i];
+    }
+}
 
 template<typename TK, typename TR>
 double LineSearch<TK, TR>::cal_phi(const std::vector<double>& x_new)

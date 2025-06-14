@@ -335,7 +335,7 @@ void EBI::solving_mu()
         while( std::abs(occ_num_error) > this->tot_nelec_thr )
         {
             ++this->solve_mu_times;
-            if( solve_mu_times > 200 )
+            if( solve_mu_times > 300 )
             {
                 std::cout << "\nThe number of times to solve mu using the Newton's method is too many: " << solve_mu_times << "\n" << std::endl;
                 break;
