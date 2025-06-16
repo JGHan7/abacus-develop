@@ -29,7 +29,7 @@ class LineSearch
 
     void before_opti();
 
-    std::vector<double> Etotal;
+    std::vector<double> Etotal_iter;
     int iter = 0;
     // temp
     double diff_rate_max = 1.0;
@@ -55,6 +55,9 @@ class LineSearch
 
     //! Strong Wolfe condition, get the appropriate step length
     void strong_wolfe();
+
+    //! Strong Wolfe condition, get the appropriate step length. By myself
+    void strong_wolfe2();
 
     //! exact line search, get the most appropriate step length, just be used to test or solve simple problem
     void exact_ls();
@@ -94,7 +97,10 @@ class LineSearch
     //! step_size, alpha: x_k+1 = x_k + alpha * p_k
     double step_size = 1.0;
 
-    double init_step = 0.0;
+    //! the largest possible but appropriate step that satisfies the Armijo condition
+    double armijo_step = 0.0;
+
+    double init_step = 1.0;
 
     //! phi(alpha) = E(x_k + alpha * p_k), phi_0 = E(x_k)
     double phi_0 = 0.0;

@@ -69,22 +69,22 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
         this->iter_diag_orb.init(rdmft_solver.nk_total, this->kv.get_nkstot_full(), rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
         this->ls_opti_occ_num.init(this->kv, &this->rdmft_solver);
 
-        this->iter_diag_orb.init_orb_by_lambda = PARAM.inp.init_orb_by_lambda;
-        this->iter_diag_orb.scale_F = PARAM.inp.scale_fock;
-        this->iter_diag_orb.scale_zeta = PARAM.inp.scale_zeta;
+        // this->iter_diag_orb.init_orb_by_lambda = PARAM.inp.init_orb_by_lambda;
+        // this->iter_diag_orb.scale_F = PARAM.inp.scale_fock;
+        // this->iter_diag_orb.scale_zeta = PARAM.inp.scale_zeta;
         // this->iter_diag_orb.if_rotate_Fock = PARAM.inp.rotate_fock;
         // this->iter_diag_orb.if_rotate_Fock = false;
 
-        this->ls_opti_occ_num.ebi.random_inital = PARAM.inp.random_occ_num;
-        this->ls_opti_occ_num.ebi.solve_mu_thr = PARAM.inp.solve_mu_thr;
-        this->ls_opti_occ_num.ebi.tot_nelec_thr = PARAM.inp.tot_nelec_thr;
-        this->ls_opti_occ_num.ls_wolfe_c1 = PARAM.inp.ls_wolfe_c1;
-        this->ls_opti_occ_num.ls_wolfe_c2 = PARAM.inp.ls_wolfe_c2;
-        this->ls_opti_occ_num.ls_armijo_c1 = PARAM.inp.ls_armijo_c1;
-        this->ls_opti_occ_num.ls_armijo_c2 = PARAM.inp.ls_armijo_c2;
-        this->ls_opti_occ_num.ls_condition = PARAM.inp.ls_condition;
-        this->ls_opti_occ_num.max_step_size = PARAM.inp.max_step_size;
-        this->ls_opti_occ_num.min_step_size = PARAM.inp.min_step_size;
+        // this->ls_opti_occ_num.ebi.random_inital = PARAM.inp.random_occ_num;
+        // this->ls_opti_occ_num.ebi.solve_mu_thr = PARAM.inp.solve_mu_thr;
+        // this->ls_opti_occ_num.ebi.tot_nelec_thr = PARAM.inp.tot_nelec_thr;
+        // this->ls_opti_occ_num.ls_wolfe_c1 = PARAM.inp.ls_wolfe_c1;
+        // this->ls_opti_occ_num.ls_wolfe_c2 = PARAM.inp.ls_wolfe_c2;
+        // this->ls_opti_occ_num.ls_armijo_c1 = PARAM.inp.ls_armijo_c1;
+        // this->ls_opti_occ_num.ls_armijo_c2 = PARAM.inp.ls_armijo_c2;
+        // this->ls_opti_occ_num.ls_condition = PARAM.inp.ls_condition;
+        // this->ls_opti_occ_num.max_step_size = PARAM.inp.max_step_size;
+        // this->ls_opti_occ_num.min_step_size = PARAM.inp.min_step_size;
     }
     else if( PARAM.inp.rdmft_orb_opti == "idmft" )
     {

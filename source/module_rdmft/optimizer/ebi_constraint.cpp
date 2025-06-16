@@ -33,7 +33,9 @@ EBI::~EBI()
 
 void EBI::init(const int nk_total, const int nkstot_full, const std::vector<double> wk_in)
 {
-    // this->random_inital = PARAM.inp.;
+    this->random_inital = PARAM.inp.random_occ_num;
+    this->solve_mu_thr = PARAM.inp.solve_mu_thr;
+    this->tot_nelec_thr = PARAM.inp.tot_nelec_thr;
     
     this->solve_mu_thr = 1e-10;
     this->tot_nelec_thr = 1e-10;

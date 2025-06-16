@@ -47,7 +47,10 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
     this->ParaV = &ParaV_in;
     // identi_mat = get_identi_mat(this->para_Fij); // temporary
 
-    this->scale_zeta = 0.01; // PARAM.inp.scale_zeta_rdmft?
+    this->init_orb_by_lambda = PARAM.inp.init_orb_by_lambda;
+    this->scale_F = PARAM.inp.scale_fock;
+    this->scale_zeta = PARAM.inp.scale_zeta;
+    // this->scale_zeta = 0.01; // PARAM.inp.scale_zeta_rdmft?
     this->scale_zeta_vector.resize(nk_total);
 
     dEee_docc_num.create(nk_total, nbands_total);

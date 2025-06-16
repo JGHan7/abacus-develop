@@ -36,8 +36,8 @@ void BFGS_ONs<TX>::init(int nk_total_in, int nbands_in)
 
     // x0.resize(nk_total*nbands);
     // x1.resize(nk_total*nbands);
-    var_x.resize(nk_total*nbands);
-    diff_x.resize(nk_total*nbands);
+    var_x.resize(nk_total*nbands, 0.0);
+    diff_x.resize(nk_total*nbands, 0.0);
     // dE_dx0.resize(nk_total*nbands);
     // dE_dx1.resize(nk_total*nbands);
     dE_dx.resize(nk_total*nbands);
@@ -51,35 +51,31 @@ void BFGS_ONs<TX>::init(int nk_total_in, int nbands_in)
 
 
 template<typename TX>
-void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool start_guess)
+void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool new_landscape)
 {
     // set some vars zero?
 
     // get Hk
-    if( start_guess )
+    if( new_landscape || a_equal_b(x_new, this->var_x) )
     {
+        std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
+        std::fill(this->dE_dx.begin(), this->dE_dx.end(), 0.0);
+        std::fill(this->search_direction.begin(), this->search_direction.end(), 0.0);
         // identity matrix or other method to initialize H0
+        std::fill(Hk.begin(), Hk.end(), 0.0);
         for(int i=0; i<nk_total*nbands; ++i) { Hk[i*(nk_total*nbands) + i] = 1.0; }
+
+        // delete in the future
+        if( !new_landscape )
+        {
+            std::cout << "\n" << "BFGS: the increase in var_x is too small !!!!!!!!" << "\n" << std::endl;
+            // assert(0);
+        }
     }
     else
     {
         for(int j=0; j<x_new.size(); ++j)
         {
-            if( a_equal_b(x_new, this->var_x) )
-            {
-                std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!" << "\n" << std::endl;
-                return;
-            }
-
-            // double temp_num = a_equal_b(x_new, this->var_x);
-            // Parallel_Reduce::reduce_all(temp_num);
-            // if( std::abs( temp_num ) > 1e-12 )
-            // {
-            //     std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
-            //     return;
-            // }
-
-
             // diff_x, sk = x_k+1 - x_k
             this->diff_x[j] = x_new[j] - this->var_x[j];
             // diff_grad, yk = (dE_dx)_k+1 - (dE_dx)_k
