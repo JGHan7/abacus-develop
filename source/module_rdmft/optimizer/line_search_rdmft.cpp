@@ -151,6 +151,7 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
         this->step_size = PARAM.inp.ls_fixed_step;
         // this->strong_wolfe();
     }
+    this->step_size = std::max(this->step_size, this->min_step_size);
 
     // update x_k+1 = x_k + step_size * p_k
     // can't use update_x(), because we need "+=" instead of "="
@@ -462,9 +463,9 @@ void LineSearch<TK, TR>::strong_wolfe2()
 
     this->step_size = this->init_step; // 1.0
     // bool small_step = false;
-    for(int times=0; times<60; ++times)
+    for(int times=0; times<20; ++times)
     {
-        if( this->step_size < 1e-6 )
+        if( this->step_size < 1e-8 )
         {
             std::cout << "\n" << "occNum optimization completed?" << this->step_size << std::endl;
             this->step_size = this->min_step_size;
@@ -475,7 +476,14 @@ void LineSearch<TK, TR>::strong_wolfe2()
         trial_phi = this->cal_phi(trial_x);
         if( trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0 )
         {
-            this->step_size *= 0.5;
+            if( times < 5 )
+            {
+                this->step_size *= 0.5;
+            }
+            else
+            {
+                this->step_size *= 0.2;
+            }
             // small_step = true;
             std::cout << "\n" << "initial step size needs to be reduced : " << this->step_size << std::endl;
             // continue;
@@ -485,20 +493,15 @@ void LineSearch<TK, TR>::strong_wolfe2()
             break;
         }
     }
-
-    // double step_low = 0.0;
-    // double step_high = 0.0;
-
-    // // to find zoom to use dichotomy
-    // // might also update armijo_step!!!
-    // bool find_zoom = false;
-
-    double step_size_old =0.0;
+    this->step_size = std::max(this->step_size, this->min_step_size);
+    
+    // strong wolfe condition
+    double step_size_old = 0.0;
     double phi_old = this->phi_0;
     double dphi_old = this->dphi_0;
 
     double factor1 = 0.0;
-    for(int times=0; times<60; ++times)
+    for(int times=0; times<50; ++times)
     {
         if( times != 0 )
         {
@@ -511,7 +514,7 @@ void LineSearch<TK, TR>::strong_wolfe2()
                 // armijo_step = this->step_size;
                 // std::cout << "\n" << "find zoom failed! the energy must drop in armijo steps, update as: " << this->step_size << "\n" << std::endl;
 
-                std::cout << "\n" << "Enter SW condition 3, zoom()" << "\n" << std::endl;
+                std::cout << "\n" << "Enter SW condition 1, zoom()" << "\n" << std::endl;
                 this->zoom(step_size_old, phi_old, this->step_size, trial_phi, dphi_old);
                 return;
             }
@@ -692,6 +695,8 @@ void LineSearch<TK, TR>::strong_wolfe()
 }
 
 
+// zoom() does not require step_size_high>step_size_low to work
+// but the gradient dphi_low used for acceleration calculation must correspond to step_size_low
 template<typename TK, typename TR>
 void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low)
 {
@@ -765,6 +770,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         }
 
         std::cout << "\nupdate\n" << "alpha_hi: " << alpha_hi << "\nalpha_lo: " << alpha_lo << std::endl;
+        std::cout << "\nupdate\n" << "-ls_w_c2 * dphi_0: " << -this->ls_wolfe_c2 * this->dphi_0 << "\n|dphi_low|: " << df_lo << std::endl;
 
         // // need it?
         // if( alpha_lo > alpha_hi )
@@ -776,7 +782,7 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
         // std::cout << "\n" << "By comparing the size, exchange high_low" << "\nalpha_hi: " << alpha_hi << "\nalpha_lo: " << alpha_lo << std::endl;
 
         ++times;
-        if( times >= 50 || this->step_size <= this->min_step_size )
+        if( times >= 20 || this->step_size <= this->min_step_size )
         {
             // std::cout << "\n******\n" << "zoom times too big: " << times << "\n******\n" << std::endl;
             this->step_size = this->armijo_step;
@@ -784,7 +790,6 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
             return;
         }
 
-        // if( this->step_size <= this->min_step_size ) { break; }
     }
 
 }
@@ -861,10 +866,10 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::ve
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::cal_pk_dphi0(const bool start_guess)
+void LineSearch<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 {
     // get pk: EBI provide var_x and dE_dx to BFGS
-    this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, start_guess);
+    this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape);
 
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->search_direction.data(), "search_direction");
 

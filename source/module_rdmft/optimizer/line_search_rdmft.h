@@ -79,7 +79,7 @@ class LineSearch
     virtual double cal_dphi(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr = nullptr);  // is dE_dx_new useful here? Consider deleting the outgoing
 
     //! calculate the direction of the line search: pk, and dphi_0
-    virtual void cal_pk_dphi0(const bool start_guess = false);
+    virtual void cal_pk_dphi0(const bool new_landscape = false);
 
     //! generate start guess
     virtual void get_start_guess();

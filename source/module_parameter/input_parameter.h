@@ -647,7 +647,7 @@ struct Input_para
     double scale_zeta = 0.01;
     double iter_diag_ethr = 1e-8;
     double occ_num_thr = 1e-4;
-    double lambda_thr = 1e-4;
+    double lambda_thr = 1e-3;
     double solve_mu_thr = 1e-10;
     double tot_nelec_thr = 1e-10;
     double ls_wolfe_c1 = 0.0001;
