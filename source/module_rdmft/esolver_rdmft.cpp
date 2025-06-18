@@ -270,6 +270,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
         {
             tot_exteral_iter = iter; // temp
+            bool orb_conv = false;
+            bool occ_num_conv = false;
 
             init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
             this->iter_diag_orb.before_opti(this->p_hamilt);
@@ -292,8 +294,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
                 if( this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr && iter_orb >= 3 )
                 {
-                    break;
                     tot_orb_iter += iter_orb;
+                    orb_conv = true;
+                    break;
                 }
             }
             tot_orb_iter += init_maxniter;
@@ -321,8 +324,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
                 if( diff_occ_num_max < this->occ_num_thr || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01) )
                 {
-                    break;
                     tot_occ_num_iter += iter_occ_num;
+                    occ_num_conv = true;
+                    break;
                 }
             }
             tot_occ_num_iter += PARAM.inp.maxniter_occ_num;
@@ -340,11 +344,15 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 std::cout << "\n******\n\nConvergence!\n\nmax_off_diag_F < lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
                 break;
             }
+            else if( orb_conv && occ_num_conv )
+            {
+                std::cout << "\n******\n\nNOs(DM) and ONs Converge respectively!\n\nmax_off_diag_F is " << max_off_diag_F << "\n******\n" << std::endl;
+                break;
+            }
             else
             {
                 std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
             }
-
         }
 
         this->print_info();
