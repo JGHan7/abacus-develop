@@ -3,9 +3,11 @@
 // DATE : 2024-11-28
 //==========================================================
 
+#include <algorithm>
 #include "module_rdmft/optimizer/line_search_rdmft.h"
 #include "module_rdmft/optimizer/optimizer_tools.h"
-#include <algorithm>
+#include "module_rdmft/optimizer/parameterize_ONs/ebi_constraint.h"
+#include "module_rdmft/optimizer/parameterize_ONs/softmax.h"
 
 #include "module_rdmft/rdmft_tools.h" // temp
 
@@ -22,7 +24,7 @@ LineSearch<TK, TR>::LineSearch()
 template<typename TK, typename TR>
 LineSearch<TK, TR>::~LineSearch()
 {
-    ;
+    delete this->param_occ_num;
 }
 
 
@@ -30,8 +32,22 @@ template<typename TK, typename TR>
 void LineSearch<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in)
 {
     this->rdmft_solver = rdmft_in;
-    this->ebi.init(rdmft_solver->nk_total, kv_in.get_nkstot_full(), kv_in.wk);
+    
     this->bfgs_opti_x.init(rdmft_solver->nk_total, PARAM.inp.nbands);
+    if(PARAM.inp.occ_num_func == "softmax")
+    {
+        this->param_occ_num = new rdmft::SOFTMAX();
+    }
+    else if(PARAM.inp.occ_num_func == "erf")
+    {
+        this->param_occ_num = new rdmft::EBI();
+    }
+    else
+    {
+        std::cout << "\n\n Please select the correct method to parameterize the occupation numbers \n\n" << std::endl;
+        assert(0);
+    }
+    this->param_occ_num->init(rdmft_solver->nk_total, kv_in.get_nkstot_full(), kv_in.wk);
 
     this->var_x.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
     this->dE_dx.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
@@ -71,20 +87,20 @@ template<typename TK, typename TR>
 void LineSearch<TK, TR>::get_start_guess()
 {
     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
-    if(this->ebi.random_inital)
+    if(PARAM.inp.random_occ_num)
     {
-        ebi.get_inital_guess(this->var_x);
+        this->param_occ_num->get_inital_guess(this->var_x);
 
         // // update rdmft elec_state
-        // ModuleBase::matrix occ_number( this->ebi.get_occ_number() );
+        // ModuleBase::matrix occ_number( this->param_occ_num->get_occ_number() );
         // this->rdmft_solver->update_elec( &occ_number );
     }
     else
     {
-        ebi.get_inital_guess(this->var_x, &rdmft_solver->occ_number);
+        this->param_occ_num->get_inital_guess(this->var_x, &rdmft_solver->occ_number);
     }
 
-    this->occ_number = this->ebi.get_occ_number();
+    this->occ_number = this->param_occ_num->get_occ_number();
     this->rdmft_solver->update_elec( &(this->occ_number) );
     this->phi_0 = this->rdmft_solver->cal_Energy();
 }
@@ -112,7 +128,7 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     // // test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // this->phi_0 = this->cal_phi(this->var_x);
 
-    // rdmft cal dE_docc_num, EBI convert dE_docc_num to dE_dx
+    // rdmft cal dE_docc_num, PARAM_ONs convert dE_docc_num to dE_dx
     this->cal_dE_dx(this->dE_dx);
 
     this->cal_pk_dphi0( (start_guess || this->iter == 0) );
@@ -184,11 +200,11 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     std::cout << "\n******\n" << "ls, do_line_search, phi_0: " << this->phi_0 << "\n******\n" << std::endl;
 
     // ModuleBase::matrix diff_occ_num = ( this->occ_number );
-    // this->occ_number = this->ebi.get_occ_number();
+    // this->occ_number = this->param_occ_num->get_occ_number();
     // diff_occ_num -= this->occ_number;
     
     // std::abs( diff_occ_num )
-    ModuleBase::matrix temp_occ( this->ebi.get_occ_number() );
+    ModuleBase::matrix temp_occ( this->param_occ_num->get_occ_number() );
     std::vector<double> diff_occ_num(this->rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
     std::vector<double> diff_rate(this->rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
     for(int ik=0; ik<temp_occ.nr; ++ik)
@@ -196,7 +212,7 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
         for(int ib=0; ib<temp_occ.nc; ++ib)
         {
             diff_occ_num[ ik*PARAM.inp.nbands + ib ] = std::abs( this->occ_number(ik, ib) - temp_occ(ik, ib) );
-                                                        // * (this->ebi.get_num_symm_k())[ik];
+                                                        // * (this->param_occ_num->get_num_symm_k())[ik];
             diff_rate[ ik*PARAM.inp.nbands + ib ] = std::abs( diff_occ_num[ ik*PARAM.inp.nbands + ib ] / this->occ_number(ik, ib) );
         }
     }
@@ -817,11 +833,11 @@ template<typename TK, typename TR>
 double LineSearch<TK, TR>::cal_phi(std::vector<double>& x_new)
 {
     // convert x_k+1 to occ_num
-    this->ebi.update_x_occ_num(x_new);
+    this->param_occ_num->update_x_occ_num(x_new);
 
     // rdmft_solver update occ_num, Hk, etc.
-    // ModuleBase::matrix occ_number( this->ebi.get_occ_number() );
-    ModuleBase::matrix occ_number = this->ebi.get_occ_number();
+    // ModuleBase::matrix occ_number( this->param_occ_num->get_occ_number() );
+    ModuleBase::matrix occ_number = this->param_occ_num->get_occ_number();
 
     this->rdmft_solver->update_elec( &occ_number );
 
@@ -855,9 +871,9 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vector<d
     // rdmft cal dE_docc_num
     this->rdmft_solver->cal_E_grad_occ_num();
 
-    // EBI: convert dE_docc_num to dE_dx (x in EBI is the latest, that is, it is consistent with dE_dx)
+    // PARAM_ONs: convert dE_docc_num to dE_dx (x in PARAM_ONs is the latest, that is, it is consistent with dE_dx)
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
-    this->ebi.get_dE_dx(dE_docc_num, dE_dx_new);
+    this->param_occ_num->get_dE_dx(dE_docc_num, dE_dx_new);
 
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, dE_dx_new.data(), "look, dE_dx_new");
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->var_x.data(), "now var_x", 10);
@@ -868,7 +884,7 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vector<d
 template<typename TK, typename TR>
 void LineSearch<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 {
-    // get pk: EBI provide var_x and dE_dx to BFGS
+    // get pk: PARAM_ONs provide var_x and dE_dx to BFGS
     this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape);
 
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->search_direction.data(), "search_direction");

@@ -657,6 +657,7 @@ struct Input_para
     double ls_armijo_c2 = 0.9;
     double max_step_size = 1000.0;
     double min_step_size = 1e-10;
+    std::string occ_num_func = "erf";
     std::string ls_condition = "swolfe";
     double ls_fixed_step = 0.001;
     double level_shifting = 0.0;

@@ -6,7 +6,7 @@
 #define LINE_SEARCH_RDMFT_H
 
 #include "module_rdmft/rdmft.h"
-#include "module_rdmft/optimizer/parameterize_ONs/ebi_constraint.h"
+#include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
 #include "module_rdmft/optimizer/bfgs_opti_ONs.h"
 
 namespace rdmft
@@ -114,7 +114,8 @@ class LineSearch
 
   public: // temp public
     //! handle constraints: convert natural occupation numbers and var_x
-    rdmft::EBI ebi;
+    // rdmft::EBI ebi;
+    rdmft::PARAM_ONs* param_occ_num = nullptr;
 
   private:
     //! optimizer: use the BFGS method to get the search direction, p_k

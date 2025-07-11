@@ -27,21 +27,19 @@ PARAM_ONs::~PARAM_ONs()
 }
 
 
-
-
 void PARAM_ONs::init(const int nk_total, const int nkstot_full, const std::vector<double> wk_in)
 {
     this->nk_nospin = nk_total/PARAM.inp.nspin;
     this->nbands = PARAM.inp.nbands;
     this->num_symm_k = wk_in;
-    this->sys_nelec_spin.resize(PARAM.inp.nspin);
+    this->sys_nelec_spin.resize(PARAM.inp.nspin, 0.0);
     this->x.resize(PARAM.inp.nspin);
     this->occ_number.resize(PARAM.inp.nspin);
 
     for(int is=0; is<PARAM.inp.nspin; ++is)
     {
-        this->x[is].resize(nk_nospin*nbands);
-        this->occ_number[is].resize(nk_nospin*nbands);
+        this->x[is].resize(nk_nospin*nbands, 0.0);
+        this->occ_number[is].resize(nk_nospin*nbands, 0.0);
     }
 
     if( PARAM.inp.nspin == 1 )
@@ -70,15 +68,6 @@ void PARAM_ONs::init(const int nk_total, const int nkstot_full, const std::vecto
 }
 
 
-
-
-
-
-
-
-
-
-
 ModuleBase::matrix PARAM_ONs::get_occ_number()
 {
     ModuleBase::matrix occ_num_pass(nk_nospin*PARAM.inp.nspin, nbands);
@@ -102,10 +91,6 @@ ModuleBase::matrix PARAM_ONs::get_occ_number()
 
     return occ_num_pass;
 }
-
-
-
-
 
 
 

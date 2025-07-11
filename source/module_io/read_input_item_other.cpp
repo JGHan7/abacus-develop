@@ -616,6 +616,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("occ_num_func");
+        item.annotation = "function of parameterized occupation number. Currently, the softmax and error function(erf) can be used";
+        read_sync_string(input.occ_num_func);
+        this->add_item(item);
+    }
+    {
         Input_Item item("ls_condition");
         item.annotation = "condition type for inexact line search: swolfe, wolfe";
         read_sync_string(input.ls_condition);

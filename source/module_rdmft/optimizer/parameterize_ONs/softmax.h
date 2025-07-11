@@ -13,7 +13,7 @@ namespace rdmft
 {
 
 
-class SOFTMAX
+class SOFTMAX: public rdmft::PARAM_ONs
 {
 
   public:
@@ -23,18 +23,11 @@ class SOFTMAX
 
     // void init(const int nk_total, const int nkstot_full, const std::vector<double> wk_in);
 
-    void get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix* occ_number = nullptr);
+    void get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix* occ_number_in = nullptr) override;
 
-    void update_x_occ_num();
+    void update_x_occ_num(std::vector<double>& x_in) override;
 
-    void get_dE_dx();
-
-    // //! pass the occ_number as a matrix object, spins and k-points share the same index
-    // ModuleBase::matrix get_occ_number();
-
-
-
-
+    void get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx) override;
 
 
 
@@ -66,12 +59,12 @@ class SOFTMAX
 
 
     //! when x is determined, get occ_number
-    double cal_occ_num(int is);
+    double cal_occ_num(int is) override;
 
 
     //! ensure that the minimum occ_number is greater than min_occ_num, thus avoiding the problem of dE/docc_num divergence
     //! slight modification will be made to x
-    void check_occ_num(std::vector<double>& x_pass);
+    void check_occ_num(std::vector<double>& x_pass) override;
 
 
 

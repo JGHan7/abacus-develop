@@ -26,7 +26,7 @@ class EBI: public rdmft::PARAM_ONs
 
     bool random_inital = false;
 
-    void get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix* occ_number = nullptr) override;
+    void get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix* occ_number_in = nullptr) override;
 
     //! use x_in to solve mu and update occ_number
     //! when the minimum occ_number is less than the lower limit(min_occ_num), x will be slightly modified
@@ -55,11 +55,11 @@ class EBI: public rdmft::PARAM_ONs
     //! pass the mu in EBI method
     const std::vector<double>& get_mu() { return this->mu; }
 
-    // temp 
-    const std::vector<double>& get_nelec_spin() { return this->sys_nelec_spin; }
+    // // temp 
+    // const std::vector<double>& get_nelec_spin() { return this->sys_nelec_spin; }
 
-    //! pass the number of symmetric k-points
-    const std::vector<double>& get_num_symm_k() { return this->num_symm_k; }
+    // //! pass the number of symmetric k-points
+    // const std::vector<double>& get_num_symm_k() { return this->num_symm_k; }
 
 
   protected:
