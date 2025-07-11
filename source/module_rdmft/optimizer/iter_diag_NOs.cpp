@@ -175,6 +175,9 @@ void IterDiag_NOs<TK, TR>::before_opti(hamilt::Hamilt<TK>* p_hamilt_in, int* sca
         for(int ik=0; ik<nk_total; ++ik)
         {
             rdmft::get_identi_mat( para_Fij, this->nos_rep_wfc[ik] );
+            std::fill(this->moment_m[ik].begin(), this->moment_m[ik].end(), 0.0);
+            std::fill(this->moment_v[ik].begin(), this->moment_v[ik].end(), 0.0);
+            std::fill(this->vhat_max[ik].begin(), this->vhat_max[ik].end(), 0.0);
         }
     }
 }
@@ -268,14 +271,8 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
             std::fill(this->grad[ik].begin(), this->grad[ik].end(), 0.0);
 
             // the factor is 1.0, 2.0, or 4.0 ?
-            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), this->kv->wk[ik]); // ? 1.0, 2.0, 4.0?
-
-
-
-
-
-
-
+            // antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), this->kv->wk[ik]); // ? 1.0, 2.0, 4.0?
+            antisymm_mat(this->para_Fij, nbands_total, this->lambda[ik].data(), this->grad[ik].data(), 2.0);
 
 
 
@@ -286,6 +283,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
                 this->m_hat[i] = this->moment_m[ik][i] / (1.0 - PARAM.inp.adam_beta1);
                 this->v_hat[i] = this->moment_v[ik][i] / (1.0 - PARAM.inp.adam_beta2);
                 this->vhat_max[ik][i] = std::max(this->vhat_max[ik][i], this->v_hat[i]);
+                // this->vhat_max[ik][i] = this->v_hat[i];
                 this->skew_hermi_mat[i] = - this->learn_rate * this->m_hat[i] / std::sqrt( this->vhat_max[ik][i] + 1e-16 );
             }
 
@@ -297,19 +295,22 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
             // adam_rotation = exp( skew_hermi_mat )
             this->get_adam_rotation(this->skew_hermi_mat);
 
-            // NOs = NOs * adam_rotation
-            std::vector<TK> temp_mat = this->nos_rep_wfc[ik];
-            rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), this->adam_rotation.data(),
-                                    this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
+            // // NOs = NOs * adam_rotation
+            // std::vector<TK> temp_mat = this->nos_rep_wfc[ik];
+            // rdmft::pTgemm_scalapack( this->para_Fij, temp_mat.data(), this->adam_rotation.data(),
+            //                         this->nos_rep_wfc[ik].data(), nbands_total, nbands_total, nbands_total, 'N', 'N' );
 
-            // new_wfc = new_NOs * this->rdmft_solver.wfc
+            // // new_wfc = new_NOs * this->rdmft_solver.wfc
             // rdmft::GkPsi( this->para_Fij, this->ParaV, this->nos_rep_wfc[ik][0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
             
             // rdmft::GkPsi( this->para_Fij, this->ParaV, this->adam_rotation[0], rdmft_solver_in.wfc(ik, 0, 0), this->new_wfc(ik, 0, 0) );
             
+            // correct?
             rdmft::pTgemm_scalapack( this->para_Fij, &(this->rdmft_solver->wfc(ik, 0, 0)), this->adam_rotation.data(),
                                         &(this->new_wfc(ik, 0, 0)), nbands_total, nbands_total, nbands_total, 'N', 'N' );
 
+            // rdmft::pTgemm_scalapack( this->para_Fij, this->adam_rotation.data(), &(this->rdmft_solver->wfc(ik, 0, 0)),
+            //                             &(this->new_wfc(ik, 0, 0)), nbands_total, nbands_total, nbands_total, 'N', 'N' );
 
             // std::vector<TK> U_Udagger(this->adam_rotation.size(), 0.0);
             // std::vector<TK> Udagger_U(this->adam_rotation.size(), 0.0);

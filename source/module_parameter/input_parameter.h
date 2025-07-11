@@ -650,6 +650,7 @@ struct Input_para
     double lambda_thr = 1e-3;
     double solve_mu_thr = 1e-10;
     double tot_nelec_thr = 1e-10;
+    double min_occ_num = 1e-12;
     double ls_wolfe_c1 = 0.0001;
     double ls_wolfe_c2 = 0.999;
     double ls_armijo_c1 = 0.0001;

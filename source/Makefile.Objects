@@ -776,7 +776,9 @@ OBJS_RDMFT=rdmft.o\
         optimizer_tools.o\
         line_search_rdmft.o\
         bfgs_opti_ONs.o\
+        param_ONs.o\
         ebi_constraint.o\
         idmft.o\
         mixing_dmk.o\
         ft_rdmft.o\
+        softmax.o\

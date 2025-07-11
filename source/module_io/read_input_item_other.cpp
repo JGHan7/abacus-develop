@@ -610,6 +610,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("min_occ_num");
+        item.annotation = "to avoid the problem of dE/docc_num divergence, set a minimum value for the natural occupation number";
+        read_sync_double(input.min_occ_num);
+        this->add_item(item);
+    }
+    {
         Input_Item item("ls_condition");
         item.annotation = "condition type for inexact line search: swolfe, wolfe";
         read_sync_string(input.ls_condition);

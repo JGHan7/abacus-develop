@@ -122,11 +122,28 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_scf(ucell, istep);
     rdmft_solver.update_ion(ucell, *(this->pw_rho), this->locpp.vloc, this->sf.strucFac);
 
+    //
+    std::cout << "\n******" << std::endl;
+    for(int ik=0; ik<this->rdmft_solver.nk_total; ++ik)
+    {
+        std::cout << "wk[" << ik << "]: " << this->kv.wk[ik] << std::endl;
+    }
+    std::cout << "******\n" << std::endl;
+
     // before the iterative electronic step, get initial value by one KS step
     if(GlobalC::exx_info.info_global.cal_exx)
     {
+        // ensure that exx calculation can be started
+        // a better way is to force the start of exx even if pbe does not converge when esolver_type == "rdmft"?
+        this->maxniter = std::max(200, PARAM.inp.scf_nmax);
         // the command to stop the runner is in the exx_iter_finish() function of Exx_LRI_interface.hpp
         ModuleESolver::ESolver_KS<TK>::runner(ucell, istep);
+
+        if( this->niter == this->maxniter )
+        {
+            std::cout << "\n******\n" << "dft-PBE calculation does not converge and cannot provide initial values with exx calculation" << "\n******\n" << std::endl;
+            assert(0);
+        }
     }
     else
     {
@@ -299,8 +316,11 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                     break;
                 }
             }
-            tot_orb_iter += init_maxniter;
-
+            if( !orb_conv )
+            {
+                tot_orb_iter += init_maxniter;
+            }
+            
             final_diff_E = this->rdmft_solver.Etotal - Etotal;
             if( final_diff_E > 0 )
             {
@@ -322,7 +342,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
                 rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
 
-                if( diff_occ_num_max < this->occ_num_thr || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01) )
+                if( diff_occ_num_max < this->occ_num_thr ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
                 {
                     tot_occ_num_iter += iter_occ_num;
                     occ_num_conv = true;
@@ -356,6 +376,24 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         }
 
         this->print_info();
+
+        // temp
+        // rearrange the ONs of each k point from large to small
+        std::cout << "\n******\nrearrange the ONs of each k point from large to small\n******\n" << std::endl;
+        ModuleBase::matrix temp_num = this->rdmft_solver.occ_number;
+        for(int ik=0; ik < rdmft_solver.nk_total; ++ik)
+        {
+            int num_bands = this->rdmft_solver.nbands_total;
+            std::sort(&temp_num(ik, 0), &temp_num(ik, 0) + num_bands, std::greater<>());
+
+            std::cout << "\n\nik: " << ik << std::endl; // << std::fixed << std::setprecision(10);
+            std::cout << "---------------------------------------\nnbands      " << "occ_number      " << std::endl; 
+            for(int ib=0; ib < num_bands; ++ib)
+            {
+                std::cout << ib << "           " << temp_num(ik, ib) << "        " << std::endl;
+            }
+            std::cout << "---------------------------------------\n" << std::endl;
+        }
 
         std::cout << "\n******\n" << std::fixed << std::setprecision(10);
         std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal

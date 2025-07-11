@@ -195,8 +195,8 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     {
         for(int ib=0; ib<temp_occ.nc; ++ib)
         {
-            diff_occ_num[ ik*PARAM.inp.nbands + ib ] = std::abs( this->occ_number(ik, ib) - temp_occ(ik, ib) )
-                                                        * (this->ebi.get_num_symm_k())[ik];
+            diff_occ_num[ ik*PARAM.inp.nbands + ib ] = std::abs( this->occ_number(ik, ib) - temp_occ(ik, ib) );
+                                                        // * (this->ebi.get_num_symm_k())[ik];
             diff_rate[ ik*PARAM.inp.nbands + ib ] = std::abs( diff_occ_num[ ik*PARAM.inp.nbands + ib ] / this->occ_number(ik, ib) );
         }
     }
@@ -814,7 +814,7 @@ void LineSearch<TK, TR>::update_x(std::vector<double>& x_new)
 }
 
 template<typename TK, typename TR>
-double LineSearch<TK, TR>::cal_phi(const std::vector<double>& x_new)
+double LineSearch<TK, TR>::cal_phi(std::vector<double>& x_new)
 {
     // convert x_k+1 to occ_num
     this->ebi.update_x_occ_num(x_new);
@@ -833,7 +833,7 @@ double LineSearch<TK, TR>::cal_phi(const std::vector<double>& x_new)
 
 
 template<typename TK, typename TR>
-double LineSearch<TK, TR>::cal_dphi(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr)
+double LineSearch<TK, TR>::cal_dphi(std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr)
 {
 
     this->cal_dE_dx(dE_dx_new, x_new_ptr);
@@ -846,7 +846,7 @@ double LineSearch<TK, TR>::cal_dphi(std::vector<double>& dE_dx_new, const std::v
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, const std::vector<double>* x_new_ptr)
+void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr)
 {
     if( x_new_ptr != nullptr ) { this->cal_phi( *x_new_ptr ); }
 

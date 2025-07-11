@@ -12,10 +12,12 @@ if(ENABLE_LCAO)
         optimizer/optimizer_tools.cpp
         optimizer/line_search_rdmft.cpp
         optimizer/bfgs_opti_ONs.cpp
-        optimizer/ebi_constraint.cpp
+        optimizer/parameterize_ONs/param_ONs.cpp
+        optimizer/parameterize_ONs/ebi_constraint.cpp
         optimizer/idmft.cpp
         optimizer/mixing_dmk.cpp
         optimizer/ft_rdmft.cpp
+        optimizer/parameterize_ONs/softmax.cpp
     )
 endif()
 

@@ -387,7 +387,7 @@ void ReadInput::item_elec_stru()
         read_sync_string(input.mixing_mode);
         // added by jghan, 2025-04-01
         item.reset_value = [](const Input_Item& item, Parameter& para) {
-            if(para.input.esolver_type == "rdmft")
+            if(para.input.esolver_type == "rdmft" && para.input.mixing_rdmft)
             {
                 para.input.mixing_mode = "pulay";
             }
