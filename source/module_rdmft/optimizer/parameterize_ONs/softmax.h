@@ -34,37 +34,35 @@ class SOFTMAX: public rdmft::PARAM_ONs
   private:
 
     
-    int nk_nospin = 0;
-    int nbands = 0;
-    std::vector<double> sys_nelec_spin;
+    // int nk_nospin = 0;
+    // int nbands = 0;
+    // std::vector<double> sys_nelec_spin;
 
-    //! the number of symmetric k-points
-    std::vector<double> num_symm_k;
+    // //! the number of symmetric k-points
+    // std::vector<double> num_symm_k;
 
-    std::vector< std::vector<double> > x;
+    // std::vector< std::vector<double> > x;
 
-    std::vector< std::vector<double> > occ_number;
-
-
-
-
-
-
-
-
-
+    // std::vector< std::vector<double> > occ_number;
 
 
 
 
 
     //! when x is determined, get occ_number
-    double cal_occ_num(int is) override;
+    //! return the sum of exp(x)
+    double cal_occ_num(int is);
+
+    // double cal_exp_x(const std::vector<double>& x, std::vector<double>& exp_x);
+
+    // void softmax(const int is, const std::vector<double>& x, std::vector<double>& eta);
 
 
     //! ensure that the minimum occ_number is greater than min_occ_num, thus avoiding the problem of dE/docc_num divergence
     //! slight modification will be made to x
-    void check_occ_num(std::vector<double>& x_pass) override;
+    void check_occ_num(const int is, const double sum_exp);
+
+    bool modify_x = false;
 
 
 

@@ -93,5 +93,20 @@ ModuleBase::matrix PARAM_ONs::get_occ_number()
 }
 
 
+void PARAM_ONs::convert_x2vec(const std::vector< std::vector<double> > x_in, std::vector<double>& vec_x)
+{
+    for(int is=0; is<PARAM.inp.nspin; ++is)
+    {
+        for(int ik=0; ik<this->nk_nospin; ++ik)
+        {
+            for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+            {
+                vec_x[ is*(this->nk_nospin*nbands) + ik*nbands + ib ] = x_in[is][ik*nbands+ib];
+            }
+        }
+    }
+}
+
+
 
 }

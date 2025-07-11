@@ -53,13 +53,15 @@ class PARAM_ONs
 
     std::vector< std::vector<double> > occ_number;
 
-    //! when x is determined, get occ_number
-    virtual double cal_occ_num(int is) = 0;
+    // //! when x is determined, get occ_number
+    // virtual double cal_occ_num(int is) = 0;
 
-    //! ensure that the minimum occ_number is greater than min_occ_num, thus avoiding the problem of dE/docc_num divergence
-    //! slight modification will be made to x
-    virtual void check_occ_num(std::vector<double>& x_pass) = 0;
+    // //! ensure that the minimum occ_number is greater than min_occ_num, thus avoiding the problem of dE/docc_num divergence
+    // //! slight modification will be made to x
+    // virtual void check_occ_num(std::vector<double>& x_pass) = 0;
 
+    //! convert x to a vector
+    void convert_x2vec(const std::vector< std::vector<double> > x_in, std::vector<double>& vec_x);
 
 };
 

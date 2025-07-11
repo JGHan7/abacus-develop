@@ -265,7 +265,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
         rdmft::printMatrix_pointer(num_temp.nr, num_temp.nc, this->x[0].data(), "var_x from ks_occ_num", 10);
     }
     // std::cout << "\n******\n" << "start_guess: ebi, 1.0" << "\n******\n" << std::endl;
-    this->convert_x2vec(x_pass);
+    this->convert_x2vec(this->x, x_pass);
 }
 
 
@@ -355,7 +355,7 @@ void EBI::check_occ_num(std::vector<double>& x_pass)
     // and the strictness of the conservation of occupation number is consistent with that in solving_mu()
     this->solving_mu();
 
-    this->convert_x2vec(x_pass);
+    this->convert_x2vec(this->x, x_pass);
 
 }
 
@@ -629,19 +629,19 @@ double EBI::cal_occ_num(int is)
     return tot_occ_num;
 }
 
-void EBI::convert_x2vec(std::vector<double>& vec_x)
-{
-    for(int is=0; is<PARAM.inp.nspin; ++is)
-    {
-        for(int ik=0; ik<this->nk_nospin; ++ik)
-        {
-            for(int ib=0; ib<PARAM.inp.nbands; ++ib)
-            {
-                vec_x[ is*(this->nk_nospin*nbands) + ik*nbands + ib ] = this->x[is][ik*nbands+ib];
-            }
-        }
-    }
-}
+// void EBI::convert_x2vec(std::vector<double>& vec_x)
+// {
+//     for(int is=0; is<PARAM.inp.nspin; ++is)
+//     {
+//         for(int ik=0; ik<this->nk_nospin; ++ik)
+//         {
+//             for(int ib=0; ib<PARAM.inp.nbands; ++ib)
+//             {
+//                 vec_x[ is*(this->nk_nospin*nbands) + ik*nbands + ib ] = this->x[is][ik*nbands+ib];
+//             }
+//         }
+//     }
+// }
 
 
 std::vector<double> EBI::cal_f_der(double mu_in, int is)

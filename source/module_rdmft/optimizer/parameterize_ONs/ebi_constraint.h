@@ -104,14 +104,14 @@ class EBI: public rdmft::PARAM_ONs
     void solving_mu();
 
     //! when x and mu are determined, get occ_number
-    double cal_occ_num(int is) override;
+    double cal_occ_num(int is);
 
     //! ensure that the minimum occ_number is greater than min_occ_num, thus avoiding the problem of dE/docc_num divergence
     //! slight modification will be made to x
-    void check_occ_num(std::vector<double>& x_pass) override;
+    void check_occ_num(std::vector<double>& x_pass);
 
-    //! convert x to a vector
-    void convert_x2vec(std::vector<double>& vec_x);
+    // //! convert x to a vector
+    // void convert_x2vec(std::vector<double>& vec_x);
 
     // //! when spin = is, mu=mu_in, return the sum of occ_num, erf_der1, and erf_der2 respectively
     // std::vector<double> cal_sum(double mu_in, int is = 0);
