@@ -345,14 +345,14 @@ double erf_der2(double x)
 //         }
 //     }
 // }
-void random_descend(std::vector<double>& num)
+void random_descend(std::vector<double>& num, double max)
 {
     // random seed, requires hardware support
     std::random_device rd;
     // mersenne Twister engine
     std::mt19937 gen(rd());     // std::mt19937 gen(42);
     // a uniform distribution in the range (0.0, 1.0)
-    std::uniform_real_distribution<> dis( std::nextafter(0.0, 1.0), 1.0 );
+    std::uniform_real_distribution<> dis( std::nextafter(0.0, max), max );
 
     for(int i=0; i<num.size(); ++i) { num[i] = dis(gen); }
     // sort descending

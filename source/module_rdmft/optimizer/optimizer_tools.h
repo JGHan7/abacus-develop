@@ -347,7 +347,7 @@ double erf_der2(double x);
 //! generate a set of random numbers with a uniform distribution in the range (0.0, 1.0), in descending order
 //! optional: loc is the smallest number satisfying \sum_{p=1}^{loc} num_{p} >= value
 // void random_descend(std::vector<double>& num, const double* value = nullptr, int* location = nullptr, const std::vector<double>* num_symm_k = nullptr);
-void random_descend(std::vector<double>& num);
+void random_descend(std::vector<double>& num, double max = 1.0);
 
 
 //! return location which is the smallest number( = ib*nk_total + ik) satisfying \sum_{p=1}^{location} num_{p} >= value

@@ -25,33 +25,22 @@ class SOFTMAX: public rdmft::PARAM_ONs
 
     void get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix* occ_number_in = nullptr) override;
 
+    //! use x_in to update occ_number
+    //! when the minimum occ_number is less than the lower limit(min_occ_num), x_in will be slightly modified
     void update_x_occ_num(std::vector<double>& x_in) override;
 
+    //! when x is determined, convert dE_docc_num to dE_dx
     void get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx) override;
 
 
 
   private:
 
-    
-    // int nk_nospin = 0;
-    // int nbands = 0;
-    // std::vector<double> sys_nelec_spin;
-
-    // //! the number of symmetric k-points
-    // std::vector<double> num_symm_k;
-
-    // std::vector< std::vector<double> > x;
-
-    // std::vector< std::vector<double> > occ_number;
-
-
-
-
-
     //! when x is determined, get occ_number
     //! return the sum of exp(x)
     double cal_occ_num(int is);
+
+    void cal_docc_num_dx(std::vector<double>& docc_num_dx, int is = 0);
 
     // double cal_exp_x(const std::vector<double>& x, std::vector<double>& exp_x);
 
@@ -63,15 +52,6 @@ class SOFTMAX: public rdmft::PARAM_ONs
     void check_occ_num(const int is, const double sum_exp);
 
     bool modify_x = false;
-
-
-
-
-
-
-
-
-
 
 
 

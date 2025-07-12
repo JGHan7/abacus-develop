@@ -45,9 +45,6 @@ class EBI: public rdmft::PARAM_ONs
 
     double tot_nelec_thr = 0;
 
-    // temp
-    std::vector<double> wk_temp;
-
 
     // //! pass the occ_number as a matrix object, spins and k-points share the same index
     // ModuleBase::matrix get_occ_number();
