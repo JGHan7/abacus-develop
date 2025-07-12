@@ -75,7 +75,7 @@ void SOFTMAX::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::ma
         }
 
         // will there be errors in the reverse solution? Execute for safety
-        Parallel_Common::bcast_double(x_pass.data(), PARAM.inp.nbands*nk_nospin*nbands);
+        Parallel_Common::bcast_double(x_pass.data(), PARAM.inp.nspin*nk_nospin*nbands);
     }
 
     // When the initial occupation numbers is too small, the gradient dE_dx provided by softmax is close to 0 at small occupation numbers
