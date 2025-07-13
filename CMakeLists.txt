@@ -44,6 +44,17 @@ option(USE_DSP "Enable DSP usage." OFF)
 option(USE_CUDA_ON_DCU "Enable CUDA on DCU" OFF)
 option(USE_CUDA_MPI "Enable CUDA-aware MPI" OFF)
 
+# when the libtorch version is too low, such as libtorch-cpu-1.8.2
+if(ENABLE_LCAO)
+  if(DEFINED Torch_DIR)
+    add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+    # find_package(Torch REQUIRED)
+    # if(NOT Torch_VERSION VERSION_LESS "1.9.0")
+    #   remove_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+    # endif()
+  endif()
+endif()
+
 # enable json support
 if(ENABLE_RAPIDJSON)
   find_package(RapidJSON)

@@ -9,6 +9,8 @@
 #include "module_rdmft/optimizer/parameterize_ONs/ebi_constraint.h"
 #include "module_rdmft/optimizer/parameterize_ONs/softmax.h"
 
+#include <torch/torch.h>
+
 #include "module_rdmft/rdmft_tools.h" // temp
 
 namespace rdmft

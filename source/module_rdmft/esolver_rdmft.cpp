@@ -10,6 +10,8 @@
 #include <cmath> // temporary
 #include "module_elecstate/elecstate_tools.h" // temporary
 
+#include <torch/torch.h>
+
 namespace rdmft
 {
 
@@ -112,6 +114,10 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
         this->bfgs_opti_x.init(1, this->dim_x);
         this->pk.resize(this->dim_x, 0.0);
     }
+
+    // test torch
+    auto torchTest = torch::rand({4, 4});
+    std::cout << "torchTest:\n" << torchTest << std::endl;
 
 }
 
