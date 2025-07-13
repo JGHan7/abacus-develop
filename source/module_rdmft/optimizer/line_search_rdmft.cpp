@@ -37,6 +37,8 @@ void LineSearch<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in)
     if(PARAM.inp.occ_num_func == "softmax")
     {
         this->param_occ_num = new rdmft::SOFTMAX();
+        std::cout << "\n\nSOFTMAX parameterized ONs are only applicable to electron pairing approaches which we have not yet implemented\n\n" << std::endl;
+        assert(0);
     }
     else if(PARAM.inp.occ_num_func == "erf")
     {

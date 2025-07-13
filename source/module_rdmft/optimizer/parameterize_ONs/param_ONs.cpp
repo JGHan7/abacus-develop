@@ -10,6 +10,8 @@
 #include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
 #include "module_parameter/parameter.h"
 
+// temp
+#include "module_rdmft/rdmft_tools.h"
 
 namespace rdmft
 {
@@ -65,6 +67,8 @@ void PARAM_ONs::init(const int nk_total, const int nkstot_full, const std::vecto
     {
         this->num_symm_k[iks] *= nkstot_full;
     }
+    std::cout << "\n******\n" << "this->num_symm_k.size(): " << this->num_symm_k.size() << "\n******\n" << std::endl;
+    rdmft::printMatrix_pointer(1, nk_total, this->num_symm_k.data(), "num_symm_k", 10);
 }
 
 
