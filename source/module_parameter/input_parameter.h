@@ -665,7 +665,8 @@ struct Input_para
     bool print_BFGS_Hk = false;
     bool rotate_fock = true;
     bool mixing_rdmft = true;
-    std::string rdmft_orb_opti = "iter_diag"; // iterdiag, idmft, rcg, bfgs...
+    std::string rdmft_orb_opti = "iter_diag"; // iterdiag, idmft, rcg, bfgs, adam...
+    std::string occ_num_opti = "bfgs"; // bfgs, adam...
     double idmft_kappa = 0.1;
     double idmft_beta = 0.0;
     bool read_occ_num = false;
@@ -673,6 +674,7 @@ struct Input_para
     double adam_scaling_lr = 0.4;
     double adam_beta1 = 0.7;
     double adam_beta2 = 0.9;
+    bool opti_by_torch = false;
 
     // ==============   #Parameters (22.EXX PW) =====================
     // EXX for planewave basis, rhx0820 2025-03-10

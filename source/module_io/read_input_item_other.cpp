@@ -503,6 +503,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("occ_num_opti");
+        item.annotation = "optimization method of natural occupation numbers in rdmft";
+        read_sync_string(input.occ_num_opti);
+        this->add_item(item);
+    }
+    {
         Input_Item item("rdmft");
         item.annotation = "whether to perform rdmft calculation, default is false";
         read_sync_bool(input.rdmft);
@@ -751,6 +757,12 @@ void ReadInput::item_others()
         Input_Item item("adam_beta2");
         item.annotation = "parameter of second moment in adam which used by rdmft";
         read_sync_double(input.adam_beta2);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("opti_by_torch");
+        item.annotation = "whether to use libTorch's optimizer to optimize rdmft's NOs and ONs";
+        read_sync_bool(input.opti_by_torch);
         this->add_item(item);
     }
 

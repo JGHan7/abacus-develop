@@ -105,7 +105,7 @@ class EBI: public rdmft::PARAM_ONs
 
     //! ensure that the minimum occ_number is greater than min_occ_num, thus avoiding the problem of dE/docc_num divergence
     //! slight modification will be made to x
-    void check_occ_num(std::vector<double>& x_pass);
+    void check_occ_num(std::vector<double>& x_pass, const double min_num);
 
     // //! convert x to a vector
     // void convert_x2vec(std::vector<double>& vec_x);
