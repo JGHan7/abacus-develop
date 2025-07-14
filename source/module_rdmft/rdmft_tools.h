@@ -39,7 +39,7 @@
 #include <complex>
 #include <vector>
 #include <iomanip>
-
+#include <algorithm>
 
 
 namespace rdmft
@@ -371,6 +371,101 @@ void add_wfcHwfc(const ModuleBase::matrix& wg,
 
 //! give certain occNum_wfcHwfc, get the corresponding energy
 double getEnergy(const ModuleBase::matrix& occNum_wfcHwfc);
+
+
+
+
+//! collect the psi data at fixed k points from all processes and store it in a vector
+template <typename TK>
+void psi2vec(const int ik, const Parallel_Orbitals& ParaV, const psi::Psi<TK>& wfc, std::vector<TK> vec)
+{
+    const int global_size = ParaV.get_wfc_global_nbands() * ParaV.get_wfc_global_nbasis();
+    if( vec.size() != global_size )
+    {
+        vec.resize(global_size, 0.0);
+    }
+    std::fill(vec.begin(), vec.end(), 0.0);
+
+    const int nbands_local = wfc.get_nbands();
+    const int nbasis_local = wfc.get_nbasis();
+    const int nbasis_global = ParaV.get_wfc_global_nbasis();
+
+    for(int ib_loc = 0; ib_loc < nbands_local; ++ib_loc)
+    {
+        const int ib_global = ParaV.local2global_col(ib_loc);
+        for(int ibs_loc = 0; ibs_loc < nbasis_local; ++ibs_loc)
+        {
+            const int ibs_global = ParaV.local2global_row(ibs_loc);
+            vec[ ib_global * nbasis_global + ibs_global ] = wfc(ik, ib_loc, ibs_loc);
+        }
+    }
+
+    Parallel_Reduce::reduce_all(vec.data(), global_size);
+}
+
+
+//! distribute the vector data of a fixed k-point single process to psi of different processes
+template <typename TK>
+void vec2psi(const int ik, const Parallel_Orbitals& ParaV, const std::vector<TK> vec, psi::Psi<TK>& wfc)
+{
+    const int global_size = ParaV.get_wfc_global_nbands() * ParaV.get_wfc_global_nbasis();
+
+    const int nbands_global = ParaV.get_wfc_global_nbands();
+    const int nbasis_global = ParaV.get_wfc_global_nbasis();
+    if( vec.size() != global_size )
+    {
+        std::cout << "\n***\n" << "there is something wrong when copying vector to psi::Psi " << "\n***\n" << std::endl;
+        assert(0);
+    }
+
+    for(int ib=0; ib<nbands_global; ++ib)
+    {
+        const int ib_local = ParaV.global2local_col(ib);
+        if( ib_local >= 0 )
+        {
+            for(int ibs=0; ibs<nbasis_global; ++ibs)
+            {
+                const int ibs_local = ParaV.global2local_row(ibs);
+                if( ibs_local >= 0 )
+                {
+                    wfc(ik, ib_local, ibs_local) = vec[ ib*nbasis_global + ibs ];
+                }
+            }
+        }
+    }
+}
+
+
+// void mat2vec(const ModuleBase::matrix& mat, std::vector<double> vec)
+// {
+//     if( vec.size() != mat.nr * mat.nc )
+//     {
+//         vec.resize(mat.nr * mat.nc, 0.0);
+//     }
+
+//     double* pmat = mat.c;
+//     for(int i=0; i<vec.size(); ++i)
+//     {
+//         vec[i] = pmat[i];
+//     }
+// }
+
+
+// void vec2mat(const std::vector<double> vec, ModuleBase::matrix& mat)
+// {
+//     if( vec.size() != mat.nr * mat.nc )
+//     {
+//         std::cout << "\n***\n" << "there is something wrong when copying vector to ModuleBase::matrix " << "\n***\n" << std::endl;
+//         assert(0);
+//     }
+
+//     double* pmat = mat.c;
+//     for(int i=0; i<vec.size(); ++i)
+//     {
+//         pmat[i] = vec[i];
+//     }
+// }
+
 
 
 

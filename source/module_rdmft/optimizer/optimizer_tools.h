@@ -23,6 +23,7 @@
 #include <cassert>
 #include <algorithm>
 
+#include <torch/torch.h>
 
 namespace rdmft
 {
@@ -745,6 +746,80 @@ void decom_dm(const Parallel_2D* ParaV,
 
 
 }
+
+
+
+
+
+
+
+/********* the following function is used in rdmft with libTorch *********/
+
+
+// convert vector to tensor
+template <typename T>
+void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::vector<int64_t>& shape)
+{
+    int64_t total = 1;
+    for (auto s : shape) total *= s;
+    assert(static_cast<int64_t>(vec.size()) == total);
+
+    torch::Dtype dtype;
+    if constexpr (std::is_same<T, double>::value)
+    {
+        dtype = torch::kDouble;
+    }
+    else if constexpr (std::is_same<T, std::complex<double>>::value)
+    {
+        dtype = torch::kComplexDouble;
+    }
+    else
+    {
+        static_assert(!sizeof(T), "unsupported type in vector to tensor");
+    }
+
+    // check the tensor size and type
+    if (!tensor.defined() || tensor.sizes() != torch::IntArrayRef(shape) || tensor.dtype() != dtype) {
+        tensor = torch::empty(shape, dtype);
+    }
+
+    std::memcpy(tensor.data_ptr<T>(), vec.data(), sizeof(T) * vec.size());
+}
+
+
+template <typename T>
+void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, std::initializer_list<int> shape_list)
+{
+    std::vector<int64_t> shape(shape_list.begin(), shape_list.end());
+    vector2tensor(vec, tensor, shape);
+}
+
+
+template <typename T>
+void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::vector<int>& shape_vec)
+{
+    std::vector<int64_t> shape(shape_vec.begin(), shape_vec.end());
+    vector2tensor(vec, tensor, shape);
+}
+
+
+// convert tensor to vector
+template <typename T>
+void tensor2vector(const torch::Tensor& tensor, std::vector<T>& vec)
+{
+    auto flat = tensor.flatten();
+    int64_t N = flat.numel();
+    vec.resize(N);
+    std::memcpy(vec.data(), flat.data_ptr<T>(), sizeof(T) * N);
+}
+
+
+
+
+
+
+
+
 
 
 

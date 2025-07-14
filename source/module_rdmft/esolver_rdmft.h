@@ -105,8 +105,6 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     //! 
     rdmft::FT_RDMFT<TK, TR> ft_rdmft;
 
-    // rdmft::EBI ebi;
-
     // rdmft::BFGS_ONs<double> bfgs_rdmft;
 
     // std::vector< std::vector<TK> > lambda;
@@ -120,14 +118,37 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     void print_info();
 
+    /********* the following is used in rdmft with libTorch *********/
+
+    rdmft::EBI ebi_torch;
+
+    psi::Psi<TK> wfc_new;
+    ModuleBase::matrix occ_number_new;
+
+    //! in EBI or other methods, the occupation numbers is parameterized using x
+    std::vector<double> var_x;
+    std::vector< std::vector<TK> > orb_vec;
+
+    int nk_total = 0;
+
+    // if we need has_cal_E_by_ONs and has_cal_E_by_NOs !!!!!!!!!!!!
+    bool has_cal_E = false;
+    
+    //!
+    // 
+    double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
+                        const std::vector<torch::Tensor>* orb_tensor = nullptr,
+                        bool cal_by_occ_num = false,
+                        bool cal_by_orb = false);
+
+    void cal_E_grad();
+
+
 
 
 
 
 };
-
-
-
 
 
 
