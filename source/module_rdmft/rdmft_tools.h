@@ -375,7 +375,7 @@ double getEnergy(const ModuleBase::matrix& occNum_wfcHwfc);
 
 //! collect vector data from different processes into a global vector
 template <typename TK>
-void collect_vec(const Parallel_2D* para_mat, const std::vector<TK> vec_local, std::vector<TK> vec_global)
+void collect_vec(const Parallel_2D* para_mat, const std::vector<TK>& vec_local, std::vector<TK>& vec_global)
 {
     const int global_size = para_mat->get_global_row_size() * para_mat->get_global_col_size();
     const int nrow = para_mat->get_row_size();
@@ -410,7 +410,7 @@ void collect_vec(const Parallel_2D* para_mat, const std::vector<TK> vec_local, s
 
 //! distribute the global vector data to the vectors of different processes
 template <typename TK>
-void distribute_vec(const Parallel_2D* para_mat, const std::vector<TK> vec_global, std::vector<TK> vec_local)
+void distribute_vec(const Parallel_2D* para_mat, const std::vector<TK>& vec_global, std::vector<TK>& vec_local)
 {
     const int nrow = para_mat->get_row_size();
     const int ncol = para_mat->get_col_size();
@@ -450,7 +450,7 @@ void distribute_vec(const Parallel_2D* para_mat, const std::vector<TK> vec_globa
 
 //! collect the psi data at fixed k points from all processes and store it in a vector
 template <typename TK>
-void psi2vec(const int ik, const Parallel_Orbitals& ParaV, const psi::Psi<TK>& wfc, std::vector<TK> vec)
+void psi2vec(const int ik, const Parallel_Orbitals& ParaV, const psi::Psi<TK>& wfc, std::vector<TK>& vec)
 {
     const int global_size = ParaV.get_wfc_global_nbands() * ParaV.get_wfc_global_nbasis();
     if( vec.size() != global_size )
@@ -479,7 +479,7 @@ void psi2vec(const int ik, const Parallel_Orbitals& ParaV, const psi::Psi<TK>& w
 
 //! distribute the vector data of a fixed k-point single process to psi of different processes
 template <typename TK>
-void vec2psi(const int ik, const Parallel_Orbitals& ParaV, const std::vector<TK> vec, psi::Psi<TK>& wfc)
+void vec2psi(const int ik, const Parallel_Orbitals& ParaV, const std::vector<TK>& vec, psi::Psi<TK>& wfc)
 {
     const int global_size = ParaV.get_wfc_global_nbands() * ParaV.get_wfc_global_nbasis();
 
@@ -509,7 +509,7 @@ void vec2psi(const int ik, const Parallel_Orbitals& ParaV, const std::vector<TK>
 }
 
 
-// void mat2vec(const ModuleBase::matrix& mat, std::vector<double> vec)
+// void mat2vec(const ModuleBase::matrix& mat, std::vector<double>& vec)
 // {
 //     if( vec.size() != mat.nr * mat.nc )
 //     {
@@ -524,7 +524,7 @@ void vec2psi(const int ik, const Parallel_Orbitals& ParaV, const std::vector<TK>
 // }
 
 
-// void vec2mat(const std::vector<double> vec, ModuleBase::matrix& mat)
+// void vec2mat(const std::vector<double>& vec, ModuleBase::matrix& mat)
 // {
 //     if( vec.size() != mat.nr * mat.nc )
 //     {

@@ -187,6 +187,160 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     if( PARAM.inp.opti_by_torch )
     {
 
+        // test torch
+        auto torchTest = torch::rand({6, 6});
+        std::cout << "torchTest:\n" << torchTest << std::endl;
+
+        torch::Tensor var_x_tensor;
+        torch::Tensor dE_dx_tensor;
+        std::vector<torch::Tensor> R_tensor(nk_total);
+        std::vector<torch::Tensor> dE_dR_tensor(nk_total);
+
+        rdmft::vector2tensor(this->var_x, var_x_tensor, { static_cast<int>(this->var_x.size()) });
+        std::cout << "torchTest, var_x_tensor:\n" << var_x_tensor << std::endl;
+
+        std::vector<TK> dE_dR_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 1.7);
+        rdmft::collect_vec(this->para_Fij, dE_dR_local, dE_dR_global[0]);
+        rdmft::vector2tensor(dE_dR_global[0], dE_dR_tensor[0], { static_cast<int>(this->dE_dR_global[0].size()) });
+        std::cout << "torchTest, dE_dR_tensor[0]:\n" << dE_dR_tensor[0] << std::endl;
+
+
+        int init_maxniter = 10;
+        if(dft_optimize)
+        {
+            init_maxniter = PARAM.inp.maxniter_orb;
+        }
+        double diff_E = 1.0;
+        double final_diff_E = 1.0;
+        double diff_occ_num_max = 1.0;
+        double Etotal = this->rdmft_solver.Etotal;
+
+        int tot_orb_iter = 0;
+        int tot_occ_num_iter = 0;
+        int tot_exteral_iter = 0;
+
+        for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
+        {
+            tot_exteral_iter = iter; // temp
+            bool orb_conv = false;
+            bool occ_num_conv = false;
+
+            init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
+            this->iter_diag_orb.before_opti(this->p_hamilt);
+            for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
+            {
+                // delete or save?
+                if(this->dft_optimize)
+                {
+                    this->update_occ_num_dft(this->rdmft_solver);
+                }
+
+                // optimize natural orbitals
+                diff_E = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
+
+                std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
+                std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
+                            << "\n\ndiff_E: " << diff_E
+                            << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+                            << "\n******" << std::endl << std::defaultfloat;
+
+                if( this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr && iter_orb >= 3 )
+                {
+                    tot_orb_iter += iter_orb;
+                    orb_conv = true;
+                    break;
+                }
+            }
+            if( !orb_conv )
+            {
+                tot_orb_iter += init_maxniter;
+            }
+            
+            final_diff_E = this->rdmft_solver.Etotal - Etotal;
+            if( final_diff_E > 0 )
+            {
+                this->iter_diag_orb.modify_learn_rate();
+                init_maxniter += 10;
+            }
+            Etotal = this->rdmft_solver.Etotal;
+
+            if( dft_optimize )
+            {
+                break;
+            }
+
+            if(!this->dft_optimize) { this->ls_opti_occ_num.before_opti(); }
+            for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
+            {
+                // optimize natural occupation numbers
+                diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
+                std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
+                rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
+
+                if( diff_occ_num_max < this->occ_num_thr ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
+                {
+                    tot_occ_num_iter += iter_occ_num;
+                    occ_num_conv = true;
+                    break;
+                }
+            }
+            tot_occ_num_iter += PARAM.inp.maxniter_occ_num;
+
+            final_diff_E = this->rdmft_solver.Etotal - Etotal;
+            if( final_diff_E > -1e-6 )
+            {
+                init_maxniter += 10;
+            }
+            Etotal = this->rdmft_solver.Etotal;
+
+            double max_off_diag_F = this->iter_diag_orb.check_hermi_lambda();
+            if( max_off_diag_F < this->lambda_thr )
+            {
+                std::cout << "\n******\n\nConvergence!\n\nmax_off_diag_F < lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
+                break;
+            }
+            else if( orb_conv && occ_num_conv )
+            {
+                std::cout << "\n******\n\nNOs(DM) and ONs Converge respectively!\n\nmax_off_diag_F is " << max_off_diag_F << "\n******\n" << std::endl;
+                break;
+            }
+            else
+            {
+                std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
+            }
+        }
+
+        this->print_info();
+
+        // temp
+        // rearrange the ONs of each k point from large to small
+        std::cout << "\n******\nrearrange the ONs of each k point from large to small\n******\n" << std::endl;
+        ModuleBase::matrix temp_num = this->rdmft_solver.occ_number;
+        for(int ik=0; ik < rdmft_solver.nk_total; ++ik)
+        {
+            int num_bands = this->rdmft_solver.nbands_total;
+            std::sort(&temp_num(ik, 0), &temp_num(ik, 0) + num_bands, std::greater<>());
+
+            std::cout << "\n\nik: " << ik << std::endl; // << std::fixed << std::setprecision(10);
+            std::cout << "---------------------------------------\nnbands      " << "occ_number      " << std::endl; 
+            for(int ib=0; ib < num_bands; ++ib)
+            {
+                std::cout << ib << "           " << temp_num(ik, ib) << "        " << std::endl;
+            }
+            std::cout << "---------------------------------------\n" << std::endl;
+        }
+
+        std::cout << "\n******\n" << std::fixed << std::setprecision(10);
+        std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
+                    << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
+                    // << "\n\ndiff_E: " << diff_etotal
+                    // << "\ndiff_DM_max: " << this->idmft.get_diff_DM_max()
+                    << "\n******" << std::endl << std::defaultfloat;
+
+        std::cout << "\n******\nexternal iter = " << tot_exteral_iter 
+                    << "\ntotal orbital iter = " << tot_orb_iter 
+                    << "\ntotal occ_num iter = " << tot_occ_num_iter
+                    << "\n******\n" << std::endl;
     }
     else
     {
@@ -587,19 +741,22 @@ void ESolver_RDMFT<TK, TR>::get_start_guess()
 {
     if( PARAM.inp.opti_by_torch )
     {
-        // std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
-        // if(PARAM.inp.random_occ_num)
-        // {
-        //     this->param_occ_num->get_inital_guess(this->var_x);
+        // std::fill(this->R_vec_global.begin(), this->R_vec_global.end(), 0.0);
 
-        //     // // update rdmft elec_state
-        //     // ModuleBase::matrix occ_number( this->param_occ_num->get_occ_number() );
-        //     // this->rdmft_solver->update_elec( &occ_number );
-        // }
-        // else
-        // {
-        //     this->param_occ_num->get_inital_guess(this->var_x, &rdmft_solver->occ_number);
-        // }
+        std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
+        if(PARAM.inp.random_occ_num)
+        {
+            this->ebi_torch.get_inital_guess(this->var_x);
+        }
+        else
+        {
+            this->ebi_torch.get_inital_guess(this->var_x, &this->rdmft_solver.occ_number);
+        }
+
+        torch::Tensor var_x_tensor;
+        rdmft::vector2tensor(this->var_x, var_x_tensor, { static_cast<int>(this->var_x.size()) });
+
+        this->cal_Etotal(&var_x_tensor, nullptr, 1, 0);
 
         // this->occ_number = this->param_occ_num->get_occ_number();
         // this->rdmft_solver->update_elec( &(this->occ_number) );
