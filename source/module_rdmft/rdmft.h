@@ -81,7 +81,7 @@ class RDMFT
     ModuleBase::matrix occNum_wfc_Vee_wfc; // test !!!!!!!!!!!!!!
 
     //! H_ni_nj represents the Hamiltonian in KS-orbital/nature-orbital representation
-    bool iter_diag = false;
+    bool need_lambda = false;
     std::vector< std::vector<TK> > Hij_no_exx; // it can also be passed as an external pointer to cal_Hk_Hpsi()
     std::vector< std::vector<TK> > Hij_exx;
 
@@ -106,7 +106,7 @@ class RDMFT
               TwoCenterBundle& two_center_bundle_in,
               std::string XC_func_rdmft_in,
               double alpha_power_in,
-              bool if_iter_diag = true);
+              bool if_need_lambda = true);
 
     //! update in ion-step and get V_TV
     void update_ion(UnitCell& ucell_in, ModulePW::PW_Basis& rho_basis_in,
@@ -121,6 +121,9 @@ class RDMFT
 
     //! obtain the gradient of total energy with respect to wfc
     void cal_E_grad_wfc();
+
+    //! if wfc is updated using C'=C*exp(R), dE_dR = antisymmetric-lambda * constant
+    void cal_antisym_lambda(const int ik, std::vector<TK>& antisym_lambda, double factor = 1.0);
 
     //! obtain the gradient of total energy with respect to occupation number
     void cal_E_grad_occ_num();

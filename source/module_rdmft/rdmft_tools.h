@@ -373,6 +373,79 @@ void add_wfcHwfc(const ModuleBase::matrix& wg,
 double getEnergy(const ModuleBase::matrix& occNum_wfcHwfc);
 
 
+//! collect vector data from different processes into a global vector
+template <typename TK>
+void collect_vec(const Parallel_2D* para_mat, const std::vector<TK> vec_local, std::vector<TK> vec_global)
+{
+    const int global_size = para_mat->get_global_row_size() * para_mat->get_global_col_size();
+    const int nrow = para_mat->get_row_size();
+    const int ncol = para_mat->get_col_size();
+    const int global_row = para_mat->get_global_row_size();
+
+    if( vec_local.size() < nrow*ncol )
+    {
+        std::cout << "\n***\n" << "there is something wrong when collecting vector to vector_global" << "\n***\n" << std::endl;
+        assert(0);
+    }
+    if( vec_global.size() != global_size )
+    {
+        vec_global.resize(global_size, 0.0);
+    }
+    std::fill(vec_global.begin(), vec_global.end(), 0.0);
+
+    for(int i=0; i<nrow; ++i)
+    {
+        const int i_global = para_mat->local2global_row(i);
+        for(int j=0; j<ncol; ++j)
+        {
+            int j_global = para_mat->local2global_col(j);
+
+            vec_global[i_global + j_global*global_row] = vec_local[i + j*nrow];
+        }
+    }
+
+    Parallel_Reduce::reduce_all(vec_global.data(), global_size);
+}
+
+
+//! distribute the global vector data to the vectors of different processes
+template <typename TK>
+void distribute_vec(const Parallel_2D* para_mat, const std::vector<TK> vec_global, std::vector<TK> vec_local)
+{
+    const int nrow = para_mat->get_row_size();
+    const int ncol = para_mat->get_col_size();
+    const int global_row = para_mat->get_global_row_size();
+    const int global_col = para_mat->get_global_col_size();
+
+    if( vec_global.size() < global_row*global_col )
+    {
+        std::cout << "\n***\n" << "there is something wrong when distributing vector to vector_local" << "\n***\n" << std::endl;
+        assert(0);
+    }
+    if( vec_local.size() != nrow*ncol )
+    {
+        vec_local.resize(nrow*ncol, 0.0);
+    }
+    std::fill(vec_local.begin(), vec_local.end(), 0.0);
+
+    for(int i=0; i<global_row; ++i)
+    {
+        const int i_local = para_mat->global2local_row(i);
+        if( i_local >= 0 )
+        {
+            for(int j=0; j<global_col; ++j)
+            {
+                int j_local = para_mat->local2global_col(j);
+                if( j_local >= 0 )
+                {
+                    vec_local[i_local + j_local*nrow] = vec_global[i + j*global_row];
+                }
+            }
+        }
+    }
+
+
+}
 
 
 //! collect the psi data at fixed k points from all processes and store it in a vector

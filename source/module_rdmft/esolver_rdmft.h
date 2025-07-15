@@ -16,6 +16,7 @@
 
 #include "module_rdmft/optimizer/ft_rdmft.h"
 
+#include <torch/torch.h>
 
 namespace rdmft
 {
@@ -122,30 +123,46 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     rdmft::EBI ebi_torch;
 
-    psi::Psi<TK> wfc_new;
-    ModuleBase::matrix occ_number_new;
+    Parallel_2D* para_Fij;
 
+    // 
+    psi::Psi<TK> wfc_new;
+    // 
+    std::vector< std::vector<TK> > R_vec_global;
+    // use C' = C*exp(R) to optimize NOs, C is the expansion coefficient of NOs under NAOs
+    std::vector< std::vector<TK> > dE_dR_global;
+    
+    // 
+    ModuleBase::matrix occ_number_new;
     //! in EBI or other methods, the occupation numbers is parameterized using x
     std::vector<double> var_x;
-    std::vector< std::vector<TK> > orb_vec;
+    // 
+    std::vector<double> dE_dx;
+
+
+
 
     int nk_total = 0;
 
-    // if we need has_cal_E_by_ONs and has_cal_E_by_NOs !!!!!!!!!!!!
-    bool has_cal_E = false;
+
     
     //!
     // 
     double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
-                        const std::vector<torch::Tensor>* orb_tensor = nullptr,
+                        const std::vector<torch::Tensor>* R_tensor = nullptr,
                         bool cal_by_occ_num = false,
                         bool cal_by_orb = false);
 
-    void cal_E_grad();
+    // void cal_E_grad(bool by_occ_num,
+    //                   bool by_wfc,
+    //                   const torch::Tensor* var_x_tensor = nullptr,
+    //                   const std::vector<torch::Tensor>* R_tensor = nullptr);
 
+    bool has_cal_E_occ_num = false;
+    void cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor = nullptr);
 
-
-
+    bool has_cal_E_wfc= false;
+    void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
 
 
 };

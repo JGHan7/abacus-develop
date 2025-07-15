@@ -10,6 +10,7 @@
 #include "module_base/parallel_reduce.h"
 #include "module_cell/module_symmetry/symmetry.h"
 #include "module_ri/RI_Util.h"
+#include "module_rdmft/optimizer/optimizer_tools.h"
 
 
 #include <iostream>
@@ -67,7 +68,7 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
                             TwoCenterBundle& two_center_bundle_in, 
                             std::string XC_func_rdmft_in, 
                             double alpha_power_in,
-                            bool if_iter_diag)
+                            bool if_need_lambda)
 {
     GG = &GG_in;
     GK = &GK_in;
@@ -88,7 +89,7 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
 
     XC_func_rdmft = XC_func_rdmft_in;
     alpha_power = alpha_power_in;
-    iter_diag = if_iter_diag;
+    need_lambda = if_need_lambda;
 
     nspin = PARAM.inp.nspin;
     nbands_total = PARAM.inp.nbands;
@@ -144,7 +145,7 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
     Eij_hartree.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
     Eij_exx_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
     Eij_dft_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
-    if( iter_diag )
+    if( need_lambda )
     {
         Hij_no_exx.resize(nk_total);
         Hij_exx.resize(nk_total);
@@ -280,7 +281,7 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
             for(int iloc=0; iloc<HK_XC.size(); ++iloc) HK_XC[iloc] += hsk_dft_XC->get_hk()[iloc];
         }
 
-        if( iter_diag )
+        if( need_lambda )
         {
             std::fill(Hij_no_exx[ik].begin(), Hij_no_exx[ik].end(), 0.0);
             std::fill(Hij_exx[ik].begin(), Hij_exx[ik].end(), 0.0);
@@ -365,6 +366,38 @@ void RDMFT<TK, TR>::cal_E_grad_wfc()
     // !this would transfer the value of H_wfc_TV, H_wfc_hartree, H_wfc_XC --> occNum_H_wfc
     // get the gradient of energy with respect to the wfc, i.e., Wk_occNum_HamiltWfc
     add_psi(ParaV, this->kv, occ_number, H_wfc_TV, H_wfc_hartree, H_wfc_dft_XC, H_wfc_exx_XC, occNum_HamiltWfc, XC_func_rdmft, alpha_power);
+}
+
+
+template <typename TK, typename TR>
+void RDMFT<TK, TR>::cal_antisym_lambda(const int ik, std::vector<TK>& antisym_lambda, double factor)
+{
+    // if wfc is updated using C'=C*exp(R), dE_dR = antisymmetric-lambda * constant
+    // std::vector< std::vector<TK> > lambda( nk_total, std::vector<TK>(antisym_lambda[0].size(), 0.0) );
+    std::vector<TK> lambda(antisym_lambda.size(), 0.0);
+
+    // times wk*occNum
+    // for(int ik=0; ik<nk_total; ++ik)
+    // {
+        // std::fill(lambda.begin(), lambda.end(), 0.0);
+    
+    const int nrow = para_Eij.get_row_size();
+    for(int ic=0; ic<para_Eij.get_col_size(); ++ic)
+    {
+        // use wg or occ_number??? wg!
+        const double occ_num_local = wg(ik, para_Eij.local2global_col(ic));
+        const double fun_occNum_local = wk_fun_occNum(ik, para_Eij.local2global_col(ic));
+
+        for(int ir=0; ir<nrow; ++ir)
+        {
+            lambda[ir + ic*nrow] = Hij_no_exx[ik][ir + ic*nrow]*occ_num_local + Hij_exx[ik][ir + ic*nrow]*fun_occNum_local;
+        }
+    }
+
+    // get dE_dR = factor * ( lambda - lambda^dagger )
+    rdmft::antisymm_mat(&this->para_Eij, this->nbands_total, lambda.data(), antisym_lambda.data(), factor);
+
+    // }
 }
 
 

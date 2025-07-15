@@ -750,6 +750,70 @@ void decom_dm(const Parallel_2D* ParaV,
 
 
 
+//! get exp(R) from the skew-Hermitian matrix R
+template <typename TK>
+void exp_skew_hermi_mat(const Parallel_2D* para_mat, const std::vector<TK>& R, std::vector<TK>& exp_R)
+{
+    if( exp_R.size() != R.size() )
+    {
+        exp_R.resize(R.size(), 0.0);
+    }
+
+    // hermi_mat A = i * M
+    std::vector<std::complex<double>> hermi_mat(R.size());
+    std::complex<double> imag_one(0.0, 1.0);
+    for(int i=0; i<R.size(); ++i)
+    {
+        hermi_mat[i] = imag_one * R[i];
+    }
+
+    const int global_row = para_mat->get_global_row_size();
+    std::vector<double> diag_elem(global_row, 0.0);
+    std::vector<std::complex<double>> exp_diag(para_mat->get_row_size() * para_mat->get_col_size(), 0.0);
+    std::vector<std::complex<double>> egi_vector(para_mat->get_row_size() * para_mat->get_col_size(), 0.0);
+
+    // A = V * diag_e * V^dagger
+    rdmft::pdiag_scalapack( para_mat, global_row, hermi_mat.data(), diag_elem.data(), egi_vector.data() );
+
+    std::complex<double> imag_nega_one(0.0, -1.0);
+    int nrow = para_mat->get_row_size();
+    for(int ic=0; ic<para_mat->get_col_size(); ++ic)
+    {
+        const int ic_global = para_mat->local2global_col(ic);
+        for(int ir=0; ir<nrow; ++ir)
+        {
+            int ir_global = para_mat->local2global_row(ir);
+            if( ic_global == ir_global )
+            {
+                exp_diag[ir+ic*nrow] = std::exp( imag_nega_one * diag_elem[ic_global] );
+            }
+        }
+    }
+
+    // exp(R) =  V * exp(-i * diag_e) * V^dagger
+    std::vector<std::complex<double>> temp_mat(para_mat->get_row_size() * para_mat->get_col_size(), 0.0);
+    rdmft::pTgemm_scalapack( para_mat, egi_vector.data(), exp_diag.data(),
+                            temp_mat.data(), global_row, global_row, global_row, 'N', 'N' );
+    rdmft::pTgemm_scalapack( para_mat, temp_mat.data(), egi_vector.data(),
+                            exp_diag.data(), global_row, global_row, global_row, 'N', 'C' );
+    if constexpr (std::is_same<TK, std::complex<double>>::value)
+    {
+        exp_R = exp_diag;
+    }
+    else
+    {
+        for(int i=0; i<exp_diag.size(); ++i)
+        {
+            exp_R[i] = std::real( exp_diag[i] );
+        }
+    }
+}
+
+
+
+
+
+
 
 
 
@@ -768,22 +832,32 @@ void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::
     if constexpr (std::is_same<T, double>::value)
     {
         dtype = torch::kDouble;
+        if (!tensor.defined() || tensor.sizes() != torch::IntArrayRef(shape) || tensor.dtype() != dtype)
+        {
+            tensor = torch::empty(shape, dtype);
+        }
+
+        std::memcpy(tensor.data_ptr<double>(), vec.data(), sizeof(double) * vec.size());
     }
     else if constexpr (std::is_same<T, std::complex<double>>::value)
     {
         dtype = torch::kComplexDouble;
+        if (!tensor.defined() || tensor.sizes() != torch::IntArrayRef(shape) || tensor.dtype() != dtype)
+        {
+            tensor = torch::empty(shape, dtype);
+        }
+
+        // convert std::complex<double> to c10::complex<double>
+        auto* data_ptr = tensor.data_ptr<c10::complex<double>>();
+        for (int64_t i = 0; i < total; ++i)
+        {
+            data_ptr[i] = c10::complex<double>(vec[i].real(), vec[i].imag());
+        }
     }
     else
     {
         static_assert(!sizeof(T), "unsupported type in vector to tensor");
     }
-
-    // check the tensor size and type
-    if (!tensor.defined() || tensor.sizes() != torch::IntArrayRef(shape) || tensor.dtype() != dtype) {
-        tensor = torch::empty(shape, dtype);
-    }
-
-    std::memcpy(tensor.data_ptr<T>(), vec.data(), sizeof(T) * vec.size());
 }
 
 
@@ -810,7 +884,23 @@ void tensor2vector(const torch::Tensor& tensor, std::vector<T>& vec)
     auto flat = tensor.flatten();
     int64_t N = flat.numel();
     vec.resize(N);
-    std::memcpy(vec.data(), flat.data_ptr<T>(), sizeof(T) * N);
+
+    if constexpr (std::is_same<T, double>::value)
+    {
+        std::memcpy(vec.data(), flat.data_ptr<double>(), sizeof(double) * N);
+    }
+    else if constexpr (std::is_same<T, std::complex<double>>::value)
+    {
+        const c10::complex<double>* data_ptr = flat.data_ptr<c10::complex<double>>();
+        for (int64_t i = 0; i < N; ++i)
+        {
+            vec[i] = std::complex<double>(data_ptr[i].real(), data_ptr[i].imag());
+        }
+    }
+    else
+    {
+        static_assert(!sizeof(T), "unsupported type in tensor to vector");
+    }
 }
 
 
