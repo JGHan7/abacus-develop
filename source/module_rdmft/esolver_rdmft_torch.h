@@ -62,24 +62,42 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     std::vector< std::vector<TK> > R_vec_global;
     // use C' = C*exp(R) to optimize NOs, C is the expansion coefficient of NOs under NAOs
     std::vector< std::vector<TK> > dE_dR_global;
-    
+    // 
+    std::vector<torch::Tensor> R_tensor;
+    // 
+    std::vector<torch::Tensor> dE_dR_tensor;
+
     // 
     ModuleBase::matrix occ_number_new;
     //! in EBI or other methods, the occupation numbers is parameterized using x
     std::vector<double> var_x;
     // 
     std::vector<double> dE_dx;
+    //
+    torch::Tensor var_x_tensor;
+    // 
+    torch::Tensor dE_dx_tensor;
 
-    bool x_need_ls = true;
-    torch::optim::Adam* var_x_optimizer = nullptr;
-    // torch::optim::LBFGS* var_x_optimizer = nullptr;
-    
+
     // std::unique_ptr<torch::optim::Adam> var_x_optimizer;
     // var_x_optimizer = std::make_unique<torch::optim::Adam>(params, torch::optim::AdamOptions(0.05));
 
+    bool x_need_ls = true;
+    std::unique_ptr<torch::optim::Optimizer> var_x_optimizer;
+    torch::optim::LBFGSOptions x_options_lbfgs;
+    torch::optim::AdamOptions x_options_adam;
+
+    torch::Tensor trial_Ex_Egrad();
+
+
+
     bool R_need_ls = true;
-    torch::optim::Adam* R_optimizer = nullptr;
+    std::unique_ptr<torch::optim::Optimizer> R_optimizer;
+    torch::optim::LBFGSOptions R_options_lbfgs;
+    torch::optim::AdamOptions R_options_adam;
+    // torch::optim::Adam* R_optimizer = nullptr;
     // torch::optim::LBFGS* R_optimizer = nullptr;
+    torch::Tensor trial_ER_Egrad(const int ik);
 
 
 

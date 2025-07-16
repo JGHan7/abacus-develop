@@ -820,9 +820,67 @@ void exp_skew_hermi_mat(const Parallel_2D* para_mat, const std::vector<TK>& R, s
 /********* the following function is used in rdmft with libTorch *********/
 
 
+// // convert vector to tensor
+// template <typename T>
+// void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::vector<int64_t>& shape)
+// {
+//     int64_t total = 1;
+//     for (auto s : shape) total *= s;
+//     assert(static_cast<int64_t>(vec.size()) == total);
+
+//     torch::Dtype dtype;
+//     if constexpr (std::is_same<T, double>::value)
+//     {
+//         dtype = torch::kDouble;
+//         if (!tensor.defined() || tensor.sizes() != torch::IntArrayRef(shape) || tensor.dtype() != dtype)
+//         {
+//             tensor = torch::empty(shape, dtype);
+//         }
+
+//         std::memcpy(tensor.data_ptr<double>(), vec.data(), sizeof(double) * vec.size());
+//     }
+//     else if constexpr (std::is_same<T, std::complex<double>>::value)
+//     {
+//         dtype = torch::kComplexDouble;
+//         if (!tensor.defined() || tensor.sizes() != torch::IntArrayRef(shape) || tensor.dtype() != dtype)
+//         {
+//             tensor = torch::empty(shape, dtype);
+//         }
+
+//         // convert std::complex<double> to c10::complex<double>
+//         auto* data_ptr = tensor.data_ptr<c10::complex<double>>();
+//         for (int64_t i = 0; i < total; ++i)
+//         {
+//             data_ptr[i] = c10::complex<double>(vec[i].real(), vec[i].imag());
+//         }
+//     }
+//     else
+//     {
+//         static_assert(!sizeof(T), "unsupported type in vector to tensor");
+//     }
+// }
+
+
+// template <typename T>
+// void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, std::initializer_list<int> shape_list)
+// {
+//     std::vector<int64_t> shape(shape_list.begin(), shape_list.end());
+//     vector2tensor(vec, tensor, shape);
+// }
+
+
+// template <typename T>
+// void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::vector<int>& shape_vec)
+// {
+//     std::vector<int64_t> shape(shape_vec.begin(), shape_vec.end());
+//     vector2tensor(vec, tensor, shape);
+// }
+
+
 // convert vector to tensor
 template <typename T>
-void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::vector<int64_t>& shape)
+void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
+                   const std::vector<int64_t>& shape, bool need_grad = true)
 {
     int64_t total = 1;
     for (auto s : shape) total *= s;
@@ -834,7 +892,11 @@ void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::
         dtype = torch::kDouble;
         if (!tensor.defined() || tensor.sizes() != torch::IntArrayRef(shape) || tensor.dtype() != dtype)
         {
-            tensor = torch::empty(shape, dtype);
+            tensor = torch::empty(shape, torch::TensorOptions().dtype(dtype).requires_grad(need_grad));
+        }
+        else
+        {
+            tensor.set_requires_grad(need_grad);
         }
 
         std::memcpy(tensor.data_ptr<double>(), vec.data(), sizeof(double) * vec.size());
@@ -844,7 +906,11 @@ void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::
         dtype = torch::kComplexDouble;
         if (!tensor.defined() || tensor.sizes() != torch::IntArrayRef(shape) || tensor.dtype() != dtype)
         {
-            tensor = torch::empty(shape, dtype);
+            tensor = torch::empty(shape, torch::TensorOptions().dtype(dtype).requires_grad(need_grad));
+        }
+        else
+        {
+            tensor.set_requires_grad(need_grad);
         }
 
         // convert std::complex<double> to c10::complex<double>
@@ -862,19 +928,22 @@ void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::
 
 
 template <typename T>
-void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, std::initializer_list<int> shape_list)
+void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
+                   std::initializer_list<int> shape_list, bool need_grad = true)
 {
     std::vector<int64_t> shape(shape_list.begin(), shape_list.end());
-    vector2tensor(vec, tensor, shape);
+    vector2tensor(vec, tensor, shape, need_grad);
 }
 
 
 template <typename T>
-void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor, const std::vector<int>& shape_vec)
+void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
+                   const std::vector<int>& shape_vec, bool need_grad = true)
 {
     std::vector<int64_t> shape(shape_vec.begin(), shape_vec.end());
-    vector2tensor(vec, tensor, shape);
+    vector2tensor(vec, tensor, shape, need_grad);
 }
+
 
 
 // convert tensor to vector

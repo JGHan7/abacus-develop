@@ -783,3 +783,4 @@ OBJS_RDMFT=rdmft.o\
         mixing_dmk.o\
         ft_rdmft.o\
         softmax.o\
+        torch_optimizer.o\

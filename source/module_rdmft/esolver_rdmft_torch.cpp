@@ -25,8 +25,8 @@ ESolver_RDMFT_Torch<TK, TR>::ESolver_RDMFT_Torch()
 template <typename TK, typename TR>
 ESolver_RDMFT_Torch<TK, TR>::~ESolver_RDMFT_Torch()
 {
-    delete this->var_x_optimizer;
-    delete this->R_optimizer;
+    // delete this->var_x_optimizer;
+    // delete this->R_optimizer;
 }
 
 
@@ -73,12 +73,48 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     this->occ_number_new.create(this->rdmft_solver.nk_total, PARAM.inp.nbands);
     this->wfc_new.resize(this->rdmft_solver.nk_total, this->pv.ncol_bands, this->pv.nrow);
     this->wfc_new.zero_out();
+    this->R_tensor.resize(this->nk_total);
+    this->dE_dR_tensor.resize(this->nk_total);
 
     this->ebi_torch.init(this->rdmft_solver.nk_total, this->kv.get_nkstot_full(), this->kv.wk);
 
     // test torch
     auto torchTest = torch::rand({4, 4});
     std::cout << "torchTest in ESolver_RDMFT_Torch:\n" << torchTest << std::endl;
+
+
+    if( rdmft_orb_opti == "adam" )
+    {
+        this->R_options_adam.lr(PARAM.inp.adam_learn_rate);
+        this->R_options_adam.betas(std::make_tuple(PARAM.inp.adam_beta1, PARAM.inp.adam_beta2));
+        this->R_options_adam.amsgrad(true);
+        
+    }
+    else if( rdmft_orb_opti == "lbfgs" )
+    {
+        this->R_options_lbfgs.lr(1.0);
+        this->R_options_lbfgs.max_iter(1);
+        // this->R_options_lbfgs.tolerance_grad(1e-6);
+        // this->R_options_lbfgs..line_search_fn("strong_wolfe");
+    }
+
+    if( occ_num_opti == "adam" )
+    {
+        this->x_options_adam.lr(PARAM.inp.adam_learn_rate);
+        // this->x_options_adam.betas(std::make_tuple(PARAM.inp.adam_beta1, PARAM.inp.adam_beta2));
+        // this->x_options_adam.amsgrad(true);
+    }
+    else if( occ_num_opti == "lbfgs" )
+    {
+        this->x_options_lbfgs.lr(1.0);
+        this->R_options_lbfgs.max_iter(1);
+        // this->R_options_lbfgs.tolerance_grad(1e-6);
+        // this->R_options_lbfgs..line_search_fn("strong_wolfe");
+    }
+
+
+
+
 
 }
 
@@ -96,10 +132,10 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
     auto torchTest = torch::rand({6, 6});
     std::cout << "torchTest:\n" << torchTest << std::endl;
 
-    torch::Tensor var_x_tensor;
-    torch::Tensor dE_dx_tensor;
-    std::vector<torch::Tensor> R_tensor(nk_total);
-    std::vector<torch::Tensor> dE_dR_tensor(nk_total);
+    // torch::Tensor var_x_tensor;
+    // torch::Tensor dE_dx_tensor;
+    // std::vector<torch::Tensor> R_tensor(nk_total);
+    // std::vector<torch::Tensor> dE_dR_tensor(nk_total);
 
     rdmft::vector2tensor(this->var_x, var_x_tensor, { static_cast<int>(this->var_x.size()) });
     std::cout << "torchTest, var_x_tensor:\n" << var_x_tensor << std::endl;
@@ -108,6 +144,32 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
     rdmft::collect_vec(this->para_Fij, dE_dR_local, dE_dR_global[0]);
     rdmft::vector2tensor(dE_dR_global[0], dE_dR_tensor[0], { static_cast<int>(this->dE_dR_global[0].size()) });
     std::cout << "torchTest, dE_dR_tensor[0]:\n" << dE_dR_tensor[0] << std::endl;
+
+
+    // for ONs
+    std::vector<torch::Tensor> param_x = {this->var_x_tensor};
+    if( occ_num_opti == "adam" )
+    {
+        std::make_unique<torch::optim::Adam(param_x, this->x_options_adam);
+    }
+    else if( occ_num_opti == "lbfgs" )
+    {
+        std::make_unique<torch::optim::Adam(param_x, this->x_options_lbfgs);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    // for NOs
+
+
 
 
 
@@ -453,9 +515,26 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dR(std::vector<torch::Tensor>& dE_dR_te
 }
 
 
+// double ESolver_RDMFT_Torch<TK, TR>::cal_Etotal(const torch::Tensor* var_x_tensor,
+//                                             const std::vector<torch::Tensor>* R_tensor,
+//                                             bool cal_by_occ_num,
+//                                             bool cal_by_orb)
 
+// void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor)
 
+template <typename TK, typename TR>
+torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_Ex_Egrad()
+{
+    this->var_x_optimizer->zero_grad();
 
+    double E = this->cal_Etotal( &this->var_x_tensor, nullptr, 1, 0 );
+
+    this->cal_cal_dE_dx( dE_dx_tensor );
+
+    this->var_x_tensor.mutable_grad() = dE_dx_tensor;
+
+    return torch::tensor(E, torch::requires_grad(true));
+}
 
 
 

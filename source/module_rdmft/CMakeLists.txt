@@ -19,6 +19,7 @@
 #         optimizer/mixing_dmk.cpp
 #         optimizer/ft_rdmft.cpp
 #         optimizer/parameterize_ONs/softmax.cpp
+#         optimizer/torch_optimizer.cpp
 #     )
 
 #     # target_compile_definitions(rdmft PRIVATE _GLIBCXX_USE_CXX11_ABI=0)
@@ -46,6 +47,7 @@ if(ENABLE_LCAO)
         optimizer/mixing_dmk.cpp
         optimizer/ft_rdmft.cpp
         optimizer/parameterize_ONs/softmax.cpp
+        optimizer/torch_optimizer.cpp
     )
 
     add_library(
