@@ -667,6 +667,7 @@ struct Input_para
     bool mixing_rdmft = true;
     std::string rdmft_orb_opti = "iter_diag"; // iterdiag, idmft, rcg, bfgs, adam...
     std::string occ_num_opti = "bfgs"; // bfgs, adam...
+    bool rdmft_couple_opti = false;
     double idmft_kappa = 0.1;
     double idmft_beta = 0.0;
     bool read_occ_num = false;

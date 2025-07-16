@@ -8,6 +8,7 @@
 #         rdmft_pot.cpp
 #         rdmft_update_state.cpp
 #         esolver_rdmft.cpp
+#         esolver_rdmft_torch.cpp
 #         optimizer/iter_diag_NOs.cpp
 #         optimizer/optimizer_tools.cpp
 #         optimizer/line_search_rdmft.cpp
@@ -34,6 +35,7 @@ if(ENABLE_LCAO)
         rdmft_pot.cpp
         rdmft_update_state.cpp
         esolver_rdmft.cpp
+        esolver_rdmft_torch.cpp
         optimizer/iter_diag_NOs.cpp
         optimizer/optimizer_tools.cpp
         optimizer/line_search_rdmft.cpp

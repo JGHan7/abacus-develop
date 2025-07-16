@@ -509,6 +509,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("rdmft_couple_opti");
+        item.annotation = "whether to optimize both NOs and ONs in one iteration";
+        read_sync_bool(input.rdmft_couple_opti);
+        this->add_item(item);
+    }
+    {
         Input_Item item("rdmft");
         item.annotation = "whether to perform rdmft calculation, default is false";
         read_sync_bool(input.rdmft);

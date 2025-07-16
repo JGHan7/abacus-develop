@@ -13,6 +13,7 @@
 #include "module_lr/esolver_lrtd_lcao.h"
 // added by jghan, 2024-11-06
 #include "module_rdmft/esolver_rdmft.h"
+#include "module_rdmft/esolver_rdmft_torch.h"
 extern "C"
 {
 #include "module_base/blacs_connector.h"
@@ -297,18 +298,36 @@ ESolver* init_esolver(const Input_para& inp, UnitCell& ucell)
     // added by jghan, 2024-11-05
     else if (esolver_type == "rdmft_lcao")
 	{
-		if (PARAM.globalv.gamma_only_local)
-		{
-			return new rdmft::ESolver_RDMFT<double, double>();
-		}
-		else if (PARAM.inp.nspin < 4)
-		{
-			return new rdmft::ESolver_RDMFT<std::complex<double>, double>();
-		}
-		else
-		{
-			return new rdmft::ESolver_RDMFT<std::complex<double>, std::complex<double>>();
-		}
+        if( PARAM.inp.opti_by_torch )
+        {
+		    if (PARAM.globalv.gamma_only_local)
+            {
+                return new rdmft::ESolver_RDMFT_Torch<double, double>();
+            }
+            else if (PARAM.inp.nspin < 4)
+            {
+                return new rdmft::ESolver_RDMFT_Torch<std::complex<double>, double>();
+            }
+            else
+            {
+                return new rdmft::ESolver_RDMFT_Torch<std::complex<double>, std::complex<double>>();
+            }
+        }
+        else
+        {
+		    if (PARAM.globalv.gamma_only_local)
+            {
+                return new rdmft::ESolver_RDMFT<double, double>();
+            }
+            else if (PARAM.inp.nspin < 4)
+            {
+                return new rdmft::ESolver_RDMFT<std::complex<double>, double>();
+            }
+            else
+            {
+                return new rdmft::ESolver_RDMFT<std::complex<double>, std::complex<double>>();
+            }
+        }
 	}
 #endif
     else if (esolver_type == "ofdft")

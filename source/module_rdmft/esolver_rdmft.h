@@ -28,7 +28,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 {
   public:
     ESolver_RDMFT();
-    ~ESolver_RDMFT();
+    virtual ~ESolver_RDMFT();
 
     virtual void before_all_runners(UnitCell& ucell, const Input_para& inp) override;
 
@@ -60,16 +60,26 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     // Parallel_2D* para_H_ni_nj = nullptr;
 
-  private:
+  protected:
 
     //! objective function E(orbs, occ_nums): provides Etotal_rdmft and first-order gradient
     rdmft::RDMFT<TK, TR> rdmft_solver;
 
-    //! optimizing natural orbitals by iterative diagonalization
-    rdmft::IterDiag_NOs<TK, TR> iter_diag_orb;
 
-    //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
-    rdmft::LineSearch<TK, TR> ls_opti_occ_num;
+
+  private:
+
+    // //! optimizing natural orbitals by iterative diagonalization
+    // rdmft::IterDiag_NOs<TK, TR> iter_diag_orb;
+
+    // //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
+    // rdmft::LineSearch<TK, TR> ls_opti_occ_num;
+
+    //! 
+    rdmft::IDMFT<TK, TR> idmft;
+
+    //! 
+    rdmft::FT_RDMFT<TK, TR> ft_rdmft;
 
     //! just for test
     rdmft::BFGS_ONs<double> bfgs_opti_x;
@@ -100,11 +110,13 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
         return std::sqrt(num);
     }
 
-    //! 
-    rdmft::IDMFT<TK, TR> idmft;
+  protected:
 
-    //! 
-    rdmft::FT_RDMFT<TK, TR> ft_rdmft;
+    //! optimizing natural orbitals by iterative diagonalization
+    rdmft::IterDiag_NOs<TK, TR> iter_diag_orb;
+
+    //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
+    rdmft::LineSearch<TK, TR> ls_opti_occ_num;
 
     // rdmft::BFGS_ONs<double> bfgs_rdmft;
 
@@ -112,57 +124,66 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     // std::vector< std::vector<TK> > Fock_like_mat;
 
-    void get_start_guess();
+    virtual void get_start_guess(UnitCell& ucell, const int istep);
 
     // use dft type to update occ_number
     double update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver);
 
     void print_info();
 
-    /********* the following is used in rdmft with libTorch *********/
+    // /********* the following is used in rdmft with libTorch *********/
 
-    rdmft::EBI ebi_torch;
+    // rdmft::EBI ebi_torch;
 
-    Parallel_2D* para_Fij;
+    // Parallel_2D* para_Fij;
 
-    // 
-    psi::Psi<TK> wfc_new;
-    // 
-    std::vector< std::vector<TK> > R_vec_global;
-    // use C' = C*exp(R) to optimize NOs, C is the expansion coefficient of NOs under NAOs
-    std::vector< std::vector<TK> > dE_dR_global;
+    // // 
+    // psi::Psi<TK> wfc_new;
+    // // 
+    // std::vector< std::vector<TK> > R_vec_global;
+    // // use C' = C*exp(R) to optimize NOs, C is the expansion coefficient of NOs under NAOs
+    // std::vector< std::vector<TK> > dE_dR_global;
     
-    // 
-    ModuleBase::matrix occ_number_new;
-    //! in EBI or other methods, the occupation numbers is parameterized using x
-    std::vector<double> var_x;
-    // 
-    std::vector<double> dE_dx;
+    // // 
+    // ModuleBase::matrix occ_number_new;
+    // //! in EBI or other methods, the occupation numbers is parameterized using x
+    // std::vector<double> var_x;
+    // // 
+    // std::vector<double> dE_dx;
+
+    // bool x_need_ls = true;
+    // torch::optim::Adam* var_x_optimizer = nullptr;
+    // torch::optim::LBFGS* var_x_optimizer = nullptr;
+    // // std::unique_ptr<torch::optim::Adam> var_x_optimizer;
+    // // var_x_optimizer = std::make_unique<torch::optim::Adam>(params, torch::optim::AdamOptions(0.05));
+
+    // bool R_need_ls = true;
+    // torch::optim::Adam* R_optimizer = nullptr;
+    // torch::optim::LBFGS* R_optimizer = nullptr;
 
 
 
-
-    int nk_total = 0;
+    // int nk_total = 0;
 
 
     
-    //!
-    // 
-    double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
-                        const std::vector<torch::Tensor>* R_tensor = nullptr,
-                        bool cal_by_occ_num = false,
-                        bool cal_by_orb = false);
+    // //!
+    // // 
+    // double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
+    //                     const std::vector<torch::Tensor>* R_tensor = nullptr,
+    //                     bool cal_by_occ_num = false,
+    //                     bool cal_by_orb = false);
 
-    // void cal_E_grad(bool by_occ_num,
-    //                   bool by_wfc,
-    //                   const torch::Tensor* var_x_tensor = nullptr,
-    //                   const std::vector<torch::Tensor>* R_tensor = nullptr);
+    // // void cal_E_grad(bool by_occ_num,
+    // //                   bool by_wfc,
+    // //                   const torch::Tensor* var_x_tensor = nullptr,
+    // //                   const std::vector<torch::Tensor>* R_tensor = nullptr);
 
-    bool has_cal_E_occ_num = false;
-    void cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor = nullptr);
+    // bool has_cal_E_occ_num = false;
+    // void cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor = nullptr);
 
-    bool has_cal_E_wfc= false;
-    void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
+    // bool has_cal_E_wfc= false;
+    // void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
 
 
 };
