@@ -165,6 +165,19 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
     }
 
     // for NOs
+    std::vector< std::vector<torch::Tensor> > param_R(this->nk_total);
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        param_R[ik] = { this->R_tensor[ik] };
+        if( PARAM.inp.occ_num_opti == "adam" )
+        {
+            this->R_optimizer[ik] = std::make_unique<torch::optim::Adam>(param_R[ik], this->x_options_adam);
+        }
+        else if( PARAM.inp.occ_num_opti == "lbfgs" )
+        {
+            this->R_optimizer[ik] = std::make_unique<torch::optim::LBFGS>(param_R[ik], this->x_options_lbfgs);
+        }
+    }
 
 
 
@@ -463,7 +476,7 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_Ex_Egrad()
 template <typename TK, typename TR>
 torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
 {
-    this->R_optimizer->zero_grad();
+    this->R_optimizer[ik]->zero_grad();
 
     double E = 0.0;
 

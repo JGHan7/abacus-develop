@@ -94,7 +94,8 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
     nspin = PARAM.inp.nspin;
     nbands_total = PARAM.inp.nbands;
     nk_total = ModuleSymmetry::Symmetry::symm_flag == -1 ? this->kv->get_nkstot_full(): this->kv->get_nks();  // here the spin weight is taken into account
-    
+    this->Ek.resize(this->nk_total, 0.0);
+
     // nk_total *= nspin;
     // std::cout << "\n\n nspin:"<< nspin << "\n this->kv->get_nks():" << this->kv->get_nks() << std::endl;
 
@@ -491,10 +492,10 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
 
         // for Exc
         E_RDMFT[2] = 0.0;
+        ModuleBase::matrix Exc_n_k(wg.nr, wg.nc, true);
 #ifdef __EXX
         if( GlobalC::exx_info.info_global.cal_exx )
         {
-            ModuleBase::matrix Exc_n_k(wg.nr, wg.nc, true);
             // because we have got wk_fun_occNum, we can use symbol=1 realize it
             occNum_Mul_wfcHwfc(wk_fun_occNum, wfcHwfc_exx_XC, Exc_n_k, 1);
             E_RDMFT[2] = getEnergy(Exc_n_k);
@@ -502,7 +503,22 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
             E_exxType_rdmft = E_RDMFT[2];
         }
 #endif
+
+        // contribution of DFT's xc functional to energy
         E_RDMFT[2] += etxc;
+
+        // dft_xc has not been considered yet !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        ModuleBase::matrix E_n_k(wg.nr, wg.nc, true);
+        E_n_k = ETV_n_k + Ehartree_n_k + Exc_n_k;
+        for(int ir=0; ir<E_n_k.nr; ++ ir)
+        {
+            this->Ek[ir] = 0.0;
+            for(int ic=0; ic<E_n_k.nc; ++ic)
+            { 
+                this->Ek[ir] += E_n_k(ir, ic);
+            }
+        }
+        Parallel_Reduce::reduce_all(this->Ek.data(), this->Ek.size());
 
         // add up the results obtained by all processors, or we can do reduce_all(wfcHwfc_) before add_wg() used for Etotal to replace it
         Parallel_Reduce::reduce_all(E_RDMFT[0]);

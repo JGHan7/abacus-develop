@@ -39,24 +39,22 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     virtual void runner(UnitCell& ucell, const int istep) override;
 
 
-
   protected:
     
     virtual void get_start_guess(UnitCell& ucell, const int istep) override;
 
 
-
-
-
-    /********* the following is used in rdmft with libTorch *********/
-
   private:
+
     int nk_total = 0;
+
     Parallel_2D* para_Fij;
 
-    rdmft::EBI ebi;
 
-    // 
+    /********* the following is used to optimize ONs  *********/
+    //
+    rdmft::EBI ebi;
+    //
     ModuleBase::matrix occ_number_new;
     //! in EBI or other methods, the occupation numbers is parameterized using x
     std::vector<double> var_x;
@@ -67,10 +65,23 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     // 
     torch::Tensor dE_dx_tensor;
     //
+    bool has_cal_E_occ_num = false;
+    void cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor = nullptr);
+    //
+    torch::Tensor trial_Ex_Egrad();
+    //
     double optimize_x();
+    //
+    bool x_need_ls = true;
+    //
+    torch::optim::LBFGSOptions x_options_lbfgs;
+    torch::optim::AdamOptions x_options_adam;
+    //
+    std::unique_ptr<torch::optim::Optimizer> var_x_optimizer;
 
 
 
+    /********* the following is used to optimize ONs  *********/
     // 
     psi::Psi<TK> wfc_new;
     // 
@@ -82,28 +93,25 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     // 
     std::vector<torch::Tensor> dE_dR_tensor;
     //
+    bool has_cal_E_wfc= false;
+    void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
+    //
+    torch::Tensor trial_ER_Egrad(const int ik);
+    //
     double optimize_R();
-
-
-    // std::unique_ptr<torch::optim::Adam> var_x_optimizer;
-    // var_x_optimizer = std::make_unique<torch::optim::Adam>(params, torch::optim::AdamOptions(0.05));
-
-    bool x_need_ls = true;
-    std::unique_ptr<torch::optim::Optimizer> var_x_optimizer;
-    torch::optim::LBFGSOptions x_options_lbfgs;
-    torch::optim::AdamOptions x_options_adam;
-
-    torch::Tensor trial_Ex_Egrad();
-
-
-
+    //
     bool R_need_ls = true;
-    std::unique_ptr<torch::optim::Optimizer> R_optimizer;
+    //
     torch::optim::LBFGSOptions R_options_lbfgs;
     torch::optim::AdamOptions R_options_adam;
-    // torch::optim::Adam* R_optimizer = nullptr;
-    // torch::optim::LBFGS* R_optimizer = nullptr;
-    torch::Tensor trial_ER_Egrad(const int ik);
+    //
+    std::vector< std::unique_ptr<torch::optim::Optimizer> > R_optimizer;
+
+
+
+
+
+
 
 
 
@@ -111,46 +119,23 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
 
     
-    //!
-    // 
+    //! 
     double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
                         const std::vector<torch::Tensor>* R_tensor = nullptr,
                         bool cal_by_occ_num = false,
                         bool cal_by_orb = false);
+
 
     // void cal_E_grad(bool by_occ_num,
     //                   bool by_wfc,
     //                   const torch::Tensor* var_x_tensor = nullptr,
     //                   const std::vector<torch::Tensor>* R_tensor = nullptr);
 
-    bool has_cal_E_occ_num = false;
-    void cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor = nullptr);
+    // bool has_cal_E_occ_num = false;
+    // void cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor = nullptr);
 
-    bool has_cal_E_wfc= false;
-    void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // bool has_cal_E_wfc= false;
+    // void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
 
 
 

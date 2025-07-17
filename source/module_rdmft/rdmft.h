@@ -89,6 +89,7 @@ class RDMFT
     double E_RDMFT[4] = {0.0};
     double Ecum_entropy = 0.0;
     double Etotal = 0.0;
+    std::vector<double> Ek;
     
     double idmft_entropy = 0.0;
 
