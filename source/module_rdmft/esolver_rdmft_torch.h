@@ -54,18 +54,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     int nk_total = 0;
     Parallel_2D* para_Fij;
 
-    rdmft::EBI ebi_torch;
-
-    // 
-    psi::Psi<TK> wfc_new;
-    // 
-    std::vector< std::vector<TK> > R_vec_global;
-    // use C' = C*exp(R) to optimize NOs, C is the expansion coefficient of NOs under NAOs
-    std::vector< std::vector<TK> > dE_dR_global;
-    // 
-    std::vector<torch::Tensor> R_tensor;
-    // 
-    std::vector<torch::Tensor> dE_dR_tensor;
+    rdmft::EBI ebi;
 
     // 
     ModuleBase::matrix occ_number_new;
@@ -77,6 +66,23 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     torch::Tensor var_x_tensor;
     // 
     torch::Tensor dE_dx_tensor;
+    //
+    double optimize_x();
+
+
+
+    // 
+    psi::Psi<TK> wfc_new;
+    // 
+    std::vector< std::vector<TK> > R_vec_global;
+    // use C' = C*exp(R) to optimize NOs, C is the expansion coefficient of NOs under NAOs
+    std::vector< std::vector<TK> > dE_dR_global;
+    // 
+    std::vector<torch::Tensor> R_tensor;
+    // 
+    std::vector<torch::Tensor> dE_dR_tensor;
+    //
+    double optimize_R();
 
 
     // std::unique_ptr<torch::optim::Adam> var_x_optimizer;
