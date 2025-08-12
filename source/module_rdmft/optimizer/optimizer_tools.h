@@ -973,8 +973,12 @@ void tensor2vector(const torch::Tensor& tensor, std::vector<T>& vec)
 }
 
 
+//! copy the real and imaginary parts from a complex tensor
+void split_complex_tensor(const torch::Tensor& R, torch::Tensor& R_real, torch::Tensor& R_imag);
 
 
+//! recover a tensor from the real and imaginary parts
+void merge_complex_tensor(const torch::Tensor& R_real, const torch::Tensor& R_imag, torch::Tensor& R);
 
 
 

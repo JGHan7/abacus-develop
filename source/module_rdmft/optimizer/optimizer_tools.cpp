@@ -422,6 +422,43 @@ void wg2occ_num(const K_Vectors* kv, const ModuleBase::matrix& wg, ModuleBase::m
 
 
 
+//! copy the real and imaginary parts from a complex tensor
+void split_complex_tensor(const torch::Tensor& R, torch::Tensor& R_real, torch::Tensor& R_imag)
+{
+    // TORCH_CHECK(R.dtype() == torch::kComplexDouble, "Input tensor must be complex double");
+
+    if ( R.is_complex() )
+    {
+        R_real = torch::real(R).clone().detach().set_requires_grad(true);
+        R_imag = torch::imag(R).clone().detach().set_requires_grad(true);
+    }
+    else
+    {
+        R_real = R.clone().detach().set_requires_grad(true);
+        R_imag = torch::zeros_like(R_real).detach().set_requires_grad(true);
+    }
+}
+
+
+//! recover a tensor from the real and imaginary parts
+void merge_complex_tensor(const torch::Tensor& R_real, const torch::Tensor& R_imag, torch::Tensor& R)
+{
+    TORCH_CHECK(R_real.sizes() == R_imag.sizes(), "Real and Imag tensors must have the same shape");
+    TORCH_CHECK(R_real.dtype() == torch::kDouble && R_imag.dtype() == torch::kDouble, "Real and Imag tensors must be double");
+    TORCH_CHECK(R.is_complex(), "Target tensor R must be complex");
+    TORCH_CHECK(R.sizes() == R_real.sizes(), "Target tensor R must have the same shape as real/imag parts");
+
+    R = torch::complex(R_real, R_imag);
+
+    // does not change the memory address and other properties of R
+    // auto R_tmp = torch::complex(R_real, R_imag);
+    // R.copy_(R_tmp);
+
+}
+
+
+
+
 
 
 

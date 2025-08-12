@@ -85,16 +85,24 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     // 
     psi::Psi<TK> wfc_new;
     // 
+    psi::Psi<TK> wfc_old;
+    // 
     std::vector< std::vector<TK> > R_vec_global;
     // use C' = C*exp(R) to optimize NOs, C is the expansion coefficient of NOs under NAOs
     std::vector< std::vector<TK> > dE_dR_global;
-    // 
+    // can be deleted? 
     std::vector<torch::Tensor> R_tensor;
+    //
+    std::vector<torch::Tensor> R_tensor_real;
+    //
+    std::vector<torch::Tensor> R_tensor_imag;
     // 
     std::vector<torch::Tensor> dE_dR_tensor;
     //
     bool has_cal_E_wfc= false;
-    void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
+    // in the future, it can be modified to distinguish k points
+    // void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
+    void cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, const int ik, const torch::Tensor* R_tensor_ik = nullptr);
     //
     torch::Tensor trial_ER_Egrad(const int ik);
     //
@@ -119,12 +127,17 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
 
     
+    // //! 
+    // double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
+    //                     const std::vector<torch::Tensor>* R_tensor = nullptr,
+    //                     bool cal_by_occ_num = false,
+    //                     bool cal_by_orb = false);
     //! 
     double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
-                        const std::vector<torch::Tensor>* R_tensor = nullptr,
+                        const torch::Tensor* R_tensor_ik = nullptr,
                         bool cal_by_occ_num = false,
-                        bool cal_by_orb = false);
-
+                        bool cal_by_orb = false,
+                        const int ik = 0);
 
     // void cal_E_grad(bool by_occ_num,
     //                   bool by_wfc,
