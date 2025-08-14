@@ -547,12 +547,12 @@ void ReadInput::item_others()
         Input_Item item("maxniter_orb");
         item.annotation = "maximum number of iterations to optimize the natural orbitals";
         read_sync_int(input.maxniter_orb);
-        item.reset_value = [](const Input_Item& item, Parameter& para) {
-            if( para.input.rdmft_orb_opti == "iter_diag" || PARAM.inp.dft_opti )
-            {
-                para.input.maxniter_orb = para.input.scf_nmax;
-            }
-        };
+        // item.reset_value = [](const Input_Item& item, Parameter& para) {
+        //     if( para.input.rdmft_orb_opti == "iter_diag" || PARAM.inp.dft_opti )
+        //     {
+        //         para.input.maxniter_orb = para.input.scf_nmax;
+        //     }
+        // };
         this->add_item(item);
     }
     {

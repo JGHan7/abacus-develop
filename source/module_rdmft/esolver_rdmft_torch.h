@@ -119,7 +119,18 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
 
 
+    // test 
+    std::vector< std::vector<TK> > grad;
 
+    std::vector< std::vector<TK> > moment_m;
+
+    std::vector< std::vector<double> > moment_v;
+
+    std::vector< std::vector<double> > vhat_max;
+
+    std::vector<TK> m_hat;
+
+    std::vector<double> v_hat;
 
 
 
