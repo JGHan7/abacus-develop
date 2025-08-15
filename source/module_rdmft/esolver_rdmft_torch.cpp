@@ -102,7 +102,7 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     {
         this->x_need_ls = true;
         this->x_options_lbfgs.lr(1.0);
-        this->R_options_lbfgs.max_iter(1);
+        this->x_options_lbfgs.max_iter(1);
         // this->R_options_lbfgs.tolerance_grad(1e-6);
         // this->R_options_lbfgs..line_search_fn("strong_wolfe");
     }
@@ -204,16 +204,16 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
         }
     }
 
-    // refactor together with the start_guess() function to reduce unnecessary calculations
+    // // refactor together with the start_guess() function to reduce unnecessary calculations
+    // this->trial_Ex_Egrad();
+    // for(int ik=0; ik<this->nk_total; ++ik)
+    // {
+    //     this->trial_ER_Egrad(ik);
+    // }
+
+
+
     this->trial_Ex_Egrad();
-    for(int ik=0; ik<this->nk_total; ++ik)
-    {
-        this->trial_ER_Egrad(ik);
-    }
-
-
-
-
     int init_maxniter = 30;
     if(this->dft_optimize)
     {
@@ -231,48 +231,48 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
     init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
     double Etotal_old;
 
-    // test
-    ModuleBase::matrix occ_num_old;
-    // double Etotal_old;
-    for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
-    {
-        // optimize natural occupation numbers
-        // diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
-        occ_num_old = this->ebi.get_occ_number();
-        Etotal_old = this->rdmft_solver.Etotal;
-
-        double E_new = this->optimize_x();
-
-        ModuleBase::matrix occ_num_new = this->ebi.get_occ_number();
-        double diff_occ_num_max = 0.0;
-        for(int i=0; i<occ_num_new.nr * occ_num_new.nc; ++i)
-        {
-            diff_occ_num_max = std::max( diff_occ_num_max, std::abs(occ_num_new.c[i] - occ_num_old.c[i]) );
-        }
-
-        std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
-        rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
-
-        std::cout << "by Torch:\nEtotal_rdmft: " << this->rdmft_solver.Etotal
-                    << "\n\ndiff_E: " << E_new - Etotal_old
-                    << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
-                    << "\n******" << std::endl << std::defaultfloat;
-
-        if( diff_occ_num_max < this->occ_num_thr * 1e-2 ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
-        {
-            tot_occ_num_iter += iter_occ_num;
-            // occ_num_conv = true;
-            break;
-        }
-    }
-
-
-
-
-    // for(int ik=0; ik<this->nk_total; ++ik)
+    // // test
+    // ModuleBase::matrix occ_num_old;
+    // // double Etotal_old;
+    // for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
     // {
-    //     this->trial_ER_Egrad(ik).item().toDouble();
+    //     // optimize natural occupation numbers
+    //     // diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
+    //     occ_num_old = this->ebi.get_occ_number();
+    //     Etotal_old = this->rdmft_solver.Etotal;
+
+    //     double E_new = this->optimize_x();
+
+    //     ModuleBase::matrix occ_num_new = this->ebi.get_occ_number();
+    //     double diff_occ_num_max = 0.0;
+    //     for(int i=0; i<occ_num_new.nr * occ_num_new.nc; ++i)
+    //     {
+    //         diff_occ_num_max = std::max( diff_occ_num_max, std::abs(occ_num_new.c[i] - occ_num_old.c[i]) );
+    //     }
+
+    //     std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
+    //     rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
+
+    //     std::cout << "by Torch:\nEtotal_rdmft: " << this->rdmft_solver.Etotal
+    //                 << "\n\ndiff_E: " << E_new - Etotal_old
+    //                 << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+    //                 << "\n******" << std::endl << std::defaultfloat;
+
+    //     if( diff_occ_num_max < this->occ_num_thr * 1e-2 ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
+    //     {
+    //         tot_occ_num_iter += iter_occ_num;
+    //         // occ_num_conv = true;
+    //         break;
+    //     }
     // }
+
+
+
+
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        this->trial_ER_Egrad(ik).item().toDouble();
+    }
 
     // test
     for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
@@ -287,7 +287,7 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
         double E_new = this->optimize_R();
 
         std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
-        std::cout << "by Torch:\nEtotal_rdmft: " << this->rdmft_solver.Etotal
+        std::cout << "by Torch:\nEtotal_rdmft: " << E_new // this->rdmft_solver.Etotal
                     << "\n\ndiff_E: " << E_new - Etotal_old
                     // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
                     << "\n******" << std::endl << std::defaultfloat;
@@ -296,120 +296,6 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
         if( std::abs(diff_E) < 1e-8 ) { break; }
 
     }
-
-
-
-
-
-    // int init_maxniter = 10;
-    // if(dft_optimize)
-    // {
-    //     init_maxniter = PARAM.inp.maxniter_orb;
-    // }
-    // double diff_E = 1.0;
-    // double final_diff_E = 1.0;
-    // double diff_occ_num_max = 1.0;
-    // double Etotal = this->rdmft_solver.Etotal;
-
-    // int tot_orb_iter = 0;
-    // int tot_occ_num_iter = 0;
-    // int tot_exteral_iter = 0;
-
-    // for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
-    // {
-    //     tot_exteral_iter = iter; // temp
-    //     bool orb_conv = false;
-    //     bool occ_num_conv = false;
-
-    //     init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
-    //     this->iter_diag_orb.before_opti(this->p_hamilt);
-    //     for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
-    //     {
-    //         // delete or save?
-    //         if(this->dft_optimize)
-    //         {
-    //             this->update_occ_num_dft(this->rdmft_solver);
-    //         }
-
-    //         // optimize natural orbitals
-    //         diff_E = this->iter_diag_orb.optimize_orb(this->rdmft_solver);
-
-    //         std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
-    //         std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
-    //                     << "\n\ndiff_E: " << diff_E
-    //                     << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
-    //                     << "\n******" << std::endl << std::defaultfloat;
-
-    //         if( this->iter_diag_orb.get_diff_DM_max() < PARAM.inp.scf_thr && iter_orb >= 3 )
-    //         {
-    //             tot_orb_iter += iter_orb;
-    //             orb_conv = true;
-    //             break;
-    //         }
-    //     }
-    //     if( !orb_conv )
-    //     {
-    //         tot_orb_iter += init_maxniter;
-    //     }
-        
-    //     final_diff_E = this->rdmft_solver.Etotal - Etotal;
-    //     if( final_diff_E > 0 )
-    //     {
-    //         this->iter_diag_orb.modify_learn_rate();
-    //         init_maxniter += 10;
-    //     }
-    //     Etotal = this->rdmft_solver.Etotal;
-
-    //     if( this->dft_optimize )
-    //     {
-    //         break;
-    //     }
-
-    //     if(!this->dft_optimize) { this->ls_opti_occ_num.before_opti(); }
-    //     for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
-    //     {
-    //         // optimize natural occupation numbers
-    //         diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
-    //         std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
-    //         rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
-
-    //         if( diff_occ_num_max < this->occ_num_thr ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
-    //         {
-    //             tot_occ_num_iter += iter_occ_num;
-    //             occ_num_conv = true;
-    //             break;
-    //         }
-    //     }
-    //     tot_occ_num_iter += PARAM.inp.maxniter_occ_num;
-
-    //     final_diff_E = this->rdmft_solver.Etotal - Etotal;
-    //     if( final_diff_E > -1e-6 )
-    //     {
-    //         init_maxniter += 10;
-    //     }
-    //     Etotal = this->rdmft_solver.Etotal;
-
-    //     double max_off_diag_F = this->iter_diag_orb.check_hermi_lambda();
-    //     if( max_off_diag_F < this->lambda_thr )
-    //     {
-    //         std::cout << "\n******\n\nConvergence!\n\nmax_off_diag_F < lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
-    //         break;
-    //     }
-    //     else if( orb_conv && occ_num_conv )
-    //     {
-    //         std::cout << "\n******\n\nNOs(DM) and ONs Converge respectively!\n\nmax_off_diag_F is " << max_off_diag_F << "\n******\n" << std::endl;
-    //         break;
-    //     }
-    //     else
-    //     {
-    //         std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
-    //     }
-    // }
-
-
-
-
-
 
 
 
@@ -490,7 +376,10 @@ void ESolver_RDMFT_Torch<TK, TR>::get_start_guess(UnitCell& ucell, const int ist
     TK* pwfc = &this->wfc_new(0, 0, 0);
     for(int i=0; i<this->wfc_new.size(); ++i) { pwfc[i] = pwfc_in[i]; }
 
-    this->wfc_old = this->wfc_new;
+    // this->wfc_old = this->wfc_new;
+    TK* pwfc_new = &this->wfc_new(0, 0, 0);
+    TK* pwfc_old = &this->wfc_old(0, 0, 0);
+    for(int i=0; i<this->wfc_new.size(); ++i) { pwfc_old[i] = pwfc_new[i]; }
 
     // test
     GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
@@ -557,7 +446,7 @@ double ESolver_RDMFT_Torch<TK, TR>::optimize_R()
 {
     double Etotal = 0.0;
 
-    if( this->x_need_ls )
+    if( this->R_need_ls )
     {
         for(int ik=0; ik<this->nk_total; ++ik)
         {
@@ -568,46 +457,64 @@ double ESolver_RDMFT_Torch<TK, TR>::optimize_R()
     {
         for(int ik=0; ik<this->nk_total; ++ik)
         {
+            // // Etotal = this->trial_ER_Egrad(ik).item().toDouble();
+            // this->R_optimizer[ik]->step();
             // Etotal = this->trial_ER_Egrad(ik).item().toDouble();
-            this->R_optimizer[ik]->step();
-            Etotal = this->trial_ER_Egrad(ik).item().toDouble();
         }
 
-        // std::vector<TK> R_vec_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
-        // std::vector<TK> exp_R_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
+        std::vector<TK> R_vec_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
+        std::vector<TK> exp_R_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
 
-        // // test adam which writed by myself
-        // for(int ik=0; ik<this->nk_total; ++ik)
-        // {
-        //     std::fill(R_vec_local.begin(), R_vec_local.end(), 0.0);
-        //     std::fill(exp_R_local.begin(), exp_R_local.end(), 0.0);
+        std::cout << "\n******\ntest adam which writed by myself\n******" << std::endl;
 
-        //     std::fill(this->grad[ik].begin(), this->grad[ik].end(), 0.0);
-        //     this->rdmft_solver.cal_antisym_lambda(ik, this->grad[ik], 2.0);
+        // test adam which writed by myself
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            std::fill(R_vec_local.begin(), R_vec_local.end(), 0.0);
+            std::fill(exp_R_local.begin(), exp_R_local.end(), 0.0);
 
-        //     for(int i=0; i<this->grad[ik].size(); ++i)
-        //     {
-        //         this->moment_m[ik][i] = PARAM.inp.adam_beta1 * this->moment_m[ik][i] + (1.0 - PARAM.inp.adam_beta1) * this->grad[ik][i];
-        //         this->moment_v[ik][i] = PARAM.inp.adam_beta2 * this->moment_v[ik][i] + (1.0 - PARAM.inp.adam_beta2) * std::norm(this->grad[ik][i]);
-        //         this->m_hat[i] = this->moment_m[ik][i] / (1.0 - PARAM.inp.adam_beta1);
-        //         this->v_hat[i] = this->moment_v[ik][i] / (1.0 - PARAM.inp.adam_beta2);
-        //         this->vhat_max[ik][i] = std::max(this->vhat_max[ik][i], this->v_hat[i]);
-        //         // this->vhat_max[ik][i] = this->v_hat[i];
-        //         R_vec_local[i] = - PARAM.inp.adam_learn_rate * this->m_hat[i] / std::sqrt( this->vhat_max[ik][i] + 1e-16 );
-        //     }
+            std::fill(this->grad[ik].begin(), this->grad[ik].end(), 0.0);
 
-        //     rdmft::exp_skew_hermi_mat(this->para_Fij, R_vec_local, exp_R_local);
 
-        //     rdmft::pTgemm_scalapack( this->para_Fij, &(this->rdmft_solver.wfc(ik, 0, 0)), exp_R_local.data(),
-        //                     &(this->wfc_new(ik, 0, 0)), PARAM.inp.nbands, PARAM.inp.nbands, PARAM.inp.nbands, 'N', 'N' );
+            // this->rdmft_solver.cal_antisym_lambda(ik, this->grad[ik], 2.0);
+            this->trial_ER_Egrad(ik).item().toDouble();
+            rdmft::distribute_vec(this->para_Fij, this->dE_dR_global[ik], this->grad[ik]);
 
-        // }
 
-        // this->rdmft_solver.update_elec( nullptr, &(this->wfc_new) );
-        // this->wfc_old = this->wfc_new;
-        // Etotal = this->rdmft_solver.cal_Energy();
+
+            for(int i=0; i<this->grad[ik].size(); ++i)
+            {
+                this->moment_m[ik][i] = PARAM.inp.adam_beta1 * this->moment_m[ik][i] + (1.0 - PARAM.inp.adam_beta1) * this->grad[ik][i];
+                this->moment_v[ik][i] = PARAM.inp.adam_beta2 * this->moment_v[ik][i] + (1.0 - PARAM.inp.adam_beta2) * std::norm(this->grad[ik][i]);
+                this->m_hat[i] = this->moment_m[ik][i] / (1.0 - PARAM.inp.adam_beta1);
+                this->v_hat[i] = this->moment_v[ik][i] / (1.0 - PARAM.inp.adam_beta2);
+                this->vhat_max[ik][i] = std::max(this->vhat_max[ik][i], this->v_hat[i]);
+                // this->vhat_max[ik][i] = this->v_hat[i];
+                R_vec_local[i] = - PARAM.inp.adam_learn_rate * this->m_hat[i] / std::sqrt( this->vhat_max[ik][i] + 1e-16 );
+            }
+
+            // rdmft::exp_skew_hermi_mat(this->para_Fij, R_vec_local, exp_R_local);
+
+            // rdmft::pTgemm_scalapack( this->para_Fij, &(this->wfc_old(ik, 0, 0)), exp_R_local.data(),
+            //                 &(this->wfc_new(ik, 0, 0)), PARAM.inp.nbands, PARAM.inp.nbands, PARAM.inp.nbands, 'N', 'N' );
+
+            torch::Tensor test_R;
+            rdmft::collect_vec(this->para_Fij, R_vec_local, this->R_vec_global[ik]);
+            rdmft::vector2tensor(this->R_vec_global[ik], test_R, { PARAM.inp.nbands * PARAM.inp.nbands } );
+            Etotal = this->cal_Etotal( nullptr, &test_R, 0, 1, ik );
+
+
+        }
+
+        this->rdmft_solver.update_elec( nullptr, &(this->wfc_new) );
+        TK* pwfc_new = &this->wfc_new(0, 0, 0);
+        TK* pwfc_old = &this->wfc_old(0, 0, 0);
+        for(int i=0; i<this->wfc_new.size(); ++i) { pwfc_old[i] = pwfc_new[i]; }
+        Etotal = this->rdmft_solver.cal_Energy();
 
     }
+
+    this->wfc_old = this->wfc_new;
 
     return Etotal;
 }
@@ -736,11 +643,11 @@ double ESolver_RDMFT_Torch<TK, TR>::cal_Etotal(const torch::Tensor* var_x_tensor
             rdmft::exp_skew_hermi_mat(this->para_Fij, R_vec_local, exp_R_local);
 
             // get C_t+1 = C_t * exp(R)
-            // rdmft::pTgemm_scalapack( this->para_Fij, &(this->rdmft_solver.wfc(ik, 0, 0)), exp_R_local.data(),
-            //                 &(this->wfc_new(ik, 0, 0)), PARAM.inp.nbands, PARAM.inp.nbands, PARAM.inp.nbands, 'N', 'N' );
-
-            rdmft::pTgemm_scalapack( this->para_Fij, &(this->wfc_old(ik, 0, 0)), exp_R_local.data(),
+            rdmft::pTgemm_scalapack( this->para_Fij, &(this->rdmft_solver.wfc(ik, 0, 0)), exp_R_local.data(),
                             &(this->wfc_new(ik, 0, 0)), PARAM.inp.nbands, PARAM.inp.nbands, PARAM.inp.nbands, 'N', 'N' );
+
+            // rdmft::pTgemm_scalapack( this->para_Fij, &(this->wfc_old(ik, 0, 0)), exp_R_local.data(),
+            //                 &(this->wfc_new(ik, 0, 0)), PARAM.inp.nbands, PARAM.inp.nbands, PARAM.inp.nbands, 'N', 'N' );
         }
 
         // std::cout << "R_tensor_ik:\n" << *R_tensor_ik << std::endl;
