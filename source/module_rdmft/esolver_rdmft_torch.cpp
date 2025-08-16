@@ -214,10 +214,10 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
             rdmft::split_complex_tensor(this->R_tensor[ik], this->R_tensor_real[ik], this->R_tensor_imag[ik]);
             this->R_tensor_real[ik].set_requires_grad(true);
             this->R_tensor_imag[ik].set_requires_grad(true);
-            // param_R[ik] = { this->R_tensor_real[ik], this->R_tensor_imag[ik] };
+            param_R[ik] = { this->R_tensor_real[ik], this->R_tensor_imag[ik] };
             
             // test
-            param_R[ik] = { this->R_tensor_real[ik] };
+            // param_R[ik] = { this->R_tensor_real[ik] };
         }
 
         if( PARAM.inp.rdmft_orb_opti == "adam" )
@@ -241,7 +241,7 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
 
     // this->trial_Ex_Egrad();
 
-    int init_maxniter = 30;
+    int init_maxniter = 60; // 10
     if(this->dft_optimize)
     {
         init_maxniter = PARAM.inp.maxniter_orb;
@@ -633,8 +633,8 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
         // this->R_tensor_real[ik].mutable_grad().copy_( 2 * torch::real(this->dE_dR_tensor[ik]) );
         // this->R_tensor_imag[ik].mutable_grad().copy_( -2 * torch::imag(this->dE_dR_tensor[ik]) );
 
-        this->R_tensor_real[ik].mutable_grad() =  1.0 * torch::real(this->dE_dR_tensor[ik]);
-        // this->R_tensor_imag[ik].mutable_grad() =  -2 * torch::imag(this->dE_dR_tensor[ik]);
+        this->R_tensor_real[ik].mutable_grad() =  2.0 * torch::real(this->dE_dR_tensor[ik]);
+        this->R_tensor_imag[ik].mutable_grad() =  -2.0 * torch::imag(this->dE_dR_tensor[ik]);
 
         // std::cout << "dE_dR_tensor_real:\n" << this->R_tensor_real[ik].mutable_grad() << std::endl;
         // std::cout << "dE_dR_tensor_imag:\n" << this->R_tensor_imag[ik].mutable_grad() << std::endl;
