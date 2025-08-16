@@ -57,6 +57,8 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     Parallel_2D* para_Fij;
 
+    bool cal_molecular = false;
+
 
     /********* the following is used to optimize ONs  *********/
     //

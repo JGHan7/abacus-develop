@@ -75,7 +75,7 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     this->wfc_new.zero_out();
     this->wfc_old = this->wfc_new;
     this->R_tensor.resize(this->nk_total);
-    // if( !PARAM.inp.gamma_only )
+    if( !PARAM.inp.gamma_only )
     {
         this->R_tensor_real.resize(this->nk_total);
         this->R_tensor_imag.resize(this->nk_total);
@@ -84,6 +84,8 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     this->R_optimizer.resize(this->nk_total);
 
     this->ebi.init(this->rdmft_solver.nk_total, this->kv.get_nkstot_full(), this->kv.wk);
+
+    this->cal_molecular = ( PARAM.inp.gamma_only || this->nk_total == 1 || ( this->nk_total == 2 && PARAM.inp.nspin == 2 ) );
 
     // test torch
     auto torchTest = torch::rand({4, 4});
@@ -604,19 +606,12 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
     {
         if( PARAM.inp.gamma_only )
         {
-            // this->R_tensor[ik].detach_();
             this->R_tensor[ik].data().zero_();
-            // this->R_tensor[ik].set_requires_grad(true);
         }
         else
         {
-            // this->R_tensor_real[ik].detach_();
             this->R_tensor_real[ik].data().zero_();
-            // this->R_tensor_real[ik].set_requires_grad(true);
-
-            // this->R_tensor_imag[ik].detach_();
             this->R_tensor_imag[ik].data().zero_();
-            // this->R_tensor_imag[ik].set_requires_grad(true);
         }
     }
 
@@ -633,11 +628,22 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
         // this->R_tensor_real[ik].mutable_grad().copy_( 2 * torch::real(this->dE_dR_tensor[ik]) );
         // this->R_tensor_imag[ik].mutable_grad().copy_( -2 * torch::imag(this->dE_dR_tensor[ik]) );
 
-        this->R_tensor_real[ik].mutable_grad() =  2.0 * torch::real(this->dE_dR_tensor[ik]);
-        this->R_tensor_imag[ik].mutable_grad() =  -2.0 * torch::imag(this->dE_dR_tensor[ik]);
+        // optimizers such as Adam will continue to accumulate gradient errors,
+        // causing the imaginary part that is theoretically 0 to gradually become non-zero ?
+        if( this->cal_molecular )
+        {
+            this->R_tensor_real[ik].mutable_grad() =  1.0 * torch::real(this->dE_dR_tensor[ik]);
+            this->R_tensor_imag[ik].mutable_grad() =  0.0 * torch::imag(this->dE_dR_tensor[ik]);
+        }
+        else
+        {
+            this->R_tensor_real[ik].mutable_grad() =  2.0 * torch::real(this->dE_dR_tensor[ik]);
+            this->R_tensor_imag[ik].mutable_grad() =  -2.0 * torch::imag(this->dE_dR_tensor[ik]);
+        }
 
-        // std::cout << "dE_dR_tensor_real:\n" << this->R_tensor_real[ik].mutable_grad() << std::endl;
-        // std::cout << "dE_dR_tensor_imag:\n" << this->R_tensor_imag[ik].mutable_grad() << std::endl;
+
+        std::cout << "dE_dR_tensor_real:\n" << this->R_tensor_real[ik].mutable_grad() << std::endl;
+        std::cout << "dE_dR_tensor_imag:\n" << this->R_tensor_imag[ik].mutable_grad() << std::endl;
 
     }
 
@@ -709,8 +715,8 @@ double ESolver_RDMFT_Torch<TK, TR>::cal_Etotal(const torch::Tensor* var_x_tensor
                             &(this->wfc_new(ik, 0, 0)), PARAM.inp.nbands, PARAM.inp.nbands, PARAM.inp.nbands, 'N', 'N' );
         }
 
-        // std::cout << "R_tensor_ik:\n" << *R_tensor_ik << std::endl;
-        // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, exp_R_local.data(), "exp_R_loacl", 10);
+        std::cout << "R_tensor_ik:\n" << *R_tensor_ik << std::endl;
+        rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, exp_R_local.data(), "exp_R_loacl", 10);
 
     }
 
