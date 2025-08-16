@@ -115,6 +115,9 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     //
     std::vector< std::unique_ptr<torch::optim::Optimizer> > R_optimizer;
 
+    //
+    double optimize_R_test();
+    std::unique_ptr<torch::optim::Optimizer>  R_optimizer_test;
 
 
 
