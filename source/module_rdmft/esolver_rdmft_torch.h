@@ -38,6 +38,13 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     virtual void runner(UnitCell& ucell, const int istep) override;
 
+    // Be clear about whether we're optimizing for C_t+1=exp(R_t)C_t or C_new=exp(R_t)C_0.
+    // The former means that each time R_t is a small deltaR, we can gradually rotate from C_0 to R_final;
+    // the latter means rotating C_0 to C_final all at once through the final R_final.
+    // The derivation of the explicit first-order gradient we can provide relies on R_t being close to zero.
+    // This means that only for the former is the gradient we provide approximately correct, so we recommend the former.
+    bool opti_deltaR = true;
+
 
   protected:
     
