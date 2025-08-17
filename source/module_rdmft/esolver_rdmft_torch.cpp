@@ -641,9 +641,8 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
             this->R_tensor_imag[ik].mutable_grad() =  -2.0 * torch::imag(this->dE_dR_tensor[ik]);
         }
 
-
-        std::cout << "dE_dR_tensor_real:\n" << this->R_tensor_real[ik].mutable_grad() << std::endl;
-        std::cout << "dE_dR_tensor_imag:\n" << this->R_tensor_imag[ik].mutable_grad() << std::endl;
+        // std::cout << "dE_dR_tensor_real:\n" << this->R_tensor_real[ik].mutable_grad() << std::endl;
+        // std::cout << "dE_dR_tensor_imag:\n" << this->R_tensor_imag[ik].mutable_grad() << std::endl;
 
     }
 
@@ -715,8 +714,8 @@ double ESolver_RDMFT_Torch<TK, TR>::cal_Etotal(const torch::Tensor* var_x_tensor
                             &(this->wfc_new(ik, 0, 0)), PARAM.inp.nbands, PARAM.inp.nbands, PARAM.inp.nbands, 'N', 'N' );
         }
 
-        std::cout << "R_tensor_ik:\n" << *R_tensor_ik << std::endl;
-        rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, exp_R_local.data(), "exp_R_loacl", 10);
+        // std::cout << "R_tensor_ik:\n" << *R_tensor_ik << std::endl;
+        // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, exp_R_local.data(), "exp_R_loacl", 10);
 
     }
 
