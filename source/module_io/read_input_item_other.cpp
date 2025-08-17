@@ -748,6 +748,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("adam_lr_occ_num");
+        item.annotation = "learning rate in adam which used by rdmft when optimizing occupation numbers";
+        read_sync_double(input.adam_lr_occ_num);
+        this->add_item(item);
+    }
+    {
         Input_Item item("adam_scaling_lr");
         item.annotation = "scaling factor of learning rate in adam which used by rdmft";
         read_sync_double(input.adam_scaling_lr);

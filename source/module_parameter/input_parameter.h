@@ -676,6 +676,7 @@ struct Input_para
     double adam_beta1 = 0.7;
     double adam_beta2 = 0.9;
     bool opti_by_torch = false;
+    double adam_lr_occ_num = 0.01;
 
     // ==============   #Parameters (22.EXX PW) =====================
     // EXX for planewave basis, rhx0820 2025-03-10

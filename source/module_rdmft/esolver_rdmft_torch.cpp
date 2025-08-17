@@ -95,7 +95,7 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     if( PARAM.inp.occ_num_opti == "adam" )
     {
         this->x_need_ls = false;
-        this->x_options_adam.lr(PARAM.inp.adam_learn_rate);
+        this->x_options_adam.lr(PARAM.inp.adam_lr_occ_num);
         // this->x_options_adam.betas(std::make_tuple(PARAM.inp.adam_beta1, PARAM.inp.adam_beta2));
         // this->x_options_adam.amsgrad(true);
     }
@@ -210,93 +210,93 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
     //     this->trial_ER_Egrad(ik);
     // }
 
-    int init_maxniter = 60; // 10
-    if(this->dft_optimize)
-    {
-        init_maxniter = PARAM.inp.maxniter_orb;
-    }
-    double diff_E = 1.0;
-    double final_diff_E = 1.0;
-    double diff_occ_num_max = 1.0;
-    double Etotal = this->rdmft_solver.Etotal;
+    // int init_maxniter = 60; // 10
+    // if(this->dft_optimize)
+    // {
+    //     init_maxniter = PARAM.inp.maxniter_orb;
+    // }
+    // double diff_E = 1.0;
+    // double final_diff_E = 1.0;
+    // double diff_occ_num_max = 1.0;
+    // double Etotal = this->rdmft_solver.Etotal;
 
-    int tot_orb_iter = 0;
-    int tot_occ_num_iter = 0;
-    int tot_exteral_iter = 0;
+    // int tot_orb_iter = 0;
+    // int tot_occ_num_iter = 0;
+    // int tot_exteral_iter = 0;
 
-    init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
-    double Etotal_old;
-
-    // test
-    ModuleBase::matrix occ_num_old;
+    // init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
     // double Etotal_old;
-    for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
-    {
-        // optimize natural occupation numbers
-        // diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
-        occ_num_old = this->ebi.get_occ_number();
-        Etotal_old = this->rdmft_solver.Etotal;
 
-        double E_new = this->optimize_x();
+    // // test
+    // ModuleBase::matrix occ_num_old;
+    // // double Etotal_old;
+    // for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
+    // {
+    //     // optimize natural occupation numbers
+    //     // diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
+    //     occ_num_old = this->ebi.get_occ_number();
+    //     Etotal_old = this->rdmft_solver.Etotal;
 
-        ModuleBase::matrix occ_num_new = this->ebi.get_occ_number();
-        double diff_occ_num_max = 0.0;
-        for(int i=0; i<occ_num_new.nr * occ_num_new.nc; ++i)
-        {
-            diff_occ_num_max = std::max( diff_occ_num_max, std::abs(occ_num_new.c[i] - occ_num_old.c[i]) );
-        }
+    //     double E_new = this->optimize_x();
 
-        std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
-        rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
+    //     ModuleBase::matrix occ_num_new = this->ebi.get_occ_number();
+    //     double diff_occ_num_max = 0.0;
+    //     for(int i=0; i<occ_num_new.nr * occ_num_new.nc; ++i)
+    //     {
+    //         diff_occ_num_max = std::max( diff_occ_num_max, std::abs(occ_num_new.c[i] - occ_num_old.c[i]) );
+    //     }
 
-        std::cout << "by Torch:\nEtotal_rdmft: " << this->rdmft_solver.Etotal
-                    << "\n\ndiff_E: " << E_new - Etotal_old
-                    // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
-                    << "\n******" << std::endl << std::defaultfloat;
+    //     std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
+    //     rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
 
-        if( diff_occ_num_max < this->occ_num_thr && iter_occ_num > 2 ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
-        {
-            tot_occ_num_iter += iter_occ_num;
-            // occ_num_conv = true;
-            break;
-        }
-    }
+    //     std::cout << "by Torch:\nEtotal_rdmft: " << this->rdmft_solver.Etotal
+    //                 << "\n\ndiff_E: " << E_new - Etotal_old
+    //                 // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+    //                 << "\n******" << std::endl << std::defaultfloat;
 
-    // test
-    Etotal_old = 0.0;
-    for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
-    {
-        // delete or save?
-        if(this->dft_optimize)
-        {
-            this->update_occ_num_dft(this->rdmft_solver);
-        }
-        // Etotal_old = this->rdmft_solver.Etotal;
+    //     if( diff_occ_num_max < this->occ_num_thr && iter_occ_num > 2 ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
+    //     {
+    //         tot_occ_num_iter += iter_occ_num;
+    //         // occ_num_conv = true;
+    //         break;
+    //     }
+    // }
 
-        double E_new = this->optimize_R();
+    // // test
+    // Etotal_old = 0.0;
+    // for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
+    // {
+    //     // delete or save?
+    //     if(this->dft_optimize)
+    //     {
+    //         this->update_occ_num_dft(this->rdmft_solver);
+    //     }
+    //     // Etotal_old = this->rdmft_solver.Etotal;
 
-        std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
-        std::cout << "by Torch:\nEtotal_rdmft: " << E_new // this->rdmft_solver.Etotal
-                    << "\n\ndiff_E: " << E_new - Etotal_old
-                    // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
-                    << "\n******" << std::endl << std::defaultfloat;
+    //     double E_new = this->optimize_R();
 
-        diff_E = E_new - Etotal_old;
-        Etotal_old = E_new;
-        if( std::abs(diff_E) < 1e-8 && iter_orb > 3 ) { break; }
+    //     std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
+    //     std::cout << "by Torch:\nEtotal_rdmft: " << E_new // this->rdmft_solver.Etotal
+    //                 << "\n\ndiff_E: " << E_new - Etotal_old
+    //                 // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+    //                 << "\n******" << std::endl << std::defaultfloat;
 
-    }
+    //     diff_E = E_new - Etotal_old;
+    //     Etotal_old = E_new;
+    //     if( std::abs(diff_E) < 1e-8 && iter_orb > 3 ) { break; }
+
+    // }
 
 
     this->print_info();
 
-    if( !PARAM.inp.rdmft_couple_opti )
-    {
-        std::cout << "\n******\nexternal iter = " << tot_exteral_iter 
-                    << "\ntotal orbital iter = " << tot_orb_iter 
-                    << "\ntotal occ_num iter = " << tot_occ_num_iter
-                    << "\n******\n" << std::endl;
-    }
+    // if( !PARAM.inp.rdmft_couple_opti )
+    // {
+    //     std::cout << "\n******\nexternal iter = " << tot_exteral_iter 
+    //                 << "\ntotal orbital iter = " << tot_orb_iter 
+    //                 << "\ntotal occ_num iter = " << tot_occ_num_iter
+    //                 << "\n******\n" << std::endl;
+    // }
 
 
 }
@@ -306,13 +306,70 @@ template <typename TK, typename TR>
 void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
 {
     double Etotal_old = 0.0;
-    ModuleBase::matrix occ_num_old;
-    double diff_E = 1.0;
-    double final_diff_E = 1.0;
-    double diff_occ_num_max = 1.0;
+    ModuleBase::matrix occ_num_old(this->nk_total, PARAM.inp.nbands);
+    double diff_E1 = 0.0;
+    double diff_E2 = 0.0;
+    // double final_diff_E = 0.0;
+    // double diff_occ_num_max = 0.0;
 
-    if( PARAM.inp.occ_num_opti == "adam" && PARAM.inp.rdmft_orb_opti == "adam" )
+    if( PARAM.inp.occ_num_opti == "adam" && PARAM.inp.rdmft_orb_opti == "adam" ) // ( !this->x_need_ls && !this->R_need_ls )
     {
+        for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
+        {
+            double E_new = this->trial_Ex_Egrad().item().toDouble();
+            ModuleBase::matrix occ_num_new = this->ebi.get_occ_number();
+
+            diff_E1 = E_new - Etotal_old;
+            Etotal_old = E_new;
+            double diff_occ_num_max = 0.0;
+            for(int i=0; i<occ_num_new.nr * occ_num_new.nc; ++i)
+            {
+                diff_occ_num_max = std::max( diff_occ_num_max, std::abs(occ_num_new.c[i] - occ_num_old.c[i]) );
+            }
+            occ_num_old = occ_num_new;
+
+            std::cout << "\n******\nniter of rdmft: " << iter 
+                        << "\n\ndiff_occ_num_max: " << diff_occ_num_max 
+                        << std::fixed << std::setprecision(10);
+            std::cout << "\nEtotal_rdmft by opti ONs: " << E_new
+                        << "\ndiff_E: " << diff_E1;
+                        // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+                        // << "\n******" << std::endl << std::defaultfloat;
+
+
+            for(int ik=0; ik<this->nk_total; ++ik)
+            {
+                E_new = this->trial_ER_Egrad(ik).item().toDouble();
+            }
+
+            diff_E2 = E_new - Etotal_old;
+            Etotal_old = E_new;
+
+            // std::cout << std::fixed << std::setprecision(10);
+            std::cout << "\n\nEtotal_rdmft by opti NOs: " << E_new // this->rdmft_solver.Etotal
+                        << "\ndiff_E: " << diff_E2 << std::endl;;
+                        // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+
+            rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
+            std::cout << "******" << std::endl << std::defaultfloat;
+
+            if( diff_occ_num_max < this->occ_num_thr && std::abs(diff_E1 + diff_E2) < 1e-8 )
+            {
+                break;
+            }
+
+            this->var_x_optimizer->step();
+            for(int ik=0; ik<this->nk_total; ++ik)
+            {
+                this->R_optimizer[ik]->step();
+            }
+
+            if( this->opti_deltaR )
+            {
+                this->wfc_old = this->rdmft_solver.wfc;
+            }
+
+        }
 
     }
     else
