@@ -52,7 +52,7 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     // temp
     if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "adam" )
     {
-        this->iter_diag_orb.init(this->rdmft_solver.nk_total, this->kv.get_nkstot_full(), this->rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
+        // this->iter_diag_orb.init(this->rdmft_solver.nk_total, this->kv.get_nkstot_full(), this->rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
         // this->ls_opti_occ_num.init(this->kv, &this->rdmft_solver);
     }
     this->iter_diag_ethr = PARAM.inp.iter_diag_ethr;
@@ -178,6 +178,20 @@ void ESolver_RDMFT_Torch<TK, TR>::select_optimizer()
 
 
 template <typename TK, typename TR>
+void ESolver_RDMFT_Torch<TK, TR>::do_optimize()
+{
+    if( PARAM.inp.rdmft_couple_opti )
+    {
+        this->couple_opti();
+    }
+    else
+    {
+        this->decouple_opti();
+    }
+}
+
+
+template <typename TK, typename TR>
 void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
 {
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_scf(ucell, istep);
@@ -187,48 +201,7 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
 
     this->select_optimizer();
 
-    // // for ONs
-    // // before specifying the optimizer, param must be initialized to a certain extent
-    // this->var_x_tensor.set_requires_grad(true);
-    // std::vector<torch::Tensor> param_x = {this->var_x_tensor};
-    // if( PARAM.inp.occ_num_opti == "adam" )
-    // {
-    //     this->var_x_optimizer = std::make_unique<torch::optim::Adam>(param_x, this->x_options_adam);
-    // }
-    // else if( PARAM.inp.occ_num_opti == "lbfgs" )
-    // {
-    //     this->var_x_optimizer = std::make_unique<torch::optim::LBFGS>(param_x, this->x_options_lbfgs);
-    // }
-
-    // // for NOs
-    // std::vector< std::vector<torch::Tensor> > param_R(this->nk_total);
-    // for(int ik=0; ik<this->nk_total; ++ik)
-    // {
-    //     if( PARAM.inp.gamma_only ) // GlobalC::exx_info.info_ri.real_number
-    //     {
-    //         this->R_tensor[ik].set_requires_grad(true);
-    //         param_R[ik] = { this->R_tensor[ik] };
-    //     }
-    //     else
-    //     {
-    //         // this->R_tensor_real[ik] = torch::empty(this->R_tensor[ik].sizes(), torch::dtype(torch::kDouble).requires_grad(true));
-    //         // this->R_tensor_imag[ik] = torch::empty(this->R_tensor[ik].sizes(), torch::dtype(torch::kDouble).requires_grad(true));
-    //         rdmft::split_complex_tensor(this->R_tensor[ik], this->R_tensor_real[ik], this->R_tensor_imag[ik]);
-
-    //         this->R_tensor_real[ik].set_requires_grad(true);
-    //         this->R_tensor_imag[ik].set_requires_grad(true);
-    //         param_R[ik] = { this->R_tensor_real[ik], this->R_tensor_imag[ik] };
-    //     }
-
-    //     if( PARAM.inp.rdmft_orb_opti == "adam" )
-    //     {
-    //         this->R_optimizer[ik] = std::make_unique<torch::optim::Adam>(param_R[ik], this->R_options_adam);
-    //     }
-    //     else if( PARAM.inp.rdmft_orb_opti == "lbfgs" )
-    //     {
-    //         this->R_optimizer[ik] = std::make_unique<torch::optim::LBFGS>(param_R[ik], this->R_options_lbfgs);
-    //     }
-    // }
+    this->do_optimize();
 
     // // refactor together with the start_guess() function to reduce unnecessary calculations
     // this->trial_Ex_Egrad();
@@ -278,10 +251,10 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
 
         std::cout << "by Torch:\nEtotal_rdmft: " << this->rdmft_solver.Etotal
                     << "\n\ndiff_E: " << E_new - Etotal_old
-                    << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
+                    // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
                     << "\n******" << std::endl << std::defaultfloat;
 
-        if( diff_occ_num_max < this->occ_num_thr * 1e-2  && iter_occ_num > 2 ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
+        if( diff_occ_num_max < this->occ_num_thr && iter_occ_num > 2 ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
         {
             tot_occ_num_iter += iter_occ_num;
             // occ_num_conv = true;
@@ -301,7 +274,6 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
         // Etotal_old = this->rdmft_solver.Etotal;
 
         double E_new = this->optimize_R();
-        // double E_new = this->optimize_R_test();
 
         std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
         std::cout << "by Torch:\nEtotal_rdmft: " << E_new // this->rdmft_solver.Etotal
@@ -316,45 +288,46 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
     }
 
 
-
     this->print_info();
 
-    // temp
-    // rearrange the ONs of each k point from large to small
-    std::cout << "\n******\nrearrange the ONs of each k point from large to small\n******\n" << std::endl;
-    ModuleBase::matrix temp_num = this->rdmft_solver.occ_number;
-    for(int ik=0; ik < this->nk_total; ++ik)
+    if( !PARAM.inp.rdmft_couple_opti )
     {
-        int num_bands = this->rdmft_solver.nbands_total;
-        std::sort(&temp_num(ik, 0), &temp_num(ik, 0) + num_bands, std::greater<>());
-
-        std::cout << "\n\nik: " << ik << std::endl; // << std::fixed << std::setprecision(10);
-        std::cout << "---------------------------------------\nnbands      " << "occ_number      " << std::endl; 
-        for(int ib=0; ib < num_bands; ++ib)
-        {
-            std::cout << ib << "           " << temp_num(ik, ib) << "        " << std::endl;
-        }
-        std::cout << "---------------------------------------\n" << std::endl;
+        std::cout << "\n******\nexternal iter = " << tot_exteral_iter 
+                    << "\ntotal orbital iter = " << tot_orb_iter 
+                    << "\ntotal occ_num iter = " << tot_occ_num_iter
+                    << "\n******\n" << std::endl;
     }
-
-    std::cout << "\n******\n" << std::fixed << std::setprecision(10);
-    std::cout << "Etotal_rdmft: " << this->rdmft_solver.Etotal
-                << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
-                // << "\n\ndiff_E: " << diff_etotal
-                // << "\ndiff_DM_max: " << this->idmft.get_diff_DM_max()
-                << "\n******" << std::endl << std::defaultfloat;
-
-    std::cout << "\n******\nexternal iter = " << tot_exteral_iter 
-                << "\ntotal orbital iter = " << tot_orb_iter 
-                << "\ntotal occ_num iter = " << tot_occ_num_iter
-                << "\n******\n" << std::endl;
 
 
 }
 
 
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
+{
+    double Etotal_old = 0.0;
+    ModuleBase::matrix occ_num_old;
+    double diff_E = 1.0;
+    double final_diff_E = 1.0;
+    double diff_occ_num_max = 1.0;
+
+    if( PARAM.inp.occ_num_opti == "adam" && PARAM.inp.rdmft_orb_opti == "adam" )
+    {
+
+    }
+    else
+    {
+        std::cout << "\n******\n" << "coupled optimization for optimizers requiring line search is not yet implemented" << "\n******\n" << std::endl;
+        assert(0);
+    }
+}
 
 
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
+{
+    
+}
 
 
 template <typename TK, typename TR>
@@ -382,10 +355,6 @@ void ESolver_RDMFT_Torch<TK, TR>::get_start_guess(UnitCell& ucell, const int ist
     }
 
     this->rdmft_solver.inital_wfc_occNum(this->pelec->wg, this->psi);
-
-    // TK* pwfc_in = &( this->psi->operator()(0, 0, 0) );
-    // TK* pwfc = &this->wfc_new(0, 0, 0);
-    // for(int i=0; i<this->wfc_new.size(); ++i) { pwfc[i] = pwfc_in[i]; }
 
     // must have
     this->wfc_new = *(this->psi);

@@ -52,6 +52,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     void select_optimizer();
 
+    void do_optimize();
 
   private:
 
@@ -61,6 +62,10 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     bool cal_molecular = false;
 
+    void couple_opti();
+
+    void decouple_opti();
+    
 
     /********* the following is used to optimize ONs  *********/
     //
@@ -126,32 +131,6 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     //
     std::vector< std::unique_ptr<torch::optim::Optimizer> > R_optimizer;
 
-    //
-    double optimize_R_test();
-    std::unique_ptr<torch::optim::Optimizer>  R_optimizer_test;
-
-
-
-
-    // test 
-    std::vector< std::vector<TK> > grad;
-
-    std::vector< std::vector<TK> > moment_m;
-
-    std::vector< std::vector<double> > moment_v;
-
-    std::vector< std::vector<double> > vhat_max;
-
-    std::vector<TK> m_hat;
-
-    std::vector<double> v_hat;
-
-
-
-
-
-
-    
     // //! 
     // double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
     //                     const std::vector<torch::Tensor>* R_tensor = nullptr,

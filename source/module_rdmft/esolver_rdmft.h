@@ -131,59 +131,6 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     void print_info();
 
-    // /********* the following is used in rdmft with libTorch *********/
-
-    // rdmft::EBI ebi_torch;
-
-    // Parallel_2D* para_Fij;
-
-    // // 
-    // psi::Psi<TK> wfc_new;
-    // // 
-    // std::vector< std::vector<TK> > R_vec_global;
-    // // use C' = C*exp(R) to optimize NOs, C is the expansion coefficient of NOs under NAOs
-    // std::vector< std::vector<TK> > dE_dR_global;
-    
-    // // 
-    // ModuleBase::matrix occ_number_new;
-    // //! in EBI or other methods, the occupation numbers is parameterized using x
-    // std::vector<double> var_x;
-    // // 
-    // std::vector<double> dE_dx;
-
-    // bool x_need_ls = true;
-    // torch::optim::Adam* var_x_optimizer = nullptr;
-    // torch::optim::LBFGS* var_x_optimizer = nullptr;
-    // // std::unique_ptr<torch::optim::Adam> var_x_optimizer;
-    // // var_x_optimizer = std::make_unique<torch::optim::Adam>(params, torch::optim::AdamOptions(0.05));
-
-    // bool R_need_ls = true;
-    // torch::optim::Adam* R_optimizer = nullptr;
-    // torch::optim::LBFGS* R_optimizer = nullptr;
-
-
-
-    // int nk_total = 0;
-
-
-    
-    // //!
-    // // 
-    // double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
-    //                     const std::vector<torch::Tensor>* R_tensor = nullptr,
-    //                     bool cal_by_occ_num = false,
-    //                     bool cal_by_orb = false);
-
-    // // void cal_E_grad(bool by_occ_num,
-    // //                   bool by_wfc,
-    // //                   const torch::Tensor* var_x_tensor = nullptr,
-    // //                   const std::vector<torch::Tensor>* R_tensor = nullptr);
-
-    // bool has_cal_E_occ_num = false;
-    // void cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor = nullptr);
-
-    // bool has_cal_E_wfc= false;
-    // void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
 
 
 };
