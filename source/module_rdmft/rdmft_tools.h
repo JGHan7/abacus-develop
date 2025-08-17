@@ -435,7 +435,7 @@ void distribute_vec(const Parallel_2D* para_mat, const std::vector<TK>& vec_glob
         {
             for(int j=0; j<global_col; ++j)
             {
-                int j_local = para_mat->local2global_col(j);
+                int j_local = para_mat->global2local_col(j);
                 if( j_local >= 0 )
                 {
                     vec_local[i_local + j_local*nrow] = vec_global[i + j*global_row];

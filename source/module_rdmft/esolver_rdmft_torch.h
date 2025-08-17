@@ -50,6 +50,8 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     
     virtual void get_start_guess(UnitCell& ucell, const int istep) override;
 
+    void select_optimizer();
+
 
   private:
 
