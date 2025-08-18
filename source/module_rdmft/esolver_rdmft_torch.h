@@ -65,7 +65,9 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     void couple_opti();
 
     void decouple_opti();
-    
+
+    void before_opti();
+
 
     /********* the following is used to optimize ONs  *********/
     //
@@ -119,6 +121,8 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     // in the future, it can be modified to distinguish k points
     // void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
     void cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, const int ik, const torch::Tensor* R_tensor_ik = nullptr);
+
+    const double grad_factor = 2.0;
     //
     torch::Tensor trial_ER_Egrad(const int ik);
     //
@@ -142,6 +146,10 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
                         bool cal_by_occ_num = false,
                         bool cal_by_orb = false,
                         const int ik = 0);
+
+    //! the result of calculating dE_dR is used. If you re-optimize ONs, please call the function containing dE_dR first
+    double check_hermi_lambda();
+
 
     // void cal_E_grad(bool by_occ_num,
     //                   bool by_wfc,

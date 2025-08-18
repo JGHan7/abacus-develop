@@ -340,8 +340,11 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                         break;
                     }
                 }
-                tot_occ_num_iter += PARAM.inp.maxniter_occ_num;
-
+                if( !occ_num_conv  )
+                {
+                    tot_occ_num_iter += PARAM.inp.maxniter_occ_num;
+                }
+                
                 final_diff_E = this->rdmft_solver.Etotal - Etotal;
                 if( final_diff_E > -1e-6 )
                 {
@@ -738,7 +741,7 @@ void ESolver_RDMFT<TK, TR>::print_info()
                 << "\n\nE(TV + Hartree + XC) by RDMFT:   " << this->rdmft_solver.E_RDMFT[3]
                 // << "\n\ndiff_E: " << diff_etotal
                 // << "\ndiff_DM_max: " << this->idmft.get_diff_DM_max()
-                << "\n******" << std::endl << std::defaultfloat;
+                << "\n******\n" << std::endl << std::defaultfloat;
 
 }
 
