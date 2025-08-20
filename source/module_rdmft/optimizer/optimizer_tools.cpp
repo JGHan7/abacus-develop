@@ -457,9 +457,34 @@ void merge_complex_tensor(const torch::Tensor& R_real, const torch::Tensor& R_im
 }
 
 
+// void torch_set_lr(torch::optim::LBFGS& opt, double new_lr)
+// {
+//     for (auto& group : opt.param_groups())
+//     {
+//         auto& options = static_cast<torch::optim::LBFGSOptions&>(group.options());
+//         options.lr(new_lr);
+//     }
+// }
 
 
+void torch_print_options(const torch::optim::LBFGS& opt)
+{
+    int i = 0;
+    for (const auto& group : opt.param_groups()) {
+        const auto& options = static_cast<const torch::optim::LBFGSOptions&>(group.options());
 
+        std::cout << "Param group " << i++ << ":\n";
+        std::cout << "  lr              = " << options.lr() << "\n";
+        std::cout << "  max_iter        = " << options.max_iter() << "\n";
+        std::cout << "  tolerance_grad  = " << options.tolerance_grad() << "\n";
+        std::cout << "  tolerance_change= " << options.tolerance_change() << "\n";
+        std::cout << "  history_size    = " << options.history_size() << "\n";
+        std::cout << "  line_search_fn  = "
+                << options.line_search_fn().value_or("none")
+                << "\n";
+        std::cout << std::endl;
+    }
+}
 
 
 

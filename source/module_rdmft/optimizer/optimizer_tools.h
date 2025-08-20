@@ -981,8 +981,23 @@ void split_complex_tensor(const torch::Tensor& R, torch::Tensor& R_real, torch::
 void merge_complex_tensor(const torch::Tensor& R_real, const torch::Tensor& R_imag, torch::Tensor& R);
 
 
+// void torch_set_lr(torch::optim::LBFGS& opt, double new_lr);
 
 
+template <typename OptimizerType>
+void torch_set_lr(OptimizerType& opt, double new_lr)
+{
+    for (auto& group : opt.param_groups())
+    {
+        using OptionsType = typename std::decay<decltype(group.options())>::type;
+        auto& options = static_cast<OptionsType&>(group.options());
+        options.lr(new_lr);
+    }
+}
+
+
+// temp
+void torch_print_options(const torch::optim::LBFGS& opt);
 
 
 
