@@ -243,7 +243,7 @@ double IDMFT<TK, TR>::optimize()
     }
     rdmft::reduce_all_max(this->diff_DM_max);
 
-    // // if converage, don't mixing
+    // // if convergence, don't mixing
     // if( this->diff_DM_max < PARAM.inp.scf_thr )
     // {
     //     // update the occupation number and wfc
@@ -262,7 +262,7 @@ double IDMFT<TK, TR>::optimize()
 
     // rdmft::printMatrix_pointer(occ_num_pass.nr, occ_num_pass.nc, occ_num_pass.c, "occ_num_pass before mixing", 10);
 
-    // if converage, don't mixing
+    // if convergence, don't mixing
     if( this->diff_DM_max > PARAM.inp.scf_thr )
     {
         // mixing DM, get the mixed wg and wfc

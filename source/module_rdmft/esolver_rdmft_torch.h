@@ -68,12 +68,42 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     void before_opti();
 
+    //! determine whether the optimization of NOs and ONs has converged
+    //! if dm_conv() or occ_num_conv() is called in an iteration, the obtained value must be passed in
+    bool converge(const bool* occ_num_conv_in = nullptr, const bool* dm_conv_in = nullptr);
+
+    //! determine whether the density matrix converges
+    //! will update DM, can only be called once in one iteration
+    bool dm_conv();
+    //
+    double diff_DM_max = 0.0;
+    //! DMk in NAOs representation
+    std::vector< std::vector<TK> > DM;
+
+    //! determine whether the ONs converges
+    //! will update ONs, can only be called once in one iteration
+    bool occ_num_conv();
+    //
+    double diff_occ_num_max =0.0;
+
+    //!
+    //! the result of calculating dE_dR is used. If you re-optimize ONs, please call the function containing dE_dR first
+    double check_hermi_lambda();
+    //!
+    // double max_off_diag_F = 0.0;
+
+
+
+
+
 
     /********* the following is used to optimize ONs  *********/
     //
     rdmft::EBI ebi;
     //
     ModuleBase::matrix occ_number_new;
+    //
+    ModuleBase::matrix occ_number_old;
     //! in EBI or other methods, the occupation numbers is parameterized using x
     std::vector<double> var_x;
     // 
@@ -147,8 +177,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
                         bool cal_by_orb = false,
                         const int ik = 0);
 
-    //! the result of calculating dE_dR is used. If you re-optimize ONs, please call the function containing dE_dR first
-    double check_hermi_lambda();
+
 
 
     // void cal_E_grad(bool by_occ_num,

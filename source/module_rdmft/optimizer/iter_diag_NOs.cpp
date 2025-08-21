@@ -375,7 +375,7 @@ double IterDiag_NOs<TK, TR>::optimize_orb(RDMFT<TK, TR>& rdmft_solver_in)
     }
     rdmft::reduce_all_max(this->diff_DM_max);
 
-    // if converage, don't mixing
+    // if convergence, don't mixing
     if( this->diff_DM_max > PARAM.inp.scf_thr )
     {
         // mixing DM, get the mixed wg and wfc
