@@ -985,7 +985,7 @@ void merge_complex_tensor(const torch::Tensor& R_real, const torch::Tensor& R_im
 
 
 template <typename OptimizerType>
-void torch_set_lr(OptimizerType& opt, double new_lr)
+void torch_set_lr(OptimizerType& opt, const double new_lr)
 {
     for (auto& group : opt.param_groups())
     {

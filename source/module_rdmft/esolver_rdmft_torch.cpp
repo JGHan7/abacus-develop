@@ -102,10 +102,10 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     else if( PARAM.inp.occ_num_opti == "lbfgs" )
     {
         this->x_need_ls = true;
-        this->x_options_lbfgs.lr(0.1);
+        this->x_options_lbfgs.lr(1.0);
         this->x_options_lbfgs.max_iter(1);
-        // this->x_options_lbfgs.tolerance_grad(1e-6);
         this->x_options_lbfgs.line_search_fn("strong_wolfe");
+        // this->x_options_lbfgs.tolerance_grad(1e-6);
     }
 
     // for NOs
@@ -121,8 +121,8 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
         this->R_need_ls = true;
         this->R_options_lbfgs.lr(1.0);
         this->R_options_lbfgs.max_iter(1);
-        // this->R_options_lbfgs.tolerance_grad(1e-6);
         this->R_options_lbfgs.line_search_fn("strong_wolfe");
+        // this->R_options_lbfgs.tolerance_grad(1e-6);
     }
 
 }
@@ -342,6 +342,9 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
 
             // temp
             torch::Tensor x_old = this->var_x_tensor.clone();
+
+            // only replace the value, other properties remain unchanged
+            // this->var_x_tensor.copy_(x_old);
 
             E_new = this->optimize_x();
             diff_E = E_new - Etotal_old;
