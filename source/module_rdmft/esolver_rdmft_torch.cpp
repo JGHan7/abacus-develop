@@ -413,14 +413,15 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
             diff_E = E_new - Etotal_old;
             Etotal_old = E_new;
 
+            orb_conv = this->dm_conv();
+
             std::cout << "\n******\nniter_orb of rdmft: " << iter_orb << std::endl << std::fixed << std::setprecision(10);
             std::cout << "by Torch:\nEtotal_rdmft: " << E_new
                         << "\n\ndiff_E: " << diff_E
                         << "\ndiff_DM_max: " << this->diff_DM_max
                         << "\n******" << std::endl << std::defaultfloat;
             
-            orb_conv = this->dm_conv();
-            if( orb_conv )
+            if( orb_conv || std::abs(diff_E) < 1e-8 )
             {
                 tot_orb_iter += iter_orb;
                 // orb_conv = true;
@@ -621,6 +622,10 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_Ex_Egrad()
 template <typename TK, typename TR>
 torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
 {
+
+    // test
+    // std::cout << "\n line search R" << "\n" << std::endl;
+
     this->R_optimizer[ik]->zero_grad();
 
     if( !PARAM.inp.gamma_only )
@@ -901,18 +906,16 @@ bool ESolver_RDMFT_Torch<TK, TR>::dm_conv()
     // ModuleBase::matrix occ_num = this->ebi.get_occ_number();
     ModuleBase::matrix temp_wg(this->rdmft_solver.wg);
     std::vector< std::vector<TK> > DM_new(this->nk_total, std::vector<TK>(this->pv.nloc, 0.0));
-    rdmft::cal_special_DM(&this->pv, temp_wg, this->wfc_new, DM_new);
+    // rdmft::cal_special_DM(&this->pv, temp_wg, this->wfc_new, DM_new);
+    // rdmft::cal_special_DM(&this->pv, temp_wg, this->rdmft_solver.wfc, DM_new);
+    rdmft::cal_special_DM(this->para_Fij, temp_wg, this->wfc_new, DM_new);
 
     this->diff_DM_max = 0.0;
     for(int ik=0; ik<nk_total; ++ik)
     {
         for(int iloc=0; iloc<DM_new[ik].size(); ++iloc)
         {
-            double diff_DM = std::abs( this->DM[ik][iloc] - DM_new[ik][iloc] );
-            if( diff_DM > this->diff_DM_max )
-            {
-                this->diff_DM_max = diff_DM;
-            }
+            this->diff_DM_max = std::max( this->diff_DM_max, std::abs(this->DM[ik][iloc] - DM_new[ik][iloc]) );
 
             // update DM
             this->DM[ik][iloc] = DM_new[ik][iloc];
@@ -920,9 +923,11 @@ bool ESolver_RDMFT_Torch<TK, TR>::dm_conv()
     }
     rdmft::reduce_all_max(this->diff_DM_max);
 
+    // this->DM = DM_new;
+
     if( this->diff_DM_max < PARAM.inp.scf_thr )
     {
-        return 1;
+        // return 1;
     }
 
     return 0;
