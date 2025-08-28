@@ -296,7 +296,7 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
 
             if( this->opti_deltaR )
             {
-                this->wfc_old = this->rdmft_solver.wfc;
+                this->wfc_old = this->wfc_new; //this->rdmft_solver.wfc;
             }
 
         }
@@ -304,7 +304,55 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
     }
     else if( PARAM.inp.occ_num_opti == "lbfgs" && PARAM.inp.rdmft_orb_opti == "lbfgs" )
     {
+        for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
+        {
+            // // temp
+            // torch::Tensor x_old = this->var_x_tensor.clone();
 
+            // need modify, ls problem
+            double E_new1 = this->var_x_optimizer->step( [this]() { return this->trial_Ex_Egrad(); } ).item().toDouble();
+
+            // // temp
+            // this->cal_Etotal( &x_old, nullptr, 1, 0 );
+
+            // need modify, ls problem
+            double E_new2 = 0.0;
+            for(int ik=0; ik<this->nk_total; ++ik)
+            {
+                E_new2 = this->R_optimizer[ik]->step( [this, ik]() { return this->trial_ER_Egrad(ik); } ).item().toDouble();
+            }
+
+            // // temp
+            // E_new1 = this->cal_Etotal( &this->var_x_tensor, nullptr, 1, 0 );
+            // diff_E1 = E_new1 - E_new2;
+            // diff_E2 = E_new2 - Etotal_old;
+            // Etotal_old = E_new1;
+
+            diff_E1 = E_new1 - Etotal_old;
+            diff_E2 = E_new2 - E_new1;
+            Etotal_old = E_new2;
+
+
+            bool conv = this->converge();
+
+            std::cout << "\n******\nniter of rdmft: " << iter 
+                        << "\n\ndiff_occ_num_max: " << this->diff_occ_num_max 
+                        << std::fixed << std::setprecision(10);
+            std::cout << "\nEtotal_rdmft by opti ONs: " << E_new1
+                        << "\ndiff_E: " << diff_E1 
+                        << "\n\nEtotal_rdmft by opti NOs: " << E_new2
+                        << "\ndiff_E: " << diff_E2 
+                        << "\ndiff_DM_max: " << this->diff_DM_max 
+                        << std::endl;
+
+            rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
+            std::cout << "******" << std::endl << std::defaultfloat;
+
+            if ( conv )
+            {
+                break;
+            }
+        }
     }
     else
     {
@@ -374,7 +422,7 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
                         << "\ndiff_E: " << diff_E;
                         // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
             rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
-            std::cout << x_old << std::endl;
+            // std::cout << x_old << std::endl;
             std::cout << "\n******" << std::endl << std::defaultfloat;
 
             if( occ_number_conv )
@@ -409,9 +457,33 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
                 this->update_occ_num_dft(this->rdmft_solver);
             }
 
+            // std::vector< std::vector<TK> > DM_new1(this->nk_total, std::vector<TK>(this->pv.nloc, 0.0));
+            // rdmft::cal_special_DM(this->para_Fij, this->rdmft_solver.wg, this->rdmft_solver.wfc, DM_new1);
+            // // std::cout << "\nthis->R_tensor: \n" << this->R_tensor[0] << std::endl;
+            // psi::Psi<TK> wfc_new1 = this->rdmft_solver.wfc;
+
+
             double E_new = this->optimize_R();
             diff_E = E_new - Etotal_old;
             Etotal_old = E_new;
+
+            // std::vector< std::vector<TK> > DM_new2(this->nk_total, std::vector<TK>(this->pv.nloc, 0.0));
+            // rdmft::cal_special_DM(this->para_Fij, this->rdmft_solver.wg, this->rdmft_solver.wfc, DM_new2);
+            // double diff_DM_max_tmp = 0.0;
+            // for(int ik=0; ik<nk_total; ++ik)
+            // {
+            //     for(int iloc=0; iloc<DM_new1[ik].size(); ++iloc)
+            //     {
+            //         diff_DM_max_tmp = std::max( diff_DM_max_tmp, std::abs(DM_new2[ik][iloc] - DM_new1[ik][iloc]) );
+            //     }
+            // }
+            // rdmft::reduce_all_max(diff_DM_max_tmp);
+
+            // double sum = 0.0;
+            // psi::Psi<TK> wfc_new2 = this->rdmft_solver.wfc;
+            // TK* pwfc1 = &( wfc_new1(0, 0, 0) );
+            // TK* pwfc2 = &wfc_new2(0, 0, 0);
+            // for(int i=0; i<wfc_new1.size(); ++i) {  sum += std::norm(pwfc1[i] - pwfc2[i]); }
 
             orb_conv = this->dm_conv();
 
@@ -419,9 +491,11 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
             std::cout << "by Torch:\nEtotal_rdmft: " << E_new
                         << "\n\ndiff_E: " << diff_E
                         << "\ndiff_DM_max: " << this->diff_DM_max
+                        // << "\n\ndiff_DM_max_tmp: " << diff_DM_max_tmp
+                        // << "\n|wfc_new2 - wfc_new1|: " << sum
                         << "\n******" << std::endl << std::defaultfloat;
             
-            if( orb_conv || std::abs(diff_E) < 1e-8 )
+            if( orb_conv ) // if( orb_conv || std::abs(diff_E) < 1e-8 )
             {
                 tot_orb_iter += iter_orb;
                 // orb_conv = true;
@@ -558,7 +632,12 @@ double ESolver_RDMFT_Torch<TK, TR>::optimize_x()
     double Etotal = 0.0;
     if( this->x_need_ls )
     {
-        Etotal = this->var_x_optimizer->step( [this]() { return this->trial_Ex_Egrad(); } ).item().toDouble();
+        Etotal = this->var_x_optimizer->step( [this]() { return this->trial_Ex_Egrad(true); } ).item().toDouble();
+
+        // because the step size corresponding to the last call of the trial_E_Egrad() function by torch is not necessarily the final step size
+        // torch's line search will continue to look for a more suitable step size after first finding one that satisfies the strong Wolfe condition.
+        Etotal = this->trial_Ex_Egrad(false).item().toDouble();
+        // Etotal = this->trial_Ex_Egrad(true).item().toDouble();
     }
     else
     {
@@ -583,6 +662,13 @@ double ESolver_RDMFT_Torch<TK, TR>::optimize_R()
         {
             Etotal = this->R_optimizer[ik]->step( [this, ik]() { return this->trial_ER_Egrad(ik); } ).item().toDouble();
         }
+
+        // because the step size corresponding to the last call of the trial_E_Egrad() function by torch is not necessarily the final step size
+        // torch's line search will continue to look for a more suitable step size after first finding one that satisfies the strong Wolfe condition.
+        for(int ik=0; ik<this->nk_total; ++ik)
+        {
+            Etotal = this->trial_ER_Egrad(ik, false).item().toDouble();
+        }
     }
     else
     {
@@ -596,7 +682,7 @@ double ESolver_RDMFT_Torch<TK, TR>::optimize_R()
 
     if( this->opti_deltaR )
     {
-        this->wfc_old = this->rdmft_solver.wfc;
+        this->wfc_old = this->wfc_new; //this->rdmft_solver.wfc;
     }
 
     return Etotal;
@@ -604,29 +690,28 @@ double ESolver_RDMFT_Torch<TK, TR>::optimize_R()
 
 
 template <typename TK, typename TR>
-torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_Ex_Egrad()
+torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_Ex_Egrad(bool cal_grad)
 {
-    // this->var_x_tensor.grad().zero_();
-    this->var_x_optimizer->zero_grad();
+    // this->var_x_optimizer->zero_grad();
 
     double E = this->cal_Etotal( &this->var_x_tensor, nullptr, 1, 0 );
 
-    this->cal_dE_dx( dE_dx_tensor );
-
-    this->var_x_tensor.mutable_grad() = this->dE_dx_tensor;
+    if( cal_grad )
+    {
+        this->var_x_optimizer->zero_grad();
+        this->cal_dE_dx( this->dE_dx_tensor );
+        // this->var_x_optimizer->zero_grad();
+        this->var_x_tensor.mutable_grad() = this->dE_dx_tensor;
+    }
 
     return torch::tensor(E, torch::dtype(torch::kDouble).requires_grad(true));
 }
 
 
 template <typename TK, typename TR>
-torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
+torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik, bool cal_grad)
 {
 
-    // test
-    // std::cout << "\n line search R" << "\n" << std::endl;
-
-    this->R_optimizer[ik]->zero_grad();
 
     if( !PARAM.inp.gamma_only )
     {
@@ -635,9 +720,6 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
 
     // in the future, the orbital contribution to energy in cal_Etotal() can be modified to distinguish k-points
     double E = this->cal_Etotal( nullptr, &this->R_tensor[ik], 0, 1, ik );
-
-    // in the future, it can be modified to distinguish k points
-    this->cal_dE_dR( this->dE_dR_tensor[ik], ik );
 
     if( this->opti_deltaR )
     {
@@ -652,29 +734,34 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik)
         }
     }
 
-    if( PARAM.inp.gamma_only )
+    if( cal_grad )
     {
-        this->R_tensor[ik].mutable_grad() = this->dE_dR_tensor[ik];
-    }
-    else
-    {
-        // optimizers such as Adam will continue to accumulate gradient errors,
-        // causing the imaginary part that is theoretically 0 to gradually become non-zero ?
-        if( this->cal_molecular )
+        this->R_optimizer[ik]->zero_grad();
+        // in the future, it can be modified to distinguish k points
+        this->cal_dE_dR( this->dE_dR_tensor[ik], ik );
+        if( PARAM.inp.gamma_only )
         {
-            this->R_tensor_real[ik].mutable_grad() =  1.0 * torch::real(this->dE_dR_tensor[ik]);
-            this->R_tensor_imag[ik].mutable_grad() =  0.0 * torch::imag(this->dE_dR_tensor[ik]);
+            this->R_tensor[ik].mutable_grad() = this->dE_dR_tensor[ik];
         }
         else
         {
-            this->R_tensor_real[ik].mutable_grad() =  2.0 * torch::real(this->dE_dR_tensor[ik]);
-            this->R_tensor_imag[ik].mutable_grad() =  -2.0 * torch::imag(this->dE_dR_tensor[ik]);
+            // optimizers such as Adam will continue to accumulate gradient errors,
+            // causing the imaginary part that is theoretically 0 to gradually become non-zero ?
+            if( this->cal_molecular )
+            {
+                this->R_tensor_real[ik].mutable_grad() =  1.0 * torch::real(this->dE_dR_tensor[ik]);
+                this->R_tensor_imag[ik].mutable_grad() =  0.0 * torch::imag(this->dE_dR_tensor[ik]);
+            }
+            else
+            {
+                this->R_tensor_real[ik].mutable_grad() =  2.0 * torch::real(this->dE_dR_tensor[ik]);
+                this->R_tensor_imag[ik].mutable_grad() =  -2.0 * torch::imag(this->dE_dR_tensor[ik]);
+            }
+            // std::cout << "dE_dR_tensor_real:\n" << this->R_tensor_real[ik].mutable_grad() << std::endl;
+            // std::cout << "dE_dR_tensor_imag:\n" << this->R_tensor_imag[ik].mutable_grad() << std::endl;
         }
-
-        // std::cout << "dE_dR_tensor_real:\n" << this->R_tensor_real[ik].mutable_grad() << std::endl;
-        // std::cout << "dE_dR_tensor_imag:\n" << this->R_tensor_imag[ik].mutable_grad() << std::endl;
-
     }
+
 
     return torch::tensor(E, torch::dtype(torch::kDouble).requires_grad(true));
 }
@@ -855,7 +942,30 @@ bool ESolver_RDMFT_Torch<TK, TR>::converge(const bool* occ_num_conv_in, const bo
 
     double max_off_diag_F = this->check_hermi_lambda();
 
-    if( max_off_diag_F < this->lambda_thr )
+    // if( max_off_diag_F < this->lambda_thr )
+    // {
+    //     std::cout << "\n******\n\nConvergence!\n" 
+    //                 << "\nmax_off_diag_F < lambda_thr: " << max_off_diag_F 
+    //                 << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
+    //                 << "\ndiff_DM_max: " << this->diff_DM_max 
+    //                 << "\n******\n" << std::endl;
+    //     return 1;
+    // }
+    // else if( dm_conv && occ_num_conv )
+    // {
+    //     std::cout << "\n******\n\nNOs(DM) and ONs Converge respectively!\n" 
+    //                 << "\nmax_off_diag_F is " << max_off_diag_F 
+    //                 << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
+    //                 << "\ndiff_DM_max: " << this->diff_DM_max 
+    //                 << "\n******\n" << std::endl;
+    //     return 1;
+    // }
+    // else
+    // {
+    //     std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
+    // }
+
+    if( max_off_diag_F < this->lambda_thr && dm_conv && occ_num_conv )
     {
         std::cout << "\n******\n\nConvergence!\n" 
                     << "\nmax_off_diag_F < lambda_thr: " << max_off_diag_F 
@@ -864,18 +974,13 @@ bool ESolver_RDMFT_Torch<TK, TR>::converge(const bool* occ_num_conv_in, const bo
                     << "\n******\n" << std::endl;
         return 1;
     }
-    else if( dm_conv && occ_num_conv )
+    else
     {
-        std::cout << "\n******\n\nNOs(DM) and ONs Converge respectively!\n" 
+        std::cout << "\n******\n\nstill optimize NOs and ONs !!!!!!!!!!!!!!! \n" 
                     << "\nmax_off_diag_F is " << max_off_diag_F 
                     << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
                     << "\ndiff_DM_max: " << this->diff_DM_max 
                     << "\n******\n" << std::endl;
-        return 1;
-    }
-    else
-    {
-        std::cout << "\n******\nstill optimize NOs and ONs, because max_off_diag_F > lambda_thr: " << max_off_diag_F << "\n******\n" << std::endl;
     }
 
     return 0;
@@ -923,11 +1028,9 @@ bool ESolver_RDMFT_Torch<TK, TR>::dm_conv()
     }
     rdmft::reduce_all_max(this->diff_DM_max);
 
-    // this->DM = DM_new;
-
     if( this->diff_DM_max < PARAM.inp.scf_thr )
     {
-        // return 1;
+        return 1;
     }
 
     return 0;

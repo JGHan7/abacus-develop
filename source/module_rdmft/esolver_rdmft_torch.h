@@ -116,7 +116,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     bool has_cal_E_occ_num = false;
     void cal_dE_dx(torch::Tensor& dE_dx_tensor, const torch::Tensor* var_x_tensor = nullptr);
     //
-    torch::Tensor trial_Ex_Egrad();
+    torch::Tensor trial_Ex_Egrad(bool cal_grad = true);
     //
     double optimize_x();
     //
@@ -154,7 +154,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     const double grad_factor = 2.0;
     //
-    torch::Tensor trial_ER_Egrad(const int ik);
+    torch::Tensor trial_ER_Egrad(const int ik, bool cal_grad = true);
     //
     double optimize_R();
     //

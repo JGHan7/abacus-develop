@@ -221,7 +221,7 @@ void EBI::update_x_occ_num(std::vector<double>& x_in)
 
     this->check_occ_num(x_in, PARAM.inp.min_occ_num);
 
-    rdmft::printMatrix_pointer(nk_nospin, nbands, this->occ_number[0].data(), "spin=1, occ_number", 5);
+    // rdmft::printMatrix_pointer(nk_nospin, nbands, this->occ_number[0].data(), "spin=1, occ_number", 5);
 
     // rdmft::printMatrix_pointer(nk_nospin*PARAM.inp.nspin, nbands, x_in.data(), "trial_x", 10);
 }
