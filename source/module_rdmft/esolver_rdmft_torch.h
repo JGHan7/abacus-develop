@@ -80,6 +80,15 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     //! DMk in NAOs representation
     std::vector< std::vector<TK> > DM;
 
+    // determine whether NOs converges
+    bool orb_conv();
+    // only used to judge convergence
+    psi::Psi<TK> wfc_record;
+    //
+    double diff_wfc_norm = 0.0;
+    //
+    double diff_wfc_max = 0.0;
+
     //! determine whether the ONs converges
     //! will update ONs, can only be called once in one iteration
     bool occ_num_conv();
@@ -90,7 +99,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     //! the result of calculating dE_dR is used. If you re-optimize ONs, please call the function containing dE_dR first
     double check_hermi_lambda();
     //!
-    // double max_off_diag_F = 0.0;
+    double max_off_diag_Fock = 0.0;
 
 
 
