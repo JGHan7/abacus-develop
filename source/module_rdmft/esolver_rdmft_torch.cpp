@@ -277,7 +277,7 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
             }
             std::cout << "******" << std::endl << std::defaultfloat;
 
-            if ( conv )
+            if ( conv && std::abs(diff_E1 + diff_E2) < 1e-5 )
             {
                 break;
             }
@@ -343,7 +343,7 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
             }
             std::cout << "******" << std::endl << std::defaultfloat;
 
-            if ( conv )
+            if ( conv && std::abs(diff_E1 + diff_E2) < 1e-5 )
             {
                 break;
             }
@@ -426,6 +426,7 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
                 this->cal_Etotal(&this->var_x_tensor, nullptr, 1, 0);
             }
         }
+        double diff_E_tot = diff_E;
 
         if( occ_number_conv == true )
         {
@@ -463,6 +464,7 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
                 break;
             }
         }
+        diff_E_tot += diff_E;
 
         if( !orb_conv )
         {
@@ -487,7 +489,7 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
             break;
         }
 
-        if( this->converge( &occ_number_conv, &orb_conv ) )
+        if( this->converge( &occ_number_conv, &orb_conv ) && std::abs( diff_E_tot ) < 1e-5 )
         {
             break;
         }
@@ -920,20 +922,20 @@ bool ESolver_RDMFT_Torch<TK, TR>::converge(const bool* occ_num_conv_in, const bo
                     << "\nmax_off_diag_F < lambda_thr: " << max_off_diag_F 
                     << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
                     << "\ndiff_DM_max: " << this->diff_DM_max 
-                    << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
+                    // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
                     << "\n******\n" << std::endl;
         return 1;
     }
-    // else if( max_off_diag_F < this->lambda_thr && orb_conv && occ_num_conv )
-    // {
-    //     std::cout << "\n******\n\nConvergence with orb_conv!\n" 
-    //                 << "\nmax_off_diag_F < lambda_thr: " << max_off_diag_F 
-    //                 << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
-    //                 << "\ndiff_DM_max: " << this->diff_DM_max 
-    //                 << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
-    //                 << "\n******\n" << std::endl;
-    //     return 1;
-    // }
+    else if( !PARAM.inp.rdmft_dm_conv && max_off_diag_F < this->lambda_thr && occ_num_conv )
+    {
+        std::cout << "\n******\n\nConvergence with max_off_diag_F and Etotal!\n" 
+                    << "\nmax_off_diag_F < lambda_thr: " << max_off_diag_F 
+                    << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
+                    << "\ndiff_DM_max: " << this->diff_DM_max 
+                    // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
+                    << "\n******\n" << std::endl;
+        return 1;
+    }
     else
     {
         if( !PARAM.inp.rdmft_couple_opti )
@@ -942,7 +944,7 @@ bool ESolver_RDMFT_Torch<TK, TR>::converge(const bool* occ_num_conv_in, const bo
                         << "\nmax_off_diag_F is " << max_off_diag_F 
                         << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
                         << "\ndiff_DM_max: " << this->diff_DM_max 
-                        << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
+                        // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
                         << "\n******\n" << std::endl;
         }
     }

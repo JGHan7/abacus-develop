@@ -777,6 +777,12 @@ void ReadInput::item_others()
         read_sync_bool(input.opti_by_torch);
         this->add_item(item);
     }
+    {
+        Input_Item item("rdmft_dm_conv");
+        item.annotation = "whether to force density matrix convergence in rdmft optimization";
+        read_sync_bool(input.rdmft_dm_conv);
+        this->add_item(item);
+    }
 
     // EXX PW by rhx0820, 2025-03-10
     {
