@@ -275,7 +275,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             int tot_occ_num_iter = 0;
             int tot_exteral_iter = 0;
 
-            for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
+            for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
             {
                 tot_exteral_iter = iter; // temp
                 bool orb_conv = false;
@@ -474,7 +474,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         {   
             bool first_time = true;
             double f_value = 0.0;
-            for(int i=0; i<PARAM.inp.scf_nmax; ++i)
+            for(int i=0; i<=PARAM.inp.scf_nmax; ++i)
             {
                 f_value = this->fx(this->data_x);
                 this->df_dx = this->grad_f(this->data_x);

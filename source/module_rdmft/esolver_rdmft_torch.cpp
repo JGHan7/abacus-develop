@@ -243,9 +243,10 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
 
     if( PARAM.inp.occ_num_opti == "adam" && PARAM.inp.rdmft_orb_opti == "adam" ) // ( !this->x_need_ls && !this->R_need_ls )
     {
-        for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
+        for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
         {
             // get Etotal and update the gradient
+            // after finding a suitable learning rate, x and R can be passed together when updating the energy to reduce the amount of calculation
             double E_new1 = this->trial_Ex_Egrad().item().toDouble();
             double E_new2 = 0.0;
             for(int ik=0; ik<this->nk_total; ++ik)
@@ -270,7 +271,10 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
                         << "\n\nmax_off_diag_F: " << this->max_off_diag_Fock 
                         << std::endl;
 
-            rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
+            if( iter%10 == 1 )
+            {
+                rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
+            }
             std::cout << "******" << std::endl << std::defaultfloat;
 
             if ( conv )
@@ -295,7 +299,7 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
     }
     else if( PARAM.inp.occ_num_opti == "lbfgs" && PARAM.inp.rdmft_orb_opti == "lbfgs" )
     {
-        for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
+        for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
         {
             // record the x obtained from the previous optimization
             torch::Tensor x_old = this->var_x_tensor.clone();
@@ -329,8 +333,8 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
                         << "\ndiff_E: " << diff_E2 
                         << "\ndiff_DM_max: " << this->diff_DM_max
                         << "\n\nmax_off_diag_F: " << this->max_off_diag_Fock
-                        << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
-                        << "\n\ndiff_wfc_max: " << this->diff_wfc_max
+                        // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
+                        // << "\n\ndiff_wfc_max: " << this->diff_wfc_max
                         << std::endl;
 
             if( iter%10 == 1 )
@@ -371,7 +375,7 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
     int tot_occ_num_iter = 0;
     int tot_exteral_iter = 0;
 
-    for(int iter=1; iter<PARAM.inp.scf_nmax; ++iter)
+    for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
     {
         tot_exteral_iter = iter; // temp
         bool orb_conv = false;
@@ -883,7 +887,7 @@ bool ESolver_RDMFT_Torch<TK, TR>::converge(const bool* occ_num_conv_in, const bo
 
     double max_off_diag_F = this->check_hermi_lambda();
 
-    bool orb_conv = this->orb_conv();
+    // bool orb_conv = this->orb_conv();
 
     this->max_off_diag_Fock = max_off_diag_F;
 
@@ -920,16 +924,16 @@ bool ESolver_RDMFT_Torch<TK, TR>::converge(const bool* occ_num_conv_in, const bo
                     << "\n******\n" << std::endl;
         return 1;
     }
-    else if( max_off_diag_F < this->lambda_thr && orb_conv && occ_num_conv )
-    {
-        std::cout << "\n******\n\nConvergence with orb_conv!\n" 
-                    << "\nmax_off_diag_F < lambda_thr: " << max_off_diag_F 
-                    << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
-                    << "\ndiff_DM_max: " << this->diff_DM_max 
-                    << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
-                    << "\n******\n" << std::endl;
-        return 1;
-    }
+    // else if( max_off_diag_F < this->lambda_thr && orb_conv && occ_num_conv )
+    // {
+    //     std::cout << "\n******\n\nConvergence with orb_conv!\n" 
+    //                 << "\nmax_off_diag_F < lambda_thr: " << max_off_diag_F 
+    //                 << "\ndiff_occ_num_max: " << this->diff_occ_num_max 
+    //                 << "\ndiff_DM_max: " << this->diff_DM_max 
+    //                 << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
+    //                 << "\n******\n" << std::endl;
+    //     return 1;
+    // }
     else
     {
         if( !PARAM.inp.rdmft_couple_opti )
