@@ -154,7 +154,6 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
     //                 << "\n******\n" << std::endl;
     // }
 
-
 }
 
 

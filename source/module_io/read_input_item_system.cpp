@@ -166,6 +166,10 @@ void ReadInput::item_system()
             {
                 para.input.symmetry = "-1"; // disable kpoint reduce
             }
+            if (para.input.esolver_type == "rdmft")
+            {
+                para.input.symmetry = "-1"; // symmetry calculations still have bugs
+            }
         };
         this->add_item(item);
     }
