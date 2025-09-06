@@ -509,6 +509,21 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
     std::cout << "\n******\n" << "maxniter of NOs in rdmft is: " << PARAM.inp.maxniter_orb << "\n******\n" << std::endl;
     std::cout << "\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n\n\n" << std::endl;
+
+
+    // // just test
+    // TK* pwfc_dft = &( this->psi->operator()(0, 0, 0) );
+    // TK* pwfc_rdmft = &(this->rdmft_solver.wfc(0, 0, 0));
+    // for(int i=0; i<this->psi->size(); ++i) { pwfc_dft[i] = pwfc_rdmft[i]; }
+    // this->pelec->wg = this->rdmft_solver.wg;
+
+    // this->psi_tmp = new psi::Psi<TK>;
+    // this->psi_tmp->resize(this->rdmft_solver.nk_total, this->pv.ncol_bands, this->pv.nrow);
+    // *(this->psi_tmp) = this->rdmft_solver.wfc;
+    // this->wg_tmp = this->rdmft_solver.wg;
+
+    // ModuleESolver::ESolver_KS<TK>::runner(ucell, istep);
+
 }
 
 

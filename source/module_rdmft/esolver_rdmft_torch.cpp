@@ -321,7 +321,6 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
             // diff_E2 = E_new2 - E_new1;
             // Etotal_old = E_new2;
 
-
             bool conv = this->converge();
 
             std::cout << "\n******\nniter of rdmft: " << iter 
@@ -330,7 +329,7 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
                         << "\ndiff_E: " << diff_E1 
                         << "\ndiff_occ_num_max: " << this->diff_occ_num_max
                         << "\n\nEtotal_rdmft by opti NOs: " << E_new2
-                        << "\ndiff_E: " << diff_E2 
+                        << "\ndiff_E: " << diff_E2
                         << "\ndiff_DM_max: " << this->diff_DM_max
                         << "\n\nmax_off_diag_F: " << this->max_off_diag_Fock
                         // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
@@ -354,6 +353,10 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
         std::cout << "\n******\n" << "coupled optimization for optimizers requiring line search is not yet implemented" << "\n******\n" << std::endl;
         assert(0);
     }
+
+    // std::cout << "\n******\n" << "maxniter of NOs in rdmft is: " << PARAM.inp.maxniter_orb << "\n******\n" << std::endl;
+    std::cout << "\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n\n\n" << std::endl;
+ 
 }
 
 
