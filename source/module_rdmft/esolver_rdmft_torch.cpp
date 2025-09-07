@@ -570,24 +570,6 @@ void ESolver_RDMFT_Torch<TK, TR>::get_start_guess(UnitCell& ucell, const int ist
     std::cout << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
     this->rdmft_solver.cal_Energy();
 
-    // initialize R
-    // for(int ik=0; ik<this->nk_total; ++ik)
-    // {
-    //     std::fill(this->R_vec_global[ik].begin(), this->R_vec_global[ik].end(), 0.0);
-    //     rdmft::vector2tensor( this->R_vec_global[ik], this->R_tensor[ik], { PARAM.inp.nbands * PARAM.inp.nbands } );
-        
-    //     // malloc grad
-    //     if( PARAM.inp.gamma_only )
-    //     {
-    //         this->R_tensor[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-    //     }
-    //     else
-    //     {
-    //         this->R_tensor_real[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-    //         this->R_tensor_imag[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-    //     }
-    // }
-
     // initialize var_x
     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
     if(PARAM.inp.random_occ_num)
