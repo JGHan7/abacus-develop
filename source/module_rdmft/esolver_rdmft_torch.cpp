@@ -62,8 +62,6 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     this->dft_optimize = PARAM.inp.dft_opti;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     this->conver_initial_value = PARAM.inp.conv_inital_value; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    this->cal_molecular = ( PARAM.inp.gamma_only || this->nk_total == 1 || ( this->nk_total == 2 && PARAM.inp.nspin == 2 ) );
-
     this->nk_total = this->rdmft_solver.nk_total;
     this->para_Fij = &this->rdmft_solver.para_Eij;
     this->DM.resize(this->nk_total, std::vector<TK>(this->pv.nloc, 0.0));
@@ -74,13 +72,14 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     this->wfc_old = this->wfc_new;
     // this->wfc_record = this->wfc_new;
 
+    this->cal_molecular = ( PARAM.inp.gamma_only || this->nk_total == 1 || ( this->nk_total == 2 && PARAM.inp.nspin == 2 ) );
     this->opti_deltaR = true;
 
     this->init_opti_param();
 
     this->set_opti_options();
 
-    // this->select_optimizer();
+    this->select_optimizer();
 }
 
 
@@ -90,8 +89,8 @@ void ESolver_RDMFT_Torch<TK, TR>::init_opti_param()
     // ONs
     this->var_x.resize(this->nk_total*PARAM.inp.nbands, 0.0);
     this->dE_dx.resize(this->nk_total*PARAM.inp.nbands, 0.0);
-    // rdmft::vector2tensor(this->var_x, this->var_x_tensor, { static_cast<int>(this->var_x.size()) });
-    // this->var_x_tensor.mutable_grad() = torch::zeros_like(this->var_x_tensor);
+    rdmft::vector2tensor(this->var_x, this->var_x_tensor, { static_cast<int>(this->var_x.size()) });
+    this->var_x_tensor.mutable_grad() = torch::zeros_like(this->var_x_tensor);
 
     // NOs
     this->R_vec_global.resize( this->nk_total, std::vector<TK>(PARAM.inp.nbands * PARAM.inp.nbands, 0.0) );
@@ -103,23 +102,23 @@ void ESolver_RDMFT_Torch<TK, TR>::init_opti_param()
         this->R_tensor_imag.resize(this->nk_total);
     }
     this->dE_dR_tensor.resize(this->nk_total);
-    // // this->R_optimizer.resize(this->nk_total);
-    // for(int ik=0; ik<this->nk_total; ++ik)
-    // {
-    //     // std::fill(this->R_vec_global[ik].begin(), this->R_vec_global[ik].end(), 0.0);
-    //     rdmft::vector2tensor( this->R_vec_global[ik], this->R_tensor[ik], { PARAM.inp.nbands * PARAM.inp.nbands } );
+    this->R_optimizer.resize(this->nk_total);
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        // std::fill(this->R_vec_global[ik].begin(), this->R_vec_global[ik].end(), 0.0);
+        rdmft::vector2tensor( this->R_vec_global[ik], this->R_tensor[ik], { PARAM.inp.nbands * PARAM.inp.nbands } );
         
-    //     // malloc grad
-    //     if( PARAM.inp.gamma_only )
-    //     {
-    //         this->R_tensor[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-    //     }
-    //     else
-    //     {
-    //         this->R_tensor_real[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-    //         this->R_tensor_imag[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-    //     }
-    // }
+        // malloc grad
+        if( PARAM.inp.gamma_only )
+        {
+            this->R_tensor[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+        }
+        else
+        {
+            this->R_tensor_real[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+            this->R_tensor_imag[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+        }
+    }
 }
 
 
@@ -170,7 +169,7 @@ void ESolver_RDMFT_Torch<TK, TR>::runner(UnitCell& ucell, const int istep)
 
     this->get_start_guess(ucell, istep);
 
-    this->select_optimizer();
+    // this->select_optimizer();
 
     this->do_optimize();
 
@@ -572,22 +571,22 @@ void ESolver_RDMFT_Torch<TK, TR>::get_start_guess(UnitCell& ucell, const int ist
     this->rdmft_solver.cal_Energy();
 
     // initialize R
-    for(int ik=0; ik<this->nk_total; ++ik)
-    {
-        std::fill(this->R_vec_global[ik].begin(), this->R_vec_global[ik].end(), 0.0);
-        rdmft::vector2tensor( this->R_vec_global[ik], this->R_tensor[ik], { PARAM.inp.nbands * PARAM.inp.nbands } );
+    // for(int ik=0; ik<this->nk_total; ++ik)
+    // {
+    //     std::fill(this->R_vec_global[ik].begin(), this->R_vec_global[ik].end(), 0.0);
+    //     rdmft::vector2tensor( this->R_vec_global[ik], this->R_tensor[ik], { PARAM.inp.nbands * PARAM.inp.nbands } );
         
-        // malloc grad
-        if( PARAM.inp.gamma_only )
-        {
-            this->R_tensor[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-        }
-        else
-        {
-            this->R_tensor_real[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-            this->R_tensor_imag[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
-        }
-    }
+    //     // malloc grad
+    //     if( PARAM.inp.gamma_only )
+    //     {
+    //         this->R_tensor[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+    //     }
+    //     else
+    //     {
+    //         this->R_tensor_real[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+    //         this->R_tensor_imag[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+    //     }
+    // }
 
     // initialize var_x
     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
