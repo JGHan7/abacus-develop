@@ -34,13 +34,43 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
 
     virtual void init_opti_param() override;
 
+    virtual void select_optimizer() override;
+
+    virtual void couple_opti() override;
+
+    virtual void decouple_opti() override;
+
+
+
+
 
 
 
 
   private:
 
+    int64_t nbands64 = 0;
+    int64_t nbasis64 = 0;
 
+    std::vector<torch::Tensor> thetaR_real;
+    std::vector<torch::Tensor> thetaR_imag;
+
+    std::vector<torch::Tensor> wfc_tensor;
+    std::vector<torch::Tensor> dE_dwfc_tensor;
+
+
+    virtual void cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, const int ik, const torch::Tensor* R_tensor_ik = nullptr) override;
+
+    virtual torch::Tensor trial_ER_Egrad(const int ik, bool cal_grad = true) override;
+
+    virtual double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
+                                const torch::Tensor* R_tensor_ik = nullptr,
+                                bool cal_by_occ_num = false,
+                                bool cal_by_orb = false,
+                                const int ik = 0) override;
+
+
+    virtual double check_hermi_lambda() override;
 
 
     

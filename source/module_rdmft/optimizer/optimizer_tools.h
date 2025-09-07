@@ -877,10 +877,15 @@ void exp_skew_hermi_mat(const Parallel_2D* para_mat, const std::vector<TK>& R, s
 // }
 
 
+//! conveniently use cpp's numerical template type to declare the type of tensor
+template<typename T>
+torch::TensorOptions torch_dtype();
+
+
 // convert vector to tensor
 template <typename T>
 void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
-                   const std::vector<int64_t>& shape, bool need_grad = true)
+                   const std::vector<int64_t>& shape, bool need_grad = false)
 {
     int64_t total = 1;
     for (auto s : shape) total *= s;
@@ -929,7 +934,7 @@ void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
 
 template <typename T>
 void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
-                   std::initializer_list<int> shape_list, bool need_grad = true)
+                   std::initializer_list<int> shape_list, bool need_grad = false)
 {
     std::vector<int64_t> shape(shape_list.begin(), shape_list.end());
     vector2tensor(vec, tensor, shape, need_grad);
@@ -938,7 +943,7 @@ void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
 
 template <typename T>
 void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
-                   const std::vector<int>& shape_vec, bool need_grad = true)
+                   const std::vector<int>& shape_vec, bool need_grad = false)
 {
     std::vector<int64_t> shape(shape_vec.begin(), shape_vec.end());
     vector2tensor(vec, tensor, shape, need_grad);

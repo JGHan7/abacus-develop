@@ -59,7 +59,7 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     this->iter_diag_ethr = PARAM.inp.iter_diag_ethr;
     this->occ_num_thr = PARAM.inp.occ_num_thr;
     this->lambda_thr = PARAM.inp.lambda_thr;
-    this->dft_optimize = PARAM.inp.dft_opti;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    this->dft_optimize = PARAM.inp.dft_opti;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     this->conver_initial_value = PARAM.inp.conv_inital_value; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     this->nk_total = this->rdmft_solver.nk_total;
@@ -73,7 +73,6 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     // this->wfc_record = this->wfc_new;
 
     this->cal_molecular = ( PARAM.inp.gamma_only || this->nk_total == 1 || ( this->nk_total == 2 && PARAM.inp.nspin == 2 ) );
-    this->opti_deltaR = true;
 
     this->init_opti_param();
 
@@ -93,6 +92,7 @@ void ESolver_RDMFT_Torch<TK, TR>::init_opti_param()
     this->var_x_tensor.mutable_grad() = torch::zeros_like(this->var_x_tensor);
 
     // NOs
+    this->opti_deltaR = true;
     this->R_vec_global.resize( this->nk_total, std::vector<TK>(PARAM.inp.nbands * PARAM.inp.nbands, 0.0) );
     this->dE_dR_global.resize( this->nk_total, std::vector<TK>(PARAM.inp.nbands * PARAM.inp.nbands, 0.0) );
     this->R_tensor.resize(this->nk_total);
@@ -191,7 +191,7 @@ void ESolver_RDMFT_Torch<TK, TR>::select_optimizer()
 {
     // for ONs
     // before specifying the optimizer, param must be initialized to a certain extent
-    this->var_x_tensor.set_requires_grad(true);
+    // this->var_x_tensor.set_requires_grad(true);
     std::vector<torch::Tensor> param_x = {this->var_x_tensor};
     if( PARAM.inp.occ_num_opti == "adam" )
     {
@@ -209,7 +209,7 @@ void ESolver_RDMFT_Torch<TK, TR>::select_optimizer()
     {
         if( PARAM.inp.gamma_only ) // GlobalC::exx_info.info_ri.real_number
         {
-            this->R_tensor[ik].set_requires_grad(true);
+            // this->R_tensor[ik].set_requires_grad(true);
             param_R[ik] = { this->R_tensor[ik] };
         }
         else
@@ -218,8 +218,8 @@ void ESolver_RDMFT_Torch<TK, TR>::select_optimizer()
             // this->R_tensor_imag[ik] = torch::empty(this->R_tensor[ik].sizes(), torch::dtype(torch::kDouble).requires_grad(true));
             rdmft::split_complex_tensor(this->R_tensor[ik], this->R_tensor_real[ik], this->R_tensor_imag[ik]);
 
-            this->R_tensor_real[ik].set_requires_grad(true);
-            this->R_tensor_imag[ik].set_requires_grad(true);
+            // this->R_tensor_real[ik].set_requires_grad(true);
+            // this->R_tensor_imag[ik].set_requires_grad(true);
             param_R[ik] = { this->R_tensor_real[ik], this->R_tensor_imag[ik] };
         }
 
@@ -665,7 +665,8 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_Ex_Egrad(bool cal_grad)
         this->var_x_tensor.mutable_grad() = this->dE_dx_tensor;
     }
 
-    return torch::tensor(E, torch::dtype(torch::kDouble).requires_grad(true));
+    // return torch::tensor(E, torch::dtype(torch::kDouble).requires_grad(true));
+    return torch::tensor(E, torch::dtype(torch::kDouble));
 }
 
 
@@ -724,7 +725,8 @@ torch::Tensor ESolver_RDMFT_Torch<TK, TR>::trial_ER_Egrad(const int ik, bool cal
     }
 
 
-    return torch::tensor(E, torch::dtype(torch::kDouble).requires_grad(true));
+    // return torch::tensor(E, torch::dtype(torch::kDouble).requires_grad(true));
+    return torch::tensor(E, torch::dtype(torch::kDouble));
 }
 
 

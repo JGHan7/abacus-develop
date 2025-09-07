@@ -422,6 +422,21 @@ void wg2occ_num(const K_Vectors* kv, const ModuleBase::matrix& wg, ModuleBase::m
 
 
 
+// double
+template<>
+torch::TensorOptions torch_dtype<double>()
+{
+    return torch::dtype(torch::kDouble);
+}
+
+// std::complex<double>
+template<>
+torch::TensorOptions torch_dtype<std::complex<double>>()
+{
+    return torch::dtype(torch::kComplexDouble);
+}
+
+
 //! copy the real and imaginary parts from a complex tensor
 void split_complex_tensor(const torch::Tensor& R, torch::Tensor& R_real, torch::Tensor& R_imag)
 {

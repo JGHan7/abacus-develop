@@ -50,7 +50,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     
     virtual void get_start_guess(UnitCell& ucell, const int istep) override;
 
-    void select_optimizer();
+    virtual void select_optimizer();
 
     void before_opti();
 
@@ -68,9 +68,9 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     bool cal_molecular = false;
 
-    void couple_opti();
+    virtual void couple_opti();
 
-    void decouple_opti();
+    virtual void decouple_opti();
 
     //! determine whether the optimization of NOs and ONs has converged
     //! if dm_conv() or occ_num_conv() is called in an iteration, the obtained value must be passed in
@@ -101,7 +101,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     //!
     //! the result of calculating dE_dR is used. If you re-optimize ONs, please call the function containing dE_dR first
-    double check_hermi_lambda();
+    virtual double check_hermi_lambda();
     //!
     double max_off_diag_Fock = 0.0;
 
@@ -163,11 +163,11 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     bool has_cal_E_wfc= false;
     // in the future, it can be modified to distinguish k points
     // void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
-    void cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, const int ik, const torch::Tensor* R_tensor_ik = nullptr);
+    virtual void cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, const int ik, const torch::Tensor* R_tensor_ik = nullptr);
 
     const double grad_factor = 2.0;
     //
-    torch::Tensor trial_ER_Egrad(const int ik, bool cal_grad = true);
+    virtual torch::Tensor trial_ER_Egrad(const int ik, bool cal_grad = true);
     //
     double optimize_R();
     //
@@ -184,11 +184,11 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     //                     bool cal_by_occ_num = false,
     //                     bool cal_by_orb = false);
     //! 
-    double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
-                        const torch::Tensor* R_tensor_ik = nullptr,
-                        bool cal_by_occ_num = false,
-                        bool cal_by_orb = false,
-                        const int ik = 0);
+    virtual double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
+                                const torch::Tensor* R_tensor_ik = nullptr,
+                                bool cal_by_occ_num = false,
+                                bool cal_by_orb = false,
+                                const int ik = 0);
 
 
 
