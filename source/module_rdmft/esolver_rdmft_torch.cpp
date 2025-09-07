@@ -77,7 +77,7 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     this->wfc_new.resize(this->rdmft_solver.nk_total, this->pv.ncol_bands, this->pv.nrow);
     this->wfc_new.zero_out();
     this->wfc_old = this->wfc_new;
-    this->wfc_record = this->wfc_new;
+    // this->wfc_record = this->wfc_new;
     this->R_tensor.resize(this->nk_total);
     if( !PARAM.inp.gamma_only )
     {
@@ -1003,32 +1003,32 @@ bool ESolver_RDMFT_Torch<TK, TR>::dm_conv()
 }
 
 
-template <typename TK, typename TR>
-bool ESolver_RDMFT_Torch<TK, TR>::orb_conv()
-{
-    double sum_norm = 0.0;
-    this->diff_wfc_max = 0.0;
+// template <typename TK, typename TR>
+// bool ESolver_RDMFT_Torch<TK, TR>::orb_conv()
+// {
+//     double sum_norm = 0.0;
+//     this->diff_wfc_max = 0.0;
 
-    TK* pwfc_new = &( this->wfc_new(0, 0, 0) );
-    TK* pwfc_record = &( this->wfc_record(0, 0, 0) );
-    for(int i=0; i<this->wfc_new.size(); ++i)
-    {
-        sum_norm += std::norm( pwfc_new[i] - pwfc_record[i] );
-        this->diff_wfc_max = std::max( this->diff_wfc_max, std::abs(pwfc_new[i] - pwfc_record[i]) );
-        pwfc_record[i] = pwfc_new[i];
-    }
-    sum_norm = std::sqrt( sum_norm );
-    this->diff_wfc_norm = sum_norm;
+//     TK* pwfc_new = &( this->wfc_new(0, 0, 0) );
+//     TK* pwfc_record = &( this->wfc_record(0, 0, 0) );
+//     for(int i=0; i<this->wfc_new.size(); ++i)
+//     {
+//         sum_norm += std::norm( pwfc_new[i] - pwfc_record[i] );
+//         this->diff_wfc_max = std::max( this->diff_wfc_max, std::abs(pwfc_new[i] - pwfc_record[i]) );
+//         pwfc_record[i] = pwfc_new[i];
+//     }
+//     sum_norm = std::sqrt( sum_norm );
+//     this->diff_wfc_norm = sum_norm;
 
-    // this->wfc_record = this->wfc_new;
+//     // this->wfc_record = this->wfc_new;
 
-    if( sum_norm < PARAM.inp.scf_thr || this->diff_wfc_max < PARAM.inp.scf_thr )
-    {
-        return 1;
-    }
+//     if( sum_norm < PARAM.inp.scf_thr || this->diff_wfc_max < PARAM.inp.scf_thr )
+//     {
+//         return 1;
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
 
 template <typename TK, typename TR>
