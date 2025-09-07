@@ -203,7 +203,7 @@ void ESolver_RDMFT_Torch<TK, TR>::select_optimizer()
     }
 
     // for NOs
-    this->R_optimizer.resize(this->nk_total);
+    // this->R_optimizer.resize(this->nk_total);
     std::vector< std::vector<torch::Tensor> > param_R(this->nk_total);
     for(int ik=0; ik<this->nk_total; ++ik)
     {
@@ -599,7 +599,7 @@ void ESolver_RDMFT_Torch<TK, TR>::get_start_guess(UnitCell& ucell, const int ist
         this->ebi.get_inital_guess(this->var_x, &this->rdmft_solver.occ_number);
     }
     rdmft::vector2tensor(this->var_x, this->var_x_tensor, { static_cast<int>(this->var_x.size()) });
-    this->var_x_tensor.mutable_grad() = torch::zeros_like(this->var_x_tensor);
+    // this->var_x_tensor.mutable_grad() = torch::zeros_like(this->var_x_tensor);
 
     this->cal_Etotal(&this->var_x_tensor, nullptr, 1, 0);
 }
