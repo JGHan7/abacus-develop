@@ -52,15 +52,19 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     void select_optimizer();
 
+    void before_opti();
+
     void do_optimize();
 
-    void before_opti();
+    void set_opti_options();
+
+    virtual void init_opti_param();
 
   // private:
 
     int nk_total = 0;
 
-    Parallel_2D* para_Fij;
+    Parallel_2D* para_Fij = nullptr;
 
     bool cal_molecular = false;
 

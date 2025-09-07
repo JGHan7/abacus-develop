@@ -36,6 +36,10 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_all_runners(ucell, inp);
     // ModuleESolver::ESolver_RDMFT<TK, TR>::before_all_runners(ucell, inp);
 
+    // test torch
+    auto torchTest = torch::rand({4, 4});
+    std::cout << "\ntorchTest in ESolver_RDMFT_Torch:\n" << torchTest << "\n" << std::endl;
+
     this->rdmft_solver.init(this->GG,
                         this->GK,
                         this->pv,
@@ -49,35 +53,49 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
                         PARAM.inp.rdmft_power_alpha,
                         true);
 
-    // temp
-    if( PARAM.inp.rdmft_orb_opti == "iter_diag" || PARAM.inp.rdmft_orb_opti == "adam" )
-    {
-        // this->iter_diag_orb.init(this->rdmft_solver.nk_total, this->kv.get_nkstot_full(), this->rdmft_solver.para_Eij, this->pv, &this->rdmft_solver);
-        // this->ls_opti_occ_num.init(this->kv, &this->rdmft_solver);
-    }
+    this->ebi.init(this->rdmft_solver.nk_total, this->kv.get_nkstot_full(), this->kv.wk);
+
+    // convergence parameters
     this->iter_diag_ethr = PARAM.inp.iter_diag_ethr;
     this->occ_num_thr = PARAM.inp.occ_num_thr;
     this->lambda_thr = PARAM.inp.lambda_thr;
-
-    // convergence parameters
     this->dft_optimize = PARAM.inp.dft_opti;  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     this->conver_initial_value = PARAM.inp.conv_inital_value; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+    this->cal_molecular = ( PARAM.inp.gamma_only || this->nk_total == 1 || ( this->nk_total == 2 && PARAM.inp.nspin == 2 ) );
+
     this->nk_total = this->rdmft_solver.nk_total;
     this->para_Fij = &this->rdmft_solver.para_Eij;
-
     this->DM.resize(this->nk_total, std::vector<TK>(this->pv.nloc, 0.0));
-
-    this->var_x.resize(this->nk_total*PARAM.inp.nbands, 0.0);
-    this->dE_dx.resize(this->nk_total*PARAM.inp.nbands, 0.0);
-    this->R_vec_global.resize( this->nk_total, std::vector<TK>(PARAM.inp.nbands * PARAM.inp.nbands, 0.0) );
-    this->dE_dR_global.resize( this->nk_total, std::vector<TK>(PARAM.inp.nbands * PARAM.inp.nbands, 0.0) );
     this->occ_number_new.create(this->rdmft_solver.nk_total, PARAM.inp.nbands, true);
     this->occ_number_old.create(this->rdmft_solver.nk_total, PARAM.inp.nbands, true);
     this->wfc_new.resize(this->rdmft_solver.nk_total, this->pv.ncol_bands, this->pv.nrow);
     this->wfc_new.zero_out();
     this->wfc_old = this->wfc_new;
     // this->wfc_record = this->wfc_new;
+
+    this->opti_deltaR = true;
+
+    this->init_opti_param();
+
+    this->set_opti_options();
+
+    // this->select_optimizer();
+}
+
+
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch<TK, TR>::init_opti_param()
+{
+    // ONs
+    this->var_x.resize(this->nk_total*PARAM.inp.nbands, 0.0);
+    this->dE_dx.resize(this->nk_total*PARAM.inp.nbands, 0.0);
+    // rdmft::vector2tensor(this->var_x, this->var_x_tensor, { static_cast<int>(this->var_x.size()) });
+    // this->var_x_tensor.mutable_grad() = torch::zeros_like(this->var_x_tensor);
+
+    // NOs
+    this->R_vec_global.resize( this->nk_total, std::vector<TK>(PARAM.inp.nbands * PARAM.inp.nbands, 0.0) );
+    this->dE_dR_global.resize( this->nk_total, std::vector<TK>(PARAM.inp.nbands * PARAM.inp.nbands, 0.0) );
     this->R_tensor.resize(this->nk_total);
     if( !PARAM.inp.gamma_only )
     {
@@ -85,16 +103,29 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
         this->R_tensor_imag.resize(this->nk_total);
     }
     this->dE_dR_tensor.resize(this->nk_total);
-    this->R_optimizer.resize(this->nk_total);
+    // // this->R_optimizer.resize(this->nk_total);
+    // for(int ik=0; ik<this->nk_total; ++ik)
+    // {
+    //     // std::fill(this->R_vec_global[ik].begin(), this->R_vec_global[ik].end(), 0.0);
+    //     rdmft::vector2tensor( this->R_vec_global[ik], this->R_tensor[ik], { PARAM.inp.nbands * PARAM.inp.nbands } );
+        
+    //     // malloc grad
+    //     if( PARAM.inp.gamma_only )
+    //     {
+    //         this->R_tensor[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+    //     }
+    //     else
+    //     {
+    //         this->R_tensor_real[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+    //         this->R_tensor_imag[ik].mutable_grad() = torch::zeros_like(this->R_tensor[ik]);
+    //     }
+    // }
+}
 
-    this->ebi.init(this->rdmft_solver.nk_total, this->kv.get_nkstot_full(), this->kv.wk);
 
-    this->cal_molecular = ( PARAM.inp.gamma_only || this->nk_total == 1 || ( this->nk_total == 2 && PARAM.inp.nspin == 2 ) );
-
-    // test torch
-    auto torchTest = torch::rand({4, 4});
-    std::cout << "torchTest in ESolver_RDMFT_Torch:\n" << torchTest << std::endl;
-
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch<TK, TR>::set_opti_options()
+{
     // for ONs
     if( PARAM.inp.occ_num_opti == "adam" )
     {
@@ -128,7 +159,6 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
         this->R_options_lbfgs.line_search_fn("strong_wolfe");
         // this->R_options_lbfgs.tolerance_grad(1e-8);
     }
-
 }
 
 
@@ -174,6 +204,7 @@ void ESolver_RDMFT_Torch<TK, TR>::select_optimizer()
     }
 
     // for NOs
+    this->R_optimizer.resize(this->nk_total);
     std::vector< std::vector<torch::Tensor> > param_R(this->nk_total);
     for(int ik=0; ik<this->nk_total; ++ik)
     {

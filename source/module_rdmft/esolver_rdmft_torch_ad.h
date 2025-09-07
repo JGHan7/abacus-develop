@@ -32,7 +32,7 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
 
   protected:
 
-
+    virtual void init_opti_param() override;
 
 
 

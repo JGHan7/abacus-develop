@@ -30,6 +30,11 @@ ESolver_RDMFT_Torch_AD<TK, TR>::~ESolver_RDMFT_Torch_AD()
 }
 
 
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch_AD<TK, TR>::init_opti_param()
+{
+    ;
+}
 
 
 
