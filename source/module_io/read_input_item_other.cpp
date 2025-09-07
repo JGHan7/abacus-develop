@@ -778,6 +778,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("rdmft_auto_diff");
+        item.annotation = "whether to use libTorch's automatic differentiation";
+        read_sync_bool(input.rdmft_auto_diff);
+        this->add_item(item);
+    }
+    {
         Input_Item item("rdmft_dm_conv");
         item.annotation = "whether to force density matrix convergence in rdmft optimization";
         read_sync_bool(input.rdmft_dm_conv);

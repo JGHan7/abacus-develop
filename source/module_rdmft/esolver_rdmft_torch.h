@@ -54,6 +54,8 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     void do_optimize();
 
+    void before_opti();
+
   // private:
 
     int nk_total = 0;
@@ -65,8 +67,6 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     void couple_opti();
 
     void decouple_opti();
-
-    void before_opti();
 
     //! determine whether the optimization of NOs and ONs has converged
     //! if dm_conv() or occ_num_conv() is called in an iteration, the obtained value must be passed in

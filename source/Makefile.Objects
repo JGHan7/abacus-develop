@@ -773,6 +773,7 @@ OBJS_RDMFT=rdmft.o\
         rdmft_update_state.o\
         esolver_rdmft.o\
         esolver_rdmft_torch.o\
+        esolver_rdmft_torch_ad.o\
         iter_diag_NOs.o\
         optimizer_tools.o\
         line_search_rdmft.o\
