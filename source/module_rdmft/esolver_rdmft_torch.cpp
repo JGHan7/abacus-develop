@@ -34,7 +34,7 @@ template <typename TK, typename TR>
 void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para& inp)
 {
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_all_runners(ucell, inp);
-    // ModuleESolver::ESolver_RDMFT<TK, TR>::before_all_runners(ucell, inp);
+    // rdmft::ESolver_RDMFT<TK, TR>::before_all_runners(ucell, inp);
 
     // test torch
     auto torchTest = torch::rand({4, 4});

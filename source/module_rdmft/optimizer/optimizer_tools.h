@@ -943,6 +943,15 @@ void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
 
 template <typename T>
 void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
+                   std::initializer_list<int64_t> shape_list, bool need_grad = false)
+{
+    std::vector<int64_t> shape(shape_list.begin(), shape_list.end());
+    vector2tensor(vec, tensor, shape, need_grad);
+}
+
+
+template <typename T>
+void vector2tensor(const std::vector<T>& vec, torch::Tensor& tensor,
                    const std::vector<int>& shape_vec, bool need_grad = false)
 {
     std::vector<int64_t> shape(shape_vec.begin(), shape_vec.end());
