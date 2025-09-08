@@ -38,9 +38,9 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
 
     virtual void get_start_guess(UnitCell& ucell, const int istep) override;
 
-    virtual void couple_opti() override;
+    // virtual void couple_opti() override;
 
-    virtual void decouple_opti() override;
+    // virtual void decouple_opti() override;
 
 
 

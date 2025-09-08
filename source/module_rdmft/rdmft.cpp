@@ -362,11 +362,13 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
 
 
 template <typename TK, typename TR>
-void RDMFT<TK, TR>::cal_E_grad_wfc()
+void RDMFT<TK, TR>::cal_E_grad_wfc(psi::Psi<TK>& dE_dwfc)
 {
     // !this would transfer the value of H_wfc_TV, H_wfc_hartree, H_wfc_XC --> occNum_H_wfc
     // get the gradient of energy with respect to the wfc, i.e., Wk_occNum_HamiltWfc
     add_psi(ParaV, this->kv, occ_number, H_wfc_TV, H_wfc_hartree, H_wfc_dft_XC, H_wfc_exx_XC, occNum_HamiltWfc, XC_func_rdmft, alpha_power);
+
+    dE_dwfc = this->occNum_HamiltWfc;
 }
 
 
@@ -645,16 +647,16 @@ double RDMFT<TK, TR>::run(ModuleBase::matrix& E_gradient_occNum, psi::Psi<TK>& E
     // this->cal_V_XC();
     this->cal_Hk_Hpsi();
     // this->cal_E_grad_wfc_occ_num();
-    this->cal_E_grad_wfc();
+    this->cal_E_grad_wfc(E_gradient_wfc);
     this->cal_E_grad_occ_num();
     this->cal_Energy(this->cal_E_type);
     // this->cal_Energy(2);
 
     E_gradient_occNum = (occNum_wfcHamiltWfc);
     
-    TK* pwfc = &occNum_HamiltWfc(0, 0, 0);
-    TK* pwfc_out = &E_gradient_wfc(0, 0, 0);
-    for(int i=0; i<wfc.size(); ++i) { pwfc_out[i] = pwfc[i]; }
+    // TK* pwfc = &occNum_HamiltWfc(0, 0, 0);
+    // TK* pwfc_out = &E_gradient_wfc(0, 0, 0);
+    // for(int i=0; i<wfc.size(); ++i) { pwfc_out[i] = pwfc[i]; }
 
     ModuleBase::timer::tick("RDMFT", "E_Egradient");
     // return E_RDMFT[3];

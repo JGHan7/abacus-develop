@@ -121,7 +121,7 @@ class RDMFT
     // double cal_E_grad_wfc_occ_num();
 
     //! obtain the gradient of total energy with respect to wfc
-    void cal_E_grad_wfc();
+    void cal_E_grad_wfc(psi::Psi<TK>& dE_dwfc);
 
     //! if wfc is updated using C'=C*exp(R), dE_dR = antisymmetric-lambda * constant
     void cal_antisym_lambda(const int ik, std::vector<TK>& antisym_lambda, double factor = 1.0);

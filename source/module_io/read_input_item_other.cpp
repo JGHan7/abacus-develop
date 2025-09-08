@@ -775,6 +775,12 @@ void ReadInput::item_others()
         Input_Item item("opti_by_torch");
         item.annotation = "whether to use libTorch's optimizer to optimize rdmft's NOs and ONs";
         read_sync_bool(input.opti_by_torch);
+        item.reset_value = [](const Input_Item& item, Parameter& para) {
+            if( para.input.rdmft_auto_diff == true)
+            {
+                para.input.opti_by_torch = true;
+            }
+        };
         this->add_item(item);
     }
     {

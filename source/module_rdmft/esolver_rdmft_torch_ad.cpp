@@ -19,7 +19,7 @@ namespace rdmft
 template <typename TK, typename TR>
 ESolver_RDMFT_Torch_AD<TK, TR>::ESolver_RDMFT_Torch_AD()
 {
-    this->classname = "ESolver_RDMFT_Torch";
+    this->classname = "ESolver_RDMFT_Torch_AD";
 }
 
 
@@ -33,6 +33,7 @@ ESolver_RDMFT_Torch_AD<TK, TR>::~ESolver_RDMFT_Torch_AD()
 template <typename TK, typename TR>
 void ESolver_RDMFT_Torch_AD<TK, TR>::init_opti_param()
 {
+    std::cout << "\n***\n" << "Enter RDMFT with automatic differentiation provided by libTorch" << "\n***\n" << std::endl;
     this->nbands64 = PARAM.inp.nbands;
     this->nbasis64 = this->pv.get_wfc_global_nbasis();
 
@@ -42,10 +43,7 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::init_opti_param()
     rdmft::vector2tensor(this->var_x, this->var_x_tensor, { static_cast<int>(this->var_x.size()) });
     this->var_x_tensor.mutable_grad() = torch::zeros_like(this->var_x_tensor);
 
-
-
-
-
+    // NOs
     this->opti_deltaR = false;
     this->R_optimizer.resize(this->nk_total);
     thetaR_real.resize(this->nk_total);
@@ -133,18 +131,18 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::get_start_guess(UnitCell& ucell, const int 
 }
 
 
-template <typename TK, typename TR>
-void ESolver_RDMFT_Torch_AD<TK, TR>::couple_opti()
-{
+// template <typename TK, typename TR>
+// void ESolver_RDMFT_Torch_AD<TK, TR>::couple_opti()
+// {
     
-}
+// }
 
 
-template <typename TK, typename TR>
-void ESolver_RDMFT_Torch_AD<TK, TR>::decouple_opti()
-{
+// template <typename TK, typename TR>
+// void ESolver_RDMFT_Torch_AD<TK, TR>::decouple_opti()
+// {
     
-}
+// }
 
 
 template <typename TK, typename TR>
@@ -178,14 +176,17 @@ torch::Tensor ESolver_RDMFT_Torch_AD<TK, TR>::trial_ER_Egrad(const int ik, bool 
 {
     this->update_R_tensor(ik);
 
-    double E = this->cal_Etotal( nullptr, &this->R_tensor[ik], 0, 1, ik );
+    double Ek = this->cal_Etotal( nullptr, &this->R_tensor[ik], 0, 1, ik );
+    torch::Tensor loss_Ek = torch::tensor(Ek, torch::dtype(torch::kDouble).requires_grad(false));
 
     if( cal_grad )
     {
         this->R_optimizer[ik]->zero_grad();
+        torch::Tensor temp;
+        this->cal_dE_dR( temp, ik );
     }
 
-
+    return loss_Ek;
 }
 
 
@@ -240,27 +241,59 @@ double ESolver_RDMFT_Torch_AD<TK, TR>::cal_Etotal(const torch::Tensor* var_x_ten
     Etotal = this->rdmft_solver.cal_Energy();
 
     return Etotal;
-
-
 }
 
 
 template <typename TK, typename TR>
 void ESolver_RDMFT_Torch_AD<TK, TR>::cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, const int ik, const torch::Tensor* R_tensor_ik)
 {
-    
+    if( !this->has_cal_E_wfc )
+    {
+        if( R_tensor_ik != nullptr )
+        {
+            this->cal_Etotal(nullptr, R_tensor_ik, 0, 1, ik);
+        }
+        else
+        {
+            std::cout << "\n***\n" << "cal_Etotal() was not performed before cal_dE_dR(), and no new iteration point was provided" << "\n***\n" << std::endl;
+            assert(0);
+        }
+    }
+
+    // obtain accurate dE/dR using analytical dE/dwfc and automatic differentiation, and convert the format
+    psi::Psi<TK> dE_dwfc;
+    std::vector<TK> dE_dwfc_vec;
+    this->rdmft_solver.cal_E_grad_wfc(dE_dwfc);
+    rdmft::psi2vec( ik, this->pv, dE_dwfc, dE_dwfc_vec );
+    this->dE_dwfc_tensor[ik] = torch::from_blob(dE_dwfc_vec.data(), {nbands64, nbasis64}, torch_dtype<TK>()).clone();
+
+    // auto diff
+    this->wfc_new_tensor[ik].backward( this->dE_dwfc_tensor[ik] );
+
+    this->has_cal_E_occ_num = false;
 }
 
 
 template <typename TK, typename TR>
 double ESolver_RDMFT_Torch_AD<TK, TR>::check_hermi_lambda()
 {
-    
+    double max_off_diag_Fock = 0.0;
+    std::vector<TK> Fock_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
+
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        this->rdmft_solver.cal_antisym_lambda(ik, Fock_local, this->grad_factor);
+        for(int i=0; i<Fock_local.size(); ++i)
+        {
+            double norm_Fij = std::abs( Fock_local[i] );
+            max_off_diag_Fock = std::max( max_off_diag_Fock, norm_Fij );
+        }
+    }
+
+    rdmft::reduce_all_max(max_off_diag_Fock);
+
+    return max_off_diag_Fock;
 }
-
-
-
-
 
 
 
