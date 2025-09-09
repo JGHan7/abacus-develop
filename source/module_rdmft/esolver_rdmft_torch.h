@@ -206,7 +206,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     // bool has_cal_E_wfc= false;
     // void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
 
-
+    virtual void print_info() override;
 
 };
 

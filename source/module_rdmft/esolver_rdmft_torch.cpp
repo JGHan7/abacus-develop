@@ -1079,9 +1079,14 @@ bool ESolver_RDMFT_Torch<TK, TR>::occ_num_conv()
 }
 
 
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch<TK, TR>::print_info()
+{
+    rdmft::ESolver_RDMFT<TK, TR>::print_info();
 
-
-
+    std::cout << "\n***\nvar_x: \n" << this->var_x_tensor << "\n***\n" << std::endl;
+    std::cout << "\n***\nR(k=0): \n" << this->R_tensor[0] << "\n***\n" << std::endl;
+}
 
 
 

@@ -55,8 +55,8 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::init_opti_param()
     dE_dwfc_tensor.resize(this->nk_total);
     for(int ik=0; ik<this->nk_total; ++ik)
     {
-        thetaR_real[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<double>());
-        thetaR_imag[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<double>());
+        thetaR_real[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<double>().requires_grad(true));
+        thetaR_imag[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<double>().requires_grad(true));
         this->R_tensor[ik] = torch::zeros({nbands64, nbands64}, torch_dtype<TK>());
         
         wfc_new_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
@@ -111,13 +111,13 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::select_optimizer()
         {
             if( PARAM.inp.gamma_only ) // GlobalC::exx_info.info_ri.real_number
             {
-                this->thetaR_real[ik].set_requires_grad(true);
+                // this->thetaR_real[ik].set_requires_grad(true);
                 param_R[ik] = { this->thetaR_real[ik] };
             }
             else
             {
-                this->thetaR_real[ik].set_requires_grad(true);
-                this->thetaR_imag[ik].set_requires_grad(true);
+                // this->thetaR_real[ik].set_requires_grad(true);
+                // this->thetaR_imag[ik].set_requires_grad(true);
                 param_R[ik] = { this->thetaR_real[ik], this->thetaR_imag[ik] };
             }
 
@@ -168,10 +168,39 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::get_start_guess(UnitCell& ucell, const int 
 template <typename TK, typename TR>
 void ESolver_RDMFT_Torch_AD<TK, TR>::one_opti()
 {
+    double Etotal_old = 0.0;
+    double diff_E = 0.0;
+
     for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
     {
-        ;
+        double E_new = this->optimize_all();
+        diff_E = E_new - Etotal_old;
+        Etotal_old = E_new;
+
+        bool conv = this->converge();
+
+        std::cout << "\n******\nniter of rdmft: " << iter 
+                    << std::fixed << std::setprecision(10);
+        std::cout << "\n\nEtotal_rdmft by opti ONs&NOs: " << E_new
+                    << "\ndiff_E: " << diff_E
+                    << "\ndiff_occ_num_max: " << this->diff_occ_num_max
+                    << "\ndiff_DM_max: " << this->diff_DM_max
+                    << "\n\nmax_off_diag_F: " << this->max_off_diag_Fock
+                    << std::endl;
+
+        if( iter%10 == 1 )
+        {
+            rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
+        }
+        std::cout << "******" << std::endl << std::defaultfloat;
+
+        if ( conv && std::abs(diff_E) < 1e-5 )
+        {
+            break;
+        }
     }
+
+    std::cout << "\n***\nthetaR_real(k=0): \n" << this->thetaR_real[0] << "\n***\n" << std::endl;
 }
 
 
