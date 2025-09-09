@@ -58,7 +58,6 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::init_opti_param()
         thetaR_real[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<double>());
         thetaR_imag[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<double>());
         this->R_tensor[ik] = torch::zeros({nbands64, nbands64}, torch_dtype<TK>());
-        // rotation_R = torch::zeros({nbands64, nbands64}, torch_dtype<TK>());
         
         wfc_new_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
         wfc_0_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());

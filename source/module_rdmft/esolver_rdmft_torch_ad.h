@@ -25,10 +25,6 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
     ESolver_RDMFT_Torch_AD();
     ~ESolver_RDMFT_Torch_AD();
 
-    // virtual void before_all_runners(UnitCell& ucell, const Input_para& inp) override;
-
-    // virtual void runner(UnitCell& ucell, const int istep) override;
-
 
   protected:
 
@@ -43,12 +39,6 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
     // virtual void decouple_opti() override;
 
 
-
-
-
-
-
-
   private:
 
     int64_t nbands64 = 0;
@@ -56,7 +46,6 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
 
     std::vector<torch::Tensor> thetaR_real;
     std::vector<torch::Tensor> thetaR_imag;
-    torch::Tensor rotation_R;
 
     std::vector<torch::Tensor> wfc_new_tensor;
     std::vector<torch::Tensor> wfc_0_tensor;
@@ -74,12 +63,7 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
                                 bool cal_by_orb = false,
                                 const int ik = 0) override;
 
-
     virtual double check_hermi_lambda() override;
-
-
-    
-
 
 };
 

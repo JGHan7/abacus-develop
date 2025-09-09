@@ -36,10 +36,6 @@ void ESolver_RDMFT_Torch<TK, TR>::before_all_runners(UnitCell& ucell, const Inpu
     ModuleESolver::ESolver_KS_LCAO<TK, TR>::before_all_runners(ucell, inp);
     // rdmft::ESolver_RDMFT<TK, TR>::before_all_runners(ucell, inp);
 
-    // test torch
-    auto torchTest = torch::rand({4, 4});
-    std::cout << "\ntorchTest in ESolver_RDMFT_Torch:\n" << torchTest << "\n" << std::endl;
-
     this->rdmft_solver.init(this->GG,
                         this->GK,
                         this->pv,
