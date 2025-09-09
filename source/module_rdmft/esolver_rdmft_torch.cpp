@@ -245,13 +245,20 @@ void ESolver_RDMFT_Torch<TK, TR>::before_opti()
 template <typename TK, typename TR>
 void ESolver_RDMFT_Torch<TK, TR>::do_optimize()
 {
-    if( PARAM.inp.rdmft_couple_opti )
+    if( PARAM.inp.rdmft_one_opti )
     {
-        this->couple_opti();
+        this->one_opti();
     }
     else
     {
-        this->decouple_opti();
+        if( PARAM.inp.rdmft_couple_opti )
+        {
+            this->couple_opti();
+        }
+        else
+        {
+            this->decouple_opti();
+        }
     }
 }
 
@@ -528,6 +535,14 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
                 << "\ntotal occ_num iter = " << tot_occ_num_iter
                 << "\n******\n" << std::endl;
 
+}
+
+
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch<TK, TR>::one_opti()
+{
+    std::cout << "\n***\n" << "one_opti() was not performed without auto-diff which provided by torch" << "\n***\n" << std::endl;
+    assert(0);
 }
 
 

@@ -790,6 +790,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("rdmft_one_opti");
+        item.annotation = "whether to use one optimizer to optimize both NOs and ONs";
+        read_sync_bool(input.rdmft_one_opti);
+        this->add_item(item);
+    }
+    {
         Input_Item item("rdmft_dm_conv");
         item.annotation = "whether to force density matrix convergence in rdmft optimization";
         read_sync_bool(input.rdmft_dm_conv);

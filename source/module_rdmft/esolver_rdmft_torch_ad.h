@@ -38,6 +38,20 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
 
     // virtual void decouple_opti() override;
 
+    virtual void one_opti() override;
+
+    double optimize_all();
+
+    torch::Tensor trial_E_Egrad_all(bool cal_grad = true);
+
+    double cal_Etotal(const torch::Tensor* var_x_tensor = nullptr,
+                        const std::vector<torch::Tensor>* R_tensor = nullptr,
+                        bool cal_by_occ_num = false,
+                        bool cal_by_orb = false);
+
+    void cal_dE_dR_all(const std::vector<torch::Tensor>* R_tensor = nullptr);
+
+    std::unique_ptr<torch::optim::Optimizer> one_optimizer;
 
   private:
 

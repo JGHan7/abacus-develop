@@ -72,6 +72,8 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     virtual void decouple_opti();
 
+    virtual void one_opti();
+
     //! determine whether the optimization of NOs and ONs has converged
     //! if dm_conv() or occ_num_conv() is called in an iteration, the obtained value must be passed in
     bool converge(const bool* occ_num_conv_in = nullptr, const bool* dm_conv_in = nullptr);
