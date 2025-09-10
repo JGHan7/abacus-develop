@@ -45,6 +45,8 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     // This means that only for the former is the gradient we provide approximately correct, so we recommend the former.
     bool opti_deltaR = true;
 
+    virtual void iter_update_wfc();
+
 
   protected:
     

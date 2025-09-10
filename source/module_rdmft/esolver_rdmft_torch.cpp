@@ -323,7 +323,8 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
 
             if( this->opti_deltaR )
             {
-                this->wfc_old = this->wfc_new; //this->rdmft_solver.wfc;
+                this->iter_update_wfc();
+                // this->wfc_old = this->wfc_new; //this->rdmft_solver.wfc;
             }
 
         }
@@ -654,7 +655,8 @@ double ESolver_RDMFT_Torch<TK, TR>::optimize_R()
 
     if( this->opti_deltaR )
     {
-        this->wfc_old = this->wfc_new; //this->rdmft_solver.wfc;
+        this->iter_update_wfc();
+        // this->wfc_old = this->wfc_new; //this->rdmft_solver.wfc;
     }
 
     return Etotal;
@@ -887,6 +889,13 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, cons
     }
 
     this->has_cal_E_occ_num = false;
+}
+
+
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch<TK, TR>::iter_update_wfc()
+{
+    this->wfc_old = this->wfc_new;
 }
 
 

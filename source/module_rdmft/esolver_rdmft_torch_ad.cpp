@@ -36,6 +36,7 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::init_opti_param()
     std::cout << "\n***\n" << "Enter RDMFT with automatic differentiation provided by libTorch" << "\n***\n" << std::endl;
     this->nbands64 = PARAM.inp.nbands;
     this->nbasis64 = this->pv.get_wfc_global_nbasis();
+    this->scaling_R = PARAM.inp.scaling_rotation;
 
     // ONs
     this->var_x.resize(this->nk_total*PARAM.inp.nbands, 0.0);
@@ -44,7 +45,7 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::init_opti_param()
     this->var_x_tensor.mutable_grad() = torch::zeros_like(this->var_x_tensor);
 
     // NOs
-    this->opti_deltaR = false;
+    this->opti_deltaR = PARAM.inp.small_rotation;
     this->R_optimizer.resize(this->nk_total);
     thetaR_real.resize(this->nk_total);
     thetaR_imag.resize(this->nk_total);
@@ -224,6 +225,15 @@ double ESolver_RDMFT_Torch_AD<TK, TR>::optimize_all()
         // Etotal = this->trial_Ex_Egrad().item().toDouble();
     }
 
+    if( this->opti_deltaR )
+    {
+        this->iter_update_wfc();
+        // for (int ik=0; ik < this->nk_total; ++ik)
+        // {
+        //     wfc_0_tensor[ik] = wfc_new_tensor[ik].detach();
+        // }
+    }
+
     return Etotal;
 }
 
@@ -276,7 +286,22 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::update_R_tensor(const int ik)
     }
 
     // constructing a skew-Hermitian matrix R_skew = R_upper - R_upper^\dagger
+    // this->R_tensor[ik] = ( R_upper - R_upper.transpose(0,1).conj() ) * this->scaling_R;
     this->R_tensor[ik] = R_upper - R_upper.transpose(0,1).conj();
+
+    if( this->opti_deltaR )
+    {
+        if( PARAM.inp.gamma_only )
+        {
+            this->thetaR_real[ik].data().zero_();
+        }
+        else
+        {
+            this->thetaR_real[ik].data().zero_();
+            this->thetaR_imag[ik].data().zero_();
+        }
+    }
+
 }
 
 
@@ -472,6 +497,16 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::cal_dE_dR_all(const std::vector<torch::Tens
     }
 
     this->has_cal_E_occ_num = false;
+}
+
+
+template <typename TK, typename TR>
+void ESolver_RDMFT_Torch_AD<TK, TR>::iter_update_wfc()
+{
+    for (int ik=0; ik < this->nk_total; ++ik)
+    {
+        this->wfc_0_tensor[ik] = this->wfc_new_tensor[ik].detach();
+    }
 }
 
 

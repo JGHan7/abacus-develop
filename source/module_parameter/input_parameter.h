@@ -680,6 +680,8 @@ struct Input_para
     bool rdmft_one_opti = false;
     double adam_lr_occ_num = 0.01;
     bool rdmft_dm_conv = true;
+    double scaling_rotation = 1.0;
+    bool small_rotation = false;
 
     // ==============   #Parameters (22.EXX PW) =====================
     // EXX for planewave basis, rhx0820 2025-03-10

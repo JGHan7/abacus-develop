@@ -58,6 +58,8 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
     int64_t nbands64 = 0;
     int64_t nbasis64 = 0;
 
+    double scaling_R = 1.0;
+
     std::vector<torch::Tensor> thetaR_real;
     std::vector<torch::Tensor> thetaR_imag;
 
@@ -78,6 +80,8 @@ class ESolver_RDMFT_Torch_AD: public rdmft::ESolver_RDMFT_Torch<TK,TR>
                                 const int ik = 0) override;
 
     virtual double check_hermi_lambda() override;
+
+    virtual void iter_update_wfc() override;
 
 };
 

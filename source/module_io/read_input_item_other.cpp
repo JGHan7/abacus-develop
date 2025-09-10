@@ -801,12 +801,16 @@ void ReadInput::item_others()
         read_sync_bool(input.rdmft_dm_conv);
         this->add_item(item);
     }
-
-    // EXX PW by rhx0820, 2025-03-10
     {
-        Input_Item item("exxace");
-        item.annotation = "whether to perform ace calculation in exxpw";
-        read_sync_bool(input.exxace);
+        Input_Item item("scaling_rotation");
+        item.annotation = "scaling_rotation";
+        read_sync_double(input.scaling_rotation);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("small_rotation");
+        item.annotation = "whether to use small changes for the unitary transformation of the natural orbitals";
+        read_sync_bool(input.small_rotation);
         this->add_item(item);
     }
     {
@@ -815,6 +819,17 @@ void ReadInput::item_others()
         read_sync_bool(input.read_occ_num);
         this->add_item(item);
     }
+
+
+
+    // EXX PW by rhx0820, 2025-03-10
+    {
+        Input_Item item("exxace");
+        item.annotation = "whether to perform ace calculation in exxpw";
+        read_sync_bool(input.exxace);
+        this->add_item(item);
+    }
+
 
 }
 } // namespace ModuleIO
