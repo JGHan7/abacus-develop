@@ -233,6 +233,7 @@ void SOFTMAX::cal_docc_num_dx(std::vector<double>& docc_num_dx, int is)
 }
 
 
+// when occ_num=1 is not considered, it will be added later
 void SOFTMAX::check_occ_num(const int is, const double sum_exp)
 {
     // according to the minimum value of the ONs, the minimum value of x is approximately

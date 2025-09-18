@@ -42,7 +42,7 @@ void EBI::init(const int nk_total, const int nkstot_full, const std::vector<doub
     // this->solve_mu_thr = 1e-10;
     // this->tot_nelec_thr = 1e-10;
     mu.resize(PARAM.inp.nspin);
-    // dmu_dx.resize(PARAM.inp.nspin);
+    this->dmu_dx.resize(PARAM.inp.nspin, std::vector<double>(nk_nospin*nbands, 0.0));
     // docc_num_dx.resize(PARAM.inp.nspin);
 
 
@@ -51,6 +51,12 @@ void EBI::init(const int nk_total, const int nkstot_full, const std::vector<doub
 
 void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix* occ_number_in)
 {
+
+    // When the initial occupation numbers is too small, the gradient dE_dx provided by erf is close to 0 at small occupation numbers
+    // making it difficult for small occupation numbers to change, and the optimization may falls into the local minimum! 
+    // so we use init_min_num instead of PARAM.inp.min_occ_num here
+    const double init_min_num = 1e-4;
+
     // use random numbers to generate initial values
     if(occ_number_in == nullptr)
     {
@@ -131,15 +137,25 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                     double num = num_temp( is*nk_nospin + ik, ib );
 
                     // find the correct and finite x to ensure that erf( x + mu[is] ) = 1.0 or 0.0
-                    if( std::abs(num - 1.0) < 1e-16 )
+                    // if( std::abs(num - 1.0) < 1e-16 )
+                    // {   
+                    //     // min_occ_num = 1e-16, this->x[is][ik*nbands + ib] = 5.8;
+                    //     num_temp( is*nk_nospin + ik, ib ) = 1.0 - 1e-16;
+                    // }
+                    // else if( std::abs(num - 0.0) < 1e-16 )
+                    // {
+                    //     // min_occ_num = 1e-16, this->x[is][ik*nbands + ib] = -5.8;
+                    //     num_temp( is*nk_nospin + ik, ib ) = 0.0 + 1e-16;
+                    // }
+                    if( std::abs(num - 1.0) < init_min_num )
                     {   
                         // min_occ_num = 1e-16, this->x[is][ik*nbands + ib] = 5.8;
-                        num_temp( is*nk_nospin + ik, ib ) = 1.0 - 1e-16;
+                        num_temp( is*nk_nospin + ik, ib ) = 1.0 - init_min_num;
                     }
-                    else if( std::abs(num - 0.0) < 1e-16 )
+                    else if( std::abs(num - 0.0) < init_min_num )
                     {
                         // min_occ_num = 1e-16, this->x[is][ik*nbands + ib] = -5.8;
-                        num_temp( is*nk_nospin + ik, ib ) = 0.0 + 1e-16;
+                        num_temp( is*nk_nospin + ik, ib ) = init_min_num;
                     }
 
                     this->x[is][ik*nbands + ib] = erf_inv_own( 2 * num_temp( is*nk_nospin + ik, ib ) - 1 ) - this->mu[is];
@@ -181,6 +197,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
         //     }
         // }
         rdmft::printMatrix_pointer(num_temp.nr, num_temp.nc, occ_number_in->c, "occ_number_from_ks", 10);
+        rdmft::printMatrix_pointer(num_temp.nr, num_temp.nc, this->occ_number[0].data(), "occ_number after modification, is=0", 10);
         rdmft::printMatrix_pointer(num_temp.nr, num_temp.nc, this->x[0].data(), "var_x from ks_occ_num", 10);
     }
 
@@ -188,7 +205,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
     // When the initial occupation numbers is too small, the gradient dE_dx provided by erf is close to 0 at small occupation numbers
     // making it difficult for small occupation numbers to change, and the optimization may falls into the local minimum! 
     // so we use init_min_num instead of PARAM.inp.min_occ_num here
-    const double init_min_num = 1e-4;
+    // const double init_min_num = 1e-4;
     this->check_occ_num(x_pass, init_min_num);
 
     // // // std::cout << "\n******\n" << "start_guess: ebi, 1.0" << "\n******\n" << std::endl;
@@ -303,11 +320,11 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
         // convert format. consider spin up and spin down separately
         for(int j=0; j<N; ++j) { dE_deta[is][j] *= dE_docc_num[is*N + j]; }
 
-        std::vector<double> dmu_dx(N, 0.0);
+        // std::vector<double> dmu_dx(N, 0.0);
         std::vector<double> docc_num_dx(N * N, 0.0);
 
-        this->cal_dmu_dx(dmu_dx, is);
-        this->cal_docc_num_dx(dmu_dx, docc_num_dx, is);
+        this->cal_dmu_dx(this->dmu_dx[is], is);
+        this->cal_docc_num_dx(this->dmu_dx[is], docc_num_dx, is);
 
         // rdmft::dgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
         rdmft::dgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
@@ -315,6 +332,26 @@ void EBI::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>&
 }
 
 
+void EBI::get_d2E_dx2(const std::vector<double>& dE_docc_num, std::vector<double>& d2E_dx2)
+{
+    const int N = nk_nospin*nbands;
+    const double factor = 1.0;
+    std::vector< std::vector<double> > dE_deta(PARAM.inp.nspin, std::vector<double>(N, factor));
+
+    for(int is=0; is<PARAM.inp.nspin; ++is)
+    {
+        // convert format. consider spin up and spin down separately
+        for(int j=0; j<N; ++j) { dE_deta[is][j] *= dE_docc_num[is*N + j]; }
+
+        std::vector<double> d2mu_dx2(N, 0.0);
+        std::vector<double> d2occ_num_dx2(N * N, 0.0);
+
+        this->cal_d2mu_dx2(d2mu_dx2, is);
+        this->cal_d2occ_num_dx2(d2mu_dx2, d2occ_num_dx2, is);
+
+        rdmft::dgemm_lapack( d2occ_num_dx2.data(), dE_deta[is].data(), (d2E_dx2.data() + is*N), N, 1, N );
+    }
+}
 
 
 void EBI::solving_mu()
@@ -612,16 +649,31 @@ std::vector<double> EBI::cal_f_der(double mu_in, int is)
 // }
 
 
-void EBI::cal_dmu_dx(std::vector<double>& dmu_dx, int is)
+void EBI::cal_dmu_dx(std::vector<double>& dmu_dx_in, int is)
 {
     double sum_der1 = 0.0;
     for(int i=0; i<this->x[is].size(); ++i) { sum_der1 += erf_der1(this->x[is][i] + this->mu[is]); }
 
-    for(int j=0; j<dmu_dx.size(); ++j) { dmu_dx[j] = - erf_der1(this->x[is][j] + this->mu[is]) / sum_der1; }
+    for(int j=0; j<dmu_dx_in.size(); ++j) { dmu_dx_in[j] = - erf_der1(this->x[is][j] + this->mu[is]) / sum_der1; }
 }
 
 
-void EBI::cal_docc_num_dx(const std::vector<double>& dmu_dx, std::vector<double>& docc_num_dx, int is)
+void EBI::cal_d2mu_dx2(std::vector<double>& d2mu_dx2, int is)
+{
+    std::vector<double> sum_der(2, 0.0);
+    for(int i=0; i<this->x[is].size(); ++i)
+    {
+        sum_der[0] += erf_der1(this->x[is][i] + this->mu[is]);
+        sum_der[1] += erf_der2(this->x[is][i] + this->mu[is]) * std::pow(this->dmu_dx[is][i], 2);
+    }
+
+    for(int j=0; j<d2mu_dx2.size(); ++j)
+    {
+        d2mu_dx2[j] = - ( erf_der2(this->x[is][j] + this->mu[is]) * (1 + 2*this->dmu_dx[is][j]) + sum_der[1] ) / sum_der[0];
+    }
+}
+
+void EBI::cal_docc_num_dx(const std::vector<double>& dmu_dx_in, std::vector<double>& docc_num_dx, int is)
 {
     const int N = nk_nospin*nbands;
     for(int i=0; i<N; ++i)
@@ -630,11 +682,33 @@ void EBI::cal_docc_num_dx(const std::vector<double>& dmu_dx, std::vector<double>
         {
             if( i==j )
             {
-                docc_num_dx[i*N+j] = 0.5 * erf_der1(this->x[is][i] + this->mu[is]) * (1 + dmu_dx[i]);
+                docc_num_dx[i*N+j] = 0.5 * erf_der1(this->x[is][i] + this->mu[is]) * (1 + dmu_dx_in[i]);
             }
             else
             {
-                docc_num_dx[i*N+j] = 0.5 * erf_der1(this->x[is][i] + this->mu[is]) * dmu_dx[j];
+                docc_num_dx[i*N+j] = 0.5 * erf_der1(this->x[is][i] + this->mu[is]) * dmu_dx_in[j];
+            }
+        }
+    }
+}
+
+
+void EBI::cal_d2occ_num_dx2(const std::vector<double>& d2mu_dx2, std::vector<double>& d2occ_num_dx2, int is)
+{
+    const int N = nk_nospin*nbands;
+    for(int i=0; i<N; ++i)
+    {
+        for(int j=0; j<N; ++j)
+        {
+            if( i==j )
+            {
+                d2occ_num_dx2[i*N+j] = 0.5 * erf_der2(this->x[is][i] + this->mu[is]) * std::pow((1 + this->dmu_dx[is][i]), 2)
+                                        + 0.5 * erf_der1(this->x[is][i] + this->mu[is]) * d2mu_dx2[i];
+            }
+            else
+            {
+                d2occ_num_dx2[i*N+j] = 0.5 * erf_der2(this->x[is][i] + this->mu[is]) * std::pow(this->dmu_dx[is][j], 2)
+                                        + 0.5 * erf_der1(this->x[is][i] + this->mu[is]) * d2mu_dx2[j];
             }
         }
     }

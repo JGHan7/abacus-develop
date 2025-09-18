@@ -35,7 +35,9 @@ class EBI: public rdmft::PARAM_ONs
     //! when x and mu are determined, convert dE_docc_num to dE_dx
     void get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx) override;
 
-
+    //! when x and mu are determined, get d^2(E)/d(x_p)^2
+    //! this function can be executed after executing get_dE_dx()
+    void get_d2E_dx2(const std::vector<double>& dE_docc_num, std::vector<double>& d2E_dx2);
 
 
 
@@ -93,7 +95,7 @@ class EBI: public rdmft::PARAM_ONs
 
 
 
-    // std::vector< std::vector<double> > dmu_dx;
+    std::vector< std::vector<double> > dmu_dx;
 
     // std::vector< std::vector<double> > docc_num_dx;
 
@@ -120,7 +122,9 @@ class EBI: public rdmft::PARAM_ONs
 
     void cal_docc_num_dx(const std::vector<double>& dmu_dx, std::vector<double>& docc_num_dx, int is = 0);
 
+    void cal_d2mu_dx2(std::vector<double>& d2mu_dx2, int is = 0);
 
+    void cal_d2occ_num_dx2(const std::vector<double>& d2mu_dx2, std::vector<double>& d2occ_num_dx2, int is = 0);
 
 
 

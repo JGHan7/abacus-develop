@@ -536,6 +536,8 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
                 << "\ntotal occ_num iter = " << tot_occ_num_iter
                 << "\n******\n" << std::endl;
 
+    std::cout << "\n******\n" << "Optimization of 1-RDM is still under development" << "\n******\n\n\n" << std::endl;
+    
 }
 
 
@@ -845,6 +847,16 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dx(torch::Tensor& dE_dx_tensor, const t
     this->rdmft_solver.cal_E_grad_occ_num();
     std::vector<double> dE_docc_num = this->rdmft_solver.get_dE_docc_num();
     this->ebi.get_dE_dx(dE_docc_num, this->dE_dx);
+
+    // test
+    std::vector<double> d2E_dx2(this->nk_total*PARAM.inp.nbands, 0.0);
+    this->ebi.get_d2E_dx2(dE_docc_num, d2E_dx2);
+    for(int i=0; i<this->dE_dx.size(); ++i)
+    {
+        this->dE_dx[i] /= std::max( 1e-8, std::abs(d2E_dx2[i]) );
+        // this->dE_dx[i] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dx2[i]) ) );
+    }
+
 
     // convert data formats
     rdmft::vector2tensor(this->dE_dx, dE_dx_tensor, { this->nk_total * PARAM.inp.nbands });

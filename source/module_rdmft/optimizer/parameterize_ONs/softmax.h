@@ -49,6 +49,7 @@ class SOFTMAX: public rdmft::PARAM_ONs
 
     //! ensure that the minimum occ_number is greater than min_occ_num, thus avoiding the problem of dE/docc_num divergence
     //! slight modification will be made to x
+    //! when occ_num=1 is not considered, it probably only needs to be considered once during initialization ONs
     void check_occ_num(const int is, const double sum_exp);
 
     bool modify_x = false;
