@@ -84,6 +84,7 @@ class RDMFT
     bool need_lambda = false;
     std::vector< std::vector<TK> > Hij_no_exx; // it can also be passed as an external pointer to cal_Hk_Hpsi()
     std::vector< std::vector<TK> > Hij_exx;
+    std::vector< std::vector<TK> > d2E_dRpq_2; // d^2(E)/d(R_pq)^2
 
     //! E_RDMFT[4] stores ETV, Ehartree, Exc, Etotal
     double E_RDMFT[4] = {0.0};
@@ -125,6 +126,8 @@ class RDMFT
 
     //! if wfc is updated using C'=C*exp(R), dE_dR = antisymmetric-lambda * constant
     void cal_antisym_lambda(const int ik, std::vector<TK>& antisym_lambda, double factor = 1.0);
+
+    void cal_E_grad2_Rpq(const int ik, std::vector<TK>& d2E_dRpq_2_in);
 
     //! obtain the gradient of total energy with respect to occupation number
     void cal_E_grad_occ_num();

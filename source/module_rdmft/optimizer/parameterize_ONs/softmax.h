@@ -32,7 +32,7 @@ class SOFTMAX: public rdmft::PARAM_ONs
     //! when x is determined, convert dE_docc_num to dE_dx
     void get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx) override;
 
-
+    void get_d2E_dx2(const std::vector<double>& dE_docc_num, std::vector<double>& d2E_dx2) override {};
 
   private:
 

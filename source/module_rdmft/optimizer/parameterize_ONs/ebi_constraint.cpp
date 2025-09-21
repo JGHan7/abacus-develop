@@ -351,6 +351,8 @@ void EBI::get_d2E_dx2(const std::vector<double>& dE_docc_num, std::vector<double
 
         rdmft::dgemm_lapack( d2occ_num_dx2.data(), dE_deta[is].data(), (d2E_dx2.data() + is*N), N, 1, N );
     }
+
+    // rdmft::printMatrix_pointer(nk_nospin, nbands, d2E_dx2.data(), "d2E_dx2");
 }
 
 

@@ -878,6 +878,15 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vector<d
     // PARAM_ONs: convert dE_docc_num to dE_dx (x in PARAM_ONs is the latest, that is, it is consistent with dE_dx)
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
     this->param_occ_num->get_dE_dx(dE_docc_num, dE_dx_new);
+    
+    // test
+    double norm_dE_dx = 0.0;
+    for(int i=0; i<dE_dx_new.size(); ++i)
+    {
+        norm_dE_dx += dE_dx_new[i] * dE_dx_new[i];
+    }
+    norm_dE_dx = std::sqrt(norm_dE_dx);
+    std::cout << "\n***\nin ls, norm_dE_dx: " << norm_dE_dx  << "\n***\n" << std::endl;
 
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, dE_dx_new.data(), "look, dE_dx_new");
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->var_x.data(), "now var_x", 10);
@@ -889,7 +898,18 @@ template<typename TK, typename TR>
 void LineSearch<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 {
     // get pk: PARAM_ONs provide var_x and dE_dx to BFGS
-    this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape);
+    if( PARAM.inp.precond_occ_num )
+    {
+        std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
+        std::vector<double> d2E_dx2(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
+        this->param_occ_num->get_d2E_dx2(dE_docc_num, d2E_dx2);
+
+        this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape, &d2E_dx2);
+    }
+    else
+    {
+        this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape);
+    }
 
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->search_direction.data(), "search_direction");
 

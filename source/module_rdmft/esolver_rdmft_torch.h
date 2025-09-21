@@ -64,6 +64,9 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
   // private:
 
+    // temp
+    int n_iter = 0;
+
     int nk_total = 0;
 
     Parallel_2D* para_Fij = nullptr;

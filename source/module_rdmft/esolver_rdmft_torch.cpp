@@ -334,6 +334,9 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
     {
         for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
         {
+            // temp
+            this->n_iter = iter;
+
             // record the x obtained from the previous optimization
             torch::Tensor x_old = this->var_x_tensor.clone();
 
@@ -357,7 +360,7 @@ void ESolver_RDMFT_Torch<TK, TR>::couple_opti()
             bool conv = this->converge();
 
             std::cout << "\n******\nniter of rdmft: " << iter 
-                        << std::fixed << std::setprecision(10);
+                        << std::fixed << std::setprecision(15);
             std::cout << "\n\nEtotal_rdmft by opti ONs: " << E_new1
                         << "\ndiff_E: " << diff_E1 
                         << "\ndiff_occ_num_max: " << this->diff_occ_num_max
@@ -848,14 +851,44 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dx(torch::Tensor& dE_dx_tensor, const t
     std::vector<double> dE_docc_num = this->rdmft_solver.get_dE_docc_num();
     this->ebi.get_dE_dx(dE_docc_num, this->dE_dx);
 
+    // rdmft::printMatrix_pointer(this->nk_total, PARAM.inp.nbands, this->dE_dx.data(), "dE_dx");
+
     // test
+    std::vector<double> dE_dx_precond = this->dE_dx;
+    double norm_dE_dx = 0.0;
+    double norm_dE_dx_precond = 0.0;
+
     std::vector<double> d2E_dx2(this->nk_total*PARAM.inp.nbands, 0.0);
     this->ebi.get_d2E_dx2(dE_docc_num, d2E_dx2);
     for(int i=0; i<this->dE_dx.size(); ++i)
     {
-        this->dE_dx[i] /= std::max( 1e-8, std::abs(d2E_dx2[i]) );
-        // this->dE_dx[i] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dx2[i]) ) );
+        dE_dx_precond[i] /= std::max( 1e-8, std::abs(d2E_dx2[i]) );
+        // dE_dx_precond[i] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dx2[i]) ) );
+
+        norm_dE_dx += this->dE_dx[i] * this->dE_dx[i];
+        norm_dE_dx_precond += dE_dx_precond[i] * dE_dx_precond[i];
     }
+    norm_dE_dx = std::sqrt(norm_dE_dx);
+    norm_dE_dx_precond = std::sqrt(norm_dE_dx_precond);
+
+    if( norm_dE_dx > 1e-7 && norm_dE_dx_precond < 1e-7 )
+    {
+        double factor = norm_dE_dx / norm_dE_dx_precond;
+        for(int i=0; i<this->dE_dx.size(); ++i)
+        {
+            this->dE_dx[i] =  dE_dx_precond[i] * factor;
+        }
+    }
+    else
+    {
+        this->dE_dx = dE_dx_precond;
+    }
+
+    std::cout << "\n***\nnorm_dE_dx: " << norm_dE_dx << "\nnorm_dE_dx_precond: " << norm_dE_dx_precond << "\n***\n" << std::endl;
+
+    // rdmft::printMatrix_pointer(this->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2");
+
+    // rdmft::printMatrix_pointer(this->nk_total, PARAM.inp.nbands, dE_dx_precond.data(), "dE_dx / d2E_dx2");
 
 
     // convert data formats

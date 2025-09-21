@@ -285,6 +285,12 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 this->iter_diag_orb.before_opti(this->p_hamilt);
                 for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
                 {
+                    // // temp test
+                    // if( iter > 3 )
+                    // {
+                    //     break;
+                    // }
+
                     // delete or save?
                     if(this->dft_optimize)
                     {

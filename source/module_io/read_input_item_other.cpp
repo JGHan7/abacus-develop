@@ -814,6 +814,18 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("precond_occ_num");
+        item.annotation = "whether to precondition the optimization of ONs";
+        read_sync_bool(input.precond_occ_num);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("precond_orb");
+        item.annotation = "whether to precondition the optimization of NOs";
+        read_sync_bool(input.precond_orb);
+        this->add_item(item);
+    }
+    {
         Input_Item item("read_occ_num");
         item.annotation = "read the initial occupation numbers from the provided occ_num.txt file";
         read_sync_bool(input.read_occ_num);

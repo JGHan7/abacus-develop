@@ -51,7 +51,7 @@ void BFGS_ONs<TX>::init(int nk_total_in, int nbands_in)
 
 
 template<typename TX>
-void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool new_landscape)
+void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool new_landscape, const std::vector<TX>* d2E_dx2)
 {
     // set some vars zero?
 
@@ -119,7 +119,20 @@ void BFGS_ONs<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX
 
     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
     // property: H = H^T, also depends on the initial guess H0!
-    rdmft::dgemm_lapack( this->Hk.data(), dE_dx_new.data(), this->search_direction.data(), nk_total*nbands, 1, nk_total*nbands, 'N', 'N', -1.0 );
+    if( d2E_dx2 == nullptr )
+    {
+        rdmft::dgemm_lapack( this->Hk.data(), dE_dx_new.data(), this->search_direction.data(), nk_total*nbands, 1, nk_total*nbands, 'N', 'N', -1.0 );
+    }
+    else
+    {
+        std::vector<TX> dE_dx_precond = dE_dx_new;
+        for(int i=0; i<dE_dx_precond.size(); ++i)
+        {
+            // dE_dx_precond[i] /= std::max( 1e-8, std::abs((*d2E_dx2)[i]) );
+            dE_dx_precond[i] /= std::sqrt( std::max( 1e-8, std::abs((*d2E_dx2)[i]) ) );
+        }
+        rdmft::dgemm_lapack( this->Hk.data(), dE_dx_precond.data(), this->search_direction.data(), nk_total*nbands, 1, nk_total*nbands, 'N', 'N', -1.0 );
+    }
 
     // update x, dE_dx, pass search_direction
     for(int j=0; j<x_new.size(); ++j)

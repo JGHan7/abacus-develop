@@ -29,6 +29,7 @@ class PARAM_ONs
 
     virtual void get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<double>& dE_dx) = 0;
 
+    virtual void get_d2E_dx2(const std::vector<double>& dE_docc_num, std::vector<double>& d2E_dx2) = 0;
 
     //! pass the occ_number as a matrix object, spins and k-points share the same index
     ModuleBase::matrix get_occ_number();

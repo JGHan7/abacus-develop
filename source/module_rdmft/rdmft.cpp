@@ -158,6 +158,10 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
             // Hk_RDMFT_pass.resize(ParaV->ncol, ParaV->nrow); // delete in the future
         }
     }
+    if( PARAM.inp.precond_orb )
+    {
+        d2E_dRpq_2 = Hij_no_exx;
+    }
 
     // 
     HR_TV = new hamilt::HContainer<TR>(*ucell, ParaV);
@@ -300,16 +304,16 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
             // if(GlobalC::exx_info.info_global.cal_exx) { set_zero_vector(Eij_exx_XC); }
             // if( !only_exx_type ) { set_zero_vector(Eij_dft_XC); }
 
-            std::fill(Eij_TV.begin(), Eij_TV.end(), 0.0);
-            std::fill(Eij_hartree.begin(), Eij_hartree.end(), 0.0);
-            if(GlobalC::exx_info.info_global.cal_exx)
-            {
-                std::fill(Eij_exx_XC.begin(), Eij_exx_XC.end(), 0.0);
-            }
-            if( !only_exx_type )
-            {
-                std::fill(Eij_dft_XC.begin(), Eij_dft_XC.end(), 0.0);
-            }
+            // std::fill(Eij_TV.begin(), Eij_TV.end(), 0.0);
+            // std::fill(Eij_hartree.begin(), Eij_hartree.end(), 0.0);
+            // if(GlobalC::exx_info.info_global.cal_exx)
+            // {
+            //     std::fill(Eij_exx_XC.begin(), Eij_exx_XC.end(), 0.0);
+            // }
+            // if( !only_exx_type )
+            // {
+            //     std::fill(Eij_dft_XC.begin(), Eij_dft_XC.end(), 0.0);
+            // }
 
             // // delete in the future
             // for(int iloc=0; iloc<Hk_RDMFT_pass[ik].size(); ++iloc)
@@ -318,6 +322,51 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
             // }
         }
 
+        if( PARAM.inp.precond_orb )
+        {
+            // P_R_pq = d2E_dRpq_2 = ( 2*hpp + 4*Jpp - 2*hqq -4*Jqq) * (nq - np) - 4*( Kpp - Kqq )*(nq^alpha - np^alpha)
+            // K is the exx-type exchange correlation matrix under the molecular orbital
+
+            std::vector<TK> Pij_no_exx(para_Eij.get_row_size()*para_Eij.get_col_size(), 0.0);
+            std::vector<TK> Pij_exx(para_Eij.get_row_size()*para_Eij.get_col_size(), 0.0);
+            for(int iloc=0; iloc<Pij_no_exx.size(); ++iloc)
+            {
+                Pij_no_exx[iloc] = Eij_TV[iloc] * 2.0 + ( Eij_hartree[iloc] + Eij_dft_XC[iloc] ) * 4.0;
+                Pij_exx[iloc] = Eij_exx_XC[iloc] * 4.0;
+            }
+
+            std::vector<TK> Pij_no_exx_global(PARAM.inp.nbands*PARAM.inp.nbands, 0.0);
+            std::vector<TK> Pij_exx_global(PARAM.inp.nbands*PARAM.inp.nbands, 0.0);
+            std::vector<TK> Pij_global(PARAM.inp.nbands*PARAM.inp.nbands, 0.0);
+
+            rdmft::collect_vec(&para_Eij, Pij_no_exx, Pij_no_exx_global);
+            rdmft::collect_vec(&para_Eij, Pij_exx, Pij_exx_global);
+            const int M = PARAM.inp.nbands;
+            for(int p=0; p<M; ++p)
+            {
+                for(int q=0; q<M; ++q)
+                {
+                    const double eta_q = occNum_func(occ_number(ik, q), 2, XC_func_rdmft, alpha_power);
+                    const double eta_p = occNum_func(occ_number(ik, p), 2, XC_func_rdmft, alpha_power);
+                    Pij_global[p*M + q] = (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (occ_number(ik, q) - occ_number(ik, p))
+                                            - (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p);
+                }
+            }
+            rdmft::distribute_vec(&para_Eij, Pij_global, d2E_dRpq_2[ik]);
+        }
+
+        std::fill(Eij_TV.begin(), Eij_TV.end(), 0.0);
+        std::fill(Eij_hartree.begin(), Eij_hartree.end(), 0.0);
+#ifdef __EXX
+        if(GlobalC::exx_info.info_global.cal_exx)
+        {
+            std::fill(Eij_exx_XC.begin(), Eij_exx_XC.end(), 0.0);
+        }
+#endif
+        if( !only_exx_type )
+        {
+            std::fill(Eij_dft_XC.begin(), Eij_dft_XC.end(), 0.0);
+        }
 
         // // store HK_RDMFT
         // for(int ir=0; ir<HK_RDMFT_pass.nr; ++ir)
@@ -403,6 +452,15 @@ void RDMFT<TK, TR>::cal_antisym_lambda(const int ik, std::vector<TK>& antisym_la
     // }
 }
 
+
+template <typename TK, typename TR>
+void RDMFT<TK, TR>::cal_E_grad2_Rpq(const int ik, std::vector<TK>& d2E_dRpq_2_in)
+{
+    for(int iloc=0; iloc<this->d2E_dRpq_2[ik].size(); ++iloc)
+    {
+        d2E_dRpq_2_in[iloc] = this->d2E_dRpq_2[ik][iloc];
+    }
+}
 
 template <typename TK, typename TR>
 void RDMFT<TK, TR>::cal_E_grad_occ_num()

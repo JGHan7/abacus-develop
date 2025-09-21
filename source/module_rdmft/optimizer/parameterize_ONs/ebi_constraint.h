@@ -37,7 +37,7 @@ class EBI: public rdmft::PARAM_ONs
 
     //! when x and mu are determined, get d^2(E)/d(x_p)^2
     //! this function can be executed after executing get_dE_dx()
-    void get_d2E_dx2(const std::vector<double>& dE_docc_num, std::vector<double>& d2E_dx2);
+    void get_d2E_dx2(const std::vector<double>& dE_docc_num, std::vector<double>& d2E_dx2) override;
 
 
 

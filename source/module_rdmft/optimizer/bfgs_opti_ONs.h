@@ -30,7 +30,8 @@ class BFGS_ONs
     void init(int nk_total_in, int nbands_in);
 
     //! pk is the search direction
-    void get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool new_landscape = false);
+    void get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk,
+                const bool new_landscape = false, const std::vector<TX>* d2E_dx2 = nullptr);
 
     // // ! initialize H0 and obtain p0
     // void get_start_guess(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk);
