@@ -853,7 +853,8 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dx(torch::Tensor& dE_dx_tensor, const t
 
     // rdmft::printMatrix_pointer(this->nk_total, PARAM.inp.nbands, this->dE_dx.data(), "dE_dx");
 
-    // test
+    // *************** test precondtion ***************** //
+    // This is wrong. Taking BFGS/LBFGS as an example, this preprocessing should only affect the search direction pk = -Hk*(f_grad_xk/f_grad2_xk), but not yk = f_grad_xk+1 - f_grad_xk
     std::vector<double> dE_dx_precond = this->dE_dx;
     double norm_dE_dx = 0.0;
     double norm_dE_dx_precond = 0.0;
@@ -862,8 +863,8 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dx(torch::Tensor& dE_dx_tensor, const t
     this->ebi.get_d2E_dx2(dE_docc_num, d2E_dx2);
     for(int i=0; i<this->dE_dx.size(); ++i)
     {
-        dE_dx_precond[i] /= std::max( 1e-8, std::abs(d2E_dx2[i]) );
-        // dE_dx_precond[i] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dx2[i]) ) );
+        // dE_dx_precond[i] /= std::max( 1e-8, std::abs(d2E_dx2[i]) );
+        dE_dx_precond[i] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dx2[i]) ) );
 
         norm_dE_dx += this->dE_dx[i] * this->dE_dx[i];
         norm_dE_dx_precond += dE_dx_precond[i] * dE_dx_precond[i];
@@ -890,6 +891,7 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dx(torch::Tensor& dE_dx_tensor, const t
 
     // rdmft::printMatrix_pointer(this->nk_total, PARAM.inp.nbands, dE_dx_precond.data(), "dE_dx / d2E_dx2");
 
+    // *************** test precondtion ***************** //
 
     // convert data formats
     rdmft::vector2tensor(this->dE_dx, dE_dx_tensor, { this->nk_total * PARAM.inp.nbands });
@@ -918,11 +920,34 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, cons
 
     // antisymm lambda to get dE_dR_local
     std::vector<TK> dE_dR_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
+    std::vector<TK> d2E_dR2_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
 
     // for(int ik=0; ik<this->nk_total; ++ik)
     {
         // get dE_dR
         this->rdmft_solver.cal_antisym_lambda(ik, dE_dR_local, this->grad_factor); // re-derive the formula to determine the factor !!!!!!!!!!!!!!!!!!!!!!
+
+        // *************** test precondtion ***************** //
+        // This is wrong. Taking BFGS/LBFGS as an example, this preprocessing should only affect the search direction pk = -Hk*(f_grad_xk/f_grad2_xk), but not yk = f_grad_xk+1 - f_grad_xk
+        this->rdmft_solver.cal_E_grad2_Rpq(ik, d2E_dR2_local);
+
+        rdmft::collect_vec(this->para_Fij, dE_dR_local, dE_dR_global[ik]);
+        TK norm_dE_dR = 0.0;
+        for(int i=0; i<this->dE_dR_global[ik].size(); ++i)
+        {
+            norm_dE_dR += std::norm(this->dE_dR_global[ik][i]);
+        }
+        norm_dE_dR = std::sqrt(norm_dE_dR);
+        std::cout << "\n***\nnorm_dE_dR: " << norm_dE_dR << "\n***\n" << std::endl;
+
+        for(int iloc=0; iloc<dE_dR_local.size(); ++iloc)
+        {
+            // dE_dR_local[iloc] /= std::max( 1e-8, std::abs(d2E_dR2_local[iloc]) );
+            dE_dR_local[iloc] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dR2_local[iloc]) ) );
+        }
+
+
+        // *************** test precondtion ***************** //
 
         // convert data formats
         rdmft::collect_vec(this->para_Fij, dE_dR_local, dE_dR_global[ik]);
