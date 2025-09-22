@@ -181,8 +181,8 @@ void SOFTMAX::get_dE_dx(const std::vector<double>& dE_docc_num, std::vector<doub
         std::vector<double> docc_num_dx(N * N, 0.0);
         this->cal_docc_num_dx(docc_num_dx, is);
 
-        // rdmft::dgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
-        rdmft::dgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
+        // rdmft::Tgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
+        rdmft::Tgemm_lapack( docc_num_dx.data(), dE_deta[is].data(), (dE_dx.data() + is*N), N, 1, N );
         std::cout << "\nis: " << is << std::endl;
         rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, (dE_dx.data() + is*N), "dE_dx", 10);
     }

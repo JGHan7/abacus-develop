@@ -1,0 +1,112 @@
+//==========================================================
+// Author: Jingang Han
+// DATE : 2025-09-22
+//==========================================================
+#ifndef LINE_SEARCH_METHOD_H
+#define LINE_SEARCH_METHOD_H
+
+
+#include <complex>
+#include <string>
+#include <vector>
+
+// #include "module_rdmft/rdmft.h"
+// #include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
+// #include "module_rdmft/optimizer/bfgs_opti.h"
+
+namespace rdmft
+{
+
+template<typename TX>
+class LineSearch
+{
+
+  public:
+
+    LineSearch();
+    ~LineSearch();
+
+    // void init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in);
+
+    // //! use an approximate line search method to find a suitable step size
+    // double do_line_search(const bool start_guess = false);
+
+    // void before_opti();
+
+    // std::vector<double> Etotal_iter;
+    // int iter = 0;
+    // // temp
+    // double diff_rate_max = 1.0;
+
+    // temp?
+    // std::vector<double>* get_var_x() { return &this->var_x; }
+
+    //! parameters in strong wolfe or wolfe conditions
+    double ls_wolfe_c1 = 0.0;
+    double ls_wolfe_c2 = 0.0;
+
+    //! parameters in Armijo-Goldstein conditions
+    double ls_armijo_c1 = 0.0;
+    double ls_armijo_c2 = 0.0;
+
+    std::string ls_condition;
+
+    double max_step_size = 0.0;
+    double min_step_size = 0.0;
+
+    // example
+    // std::vector<double> trial_x(n, 0.0);
+    // auto f = [this, &trial_x]() { cal_Etotal(trial_x, this->x0 ); };
+
+
+  protected:
+
+    // //! Strong Wolfe condition, get the appropriate step length
+    // void strong_wolfe();
+
+    // //! Strong Wolfe condition, get the appropriate step length. By myself
+    // void strong_wolfe2();
+
+    // //! Wolfe condition
+    // void wolfe();
+
+    // //! used in Strong Wolfe condition, get the appropriate step length
+    // void zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low);
+
+    // //! calculate the new x based on the current step size
+    // void update_x(std::vector<double>& x_new);
+
+
+    // //! x_k, (dE_dx)_k, search direction p_k and occupation numbers
+    // std::vector<double> var_x;
+    // std::vector<double> dE_dx;
+    // std::vector<double> search_direction;
+    // ModuleBase::matrix occ_number;
+
+    // //! step_size, alpha: x_k+1 = x_k + alpha * p_k
+    // double step_size = 1.0;
+
+    // //! the largest possible but appropriate step that satisfies the Armijo condition
+    // double armijo_step = 0.0;
+
+    // double init_step = 1.0;
+
+    // //! phi(alpha) = E(x_k + alpha * p_k), phi_0 = E(x_k)
+    // double phi_0 = 0.0;
+
+    // //! dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T, dphi_0 = E'(x_k) * p_k^T
+    // double dphi_0 = 0.0;
+
+  private:
+
+
+
+
+
+
+};
+
+}
+
+
+#endif

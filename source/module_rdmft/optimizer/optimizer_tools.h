@@ -312,20 +312,41 @@ void pTgemm_scalapack<double>(const Parallel_2D* para_A,
 
 //! to compute C = alpha * A.? * B.? + beta * C, op_ = 'N' or 'T'
 //! all use the fortran perspective, not cpp
-void dgemm_lapack(const double* A,
-                    const double* B,
-                    double* C, 
+template <typename TK>
+void Tgemm_lapack(const TK* A,
+                    const TK* B,
+                    TK* C, 
                     const int row_C, 
                     const int col_C, 
                     const int contract_index,
                     const char op_A = 'N',
                     const char op_B = 'N',
-                    double alpha = 1.0,
-                    double beta = 0.0);
+                    TK alpha = 1.0,
+                    TK beta = 0.0)
+{
+    const int lda = (op_A == 'N') ? row_C : contract_index;
+    const int ldb = (op_B == 'N') ? contract_index : col_C;
+    const int one_int = 1;
+
+    zgemm_( &op_A, &op_B, &row_C, &col_C, &contract_index, &alpha, A, &lda, B, &ldb, &beta, C, &row_C );
+}
+
+
+template <>
+void Tgemm_lapack<double>(const double* A,
+                    const double* B,
+                    double* C, 
+                    const int row_C, 
+                    const int col_C, 
+                    const int contract_index,
+                    const char op_A,
+                    const char op_B,
+                    double alpha,
+                    double beta);
 
 
 
-/********* the following function is used by the BFGS_opti_ONs method *********/
+/********* the following function is used by the BFGS_opti method *********/
 
 
 

@@ -9,9 +9,9 @@
 // // #include "module_esolver/esolver_fp.h"
 // #include "module_esolver/esolver_ks_lcao.h"
 // #include "module_rdmft/optimizer/iter_diag_NOs.h"
-// #include "module_rdmft/optimizer/line_search_rdmft.h"
+// #include "module_rdmft/optimizer/line_search_ONs.h"
 // #include "module_rdmft/optimizer/parameterize_ONs/ebi_constraint.h"
-// #include "module_rdmft/optimizer/bfgs_opti_ONs.h"
+// #include "module_rdmft/optimizer/bfgs_opti.h"
 // #include "module_rdmft/optimizer/idmft.h"
 
 // #include "module_rdmft/optimizer/ft_rdmft.h"

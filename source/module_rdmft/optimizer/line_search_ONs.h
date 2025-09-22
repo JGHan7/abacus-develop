@@ -2,24 +2,24 @@
 // Author: Jingang Han
 // DATE : 2024-11-28
 //==========================================================
-#ifndef LINE_SEARCH_RDMFT_H
-#define LINE_SEARCH_RDMFT_H
+#ifndef LINE_SEARCH_ONS_H
+#define LINE_SEARCH_ONS_H
 
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
-#include "module_rdmft/optimizer/bfgs_opti_ONs.h"
+#include "module_rdmft/optimizer/bfgs_opti.h"
 
 namespace rdmft
 {
 
 template<typename TK, typename TR>
-class LineSearch
+class LineSearch_ONs
 {
 
   public:
 
-    LineSearch();
-    ~LineSearch();
+    LineSearch_ONs();
+    ~LineSearch_ONs();
 
     void init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in);
 

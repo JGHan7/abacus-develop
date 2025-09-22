@@ -8,7 +8,7 @@
 
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/idmft.h"
-#include "module_rdmft/optimizer/bfgs_opti_ONs.h"
+#include "module_rdmft/optimizer/bfgs_opti.h"
 
 
 namespace rdmft

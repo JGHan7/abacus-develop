@@ -182,7 +182,8 @@ void pTgemm_scalapack<double>(const Parallel_2D* para_A,
 
 // to compute C = alpha * A.? * B.? + beta * C
 // all use the fortran perspective, not cpp
-void dgemm_lapack(const double* A,
+template <>
+void Tgemm_lapack<double>(const double* A,
                     const double* B,
                     double* C, 
                     const int row_C, 
@@ -201,7 +202,7 @@ void dgemm_lapack(const double* A,
 }
 
 
-/********* the following function is used by the BFGS_opti_ONs method *********/
+/********* the following function is used by the BFGS_opti method *********/
 
 
 

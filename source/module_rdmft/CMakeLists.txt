@@ -11,8 +11,8 @@
 #         esolver_rdmft_torch.cpp
 #         optimizer/iter_diag_NOs.cpp
 #         optimizer/optimizer_tools.cpp
-#         optimizer/line_search_rdmft.cpp
-#         optimizer/bfgs_opti_ONs.cpp
+#         optimizer/.cpp
+#         optimizer/bfgs_opti.cpp
 #         optimizer/parameterize_ONs/param_ONs.cpp
 #         optimizer/parameterize_ONs/ebi_constraint.cpp
 #         optimizer/idmft.cpp
@@ -40,8 +40,9 @@ if(ENABLE_LCAO)
         esolver_rdmft_torch_ad.cpp
         optimizer/iter_diag_NOs.cpp
         optimizer/optimizer_tools.cpp
-        optimizer/line_search_rdmft.cpp
-        optimizer/bfgs_opti_ONs.cpp
+        optimizer/line_search_method.cpp
+        optimizer/line_search_ONs.cpp
+        optimizer/bfgs_opti.cpp
         optimizer/parameterize_ONs/param_ONs.cpp
         optimizer/parameterize_ONs/ebi_constraint.cpp
         optimizer/idmft.cpp

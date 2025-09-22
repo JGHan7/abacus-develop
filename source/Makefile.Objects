@@ -776,8 +776,9 @@ OBJS_RDMFT=rdmft.o\
         esolver_rdmft_torch_ad.o\
         iter_diag_NOs.o\
         optimizer_tools.o\
-        line_search_rdmft.o\
-        bfgs_opti_ONs.o\
+        line_search_method.o\
+        line_search_ONs.o\
+        bfgs_opti.o\
         param_ONs.o\
         ebi_constraint.o\
         idmft.o\

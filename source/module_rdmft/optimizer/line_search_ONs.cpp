@@ -4,7 +4,7 @@
 //==========================================================
 
 #include <algorithm>
-#include "module_rdmft/optimizer/line_search_rdmft.h"
+#include "module_rdmft/optimizer/line_search_ONs.h"
 #include "module_rdmft/optimizer/optimizer_tools.h"
 #include "module_rdmft/optimizer/parameterize_ONs/ebi_constraint.h"
 #include "module_rdmft/optimizer/parameterize_ONs/softmax.h"
@@ -17,25 +17,25 @@ namespace rdmft
 {
 
 template<typename TK, typename TR>
-LineSearch<TK, TR>::LineSearch()
+LineSearch_ONs<TK, TR>::LineSearch_ONs()
 {
     ;
 }
 
 
 template<typename TK, typename TR>
-LineSearch<TK, TR>::~LineSearch()
+LineSearch_ONs<TK, TR>::~LineSearch_ONs()
 {
     delete this->param_occ_num;
 }
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in)
+void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in)
 {
     this->rdmft_solver = rdmft_in;
     
-    this->bfgs_opti_x.init(rdmft_solver->nk_total, PARAM.inp.nbands);
+    this->bfgs_opti_x.init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total);
     if(PARAM.inp.occ_num_func == "softmax")
     {
         this->param_occ_num = new rdmft::SOFTMAX();
@@ -78,7 +78,7 @@ void LineSearch<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in)
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::before_opti()
+void LineSearch_ONs<TK, TR>::before_opti()
 {
     this->init_step = 1.0;
     this->Etotal_iter.clear();
@@ -88,7 +88,7 @@ void LineSearch<TK, TR>::before_opti()
 }
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::get_start_guess()
+void LineSearch_ONs<TK, TR>::get_start_guess()
 {
     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
     if(PARAM.inp.random_occ_num)
@@ -111,7 +111,7 @@ void LineSearch<TK, TR>::get_start_guess()
 
 
 template<typename TK, typename TR>
-double LineSearch<TK, TR>::do_line_search(const bool start_guess)
+double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
 {
 
     if(start_guess)
@@ -180,11 +180,11 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
         this->var_x[i] += this->step_size * this->search_direction[i]; 
     }
 
-    std::cout << "\n" << "the final step_size by lineSearch: " << this->step_size << "\n" << std::endl;
+    std::cout << "\n" << "the final step_size by lineSearch_ONs: " << this->step_size << "\n" << std::endl;
 
     // if( a_equal_b(var_x_old, this->var_x) )
     // {
-    //     std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!" << "\n" << std::endl;
+    //     std::cout << "\n" << "line_search_ONs: the increase in var_x is too small !!!!!!!!!!!!!!!" << "\n" << std::endl;
     //     return 0.0;
     // }
 
@@ -192,7 +192,7 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
     // Parallel_Reduce::reduce_all(temp_num);
     // if( std::abs( temp_num ) > 1e-12 )
     // {
-    //     std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
+    //     std::cout << "\n" << "line_search_ONs: the increase in var_x is too small !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << "\n" << std::endl;
     //     return 0.0;
     // }
 
@@ -242,7 +242,7 @@ double LineSearch<TK, TR>::do_line_search(const bool start_guess)
 //    so strict armijo condition restrictions are also required when performing binary search.
 //    It is best to make step_low and armijo_stpe exist in the same valley
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::exact_ls()
+void LineSearch_ONs<TK, TR>::exact_ls()
 {
     // trial_x = x_k(or this->var_x) + trial_step_size * p_k
     std::vector<double> trial_x(this->var_x.size() ,0.0);
@@ -469,7 +469,7 @@ void LineSearch<TK, TR>::exact_ls()
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::strong_wolfe2()
+void LineSearch_ONs<TK, TR>::strong_wolfe2()
 {
     // trial_x = x_k(or this->var_x) + trial_step_size * p_k
     std::vector<double> trial_x(this->var_x.size() ,0.0);
@@ -611,7 +611,7 @@ void LineSearch<TK, TR>::strong_wolfe2()
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::strong_wolfe()
+void LineSearch_ONs<TK, TR>::strong_wolfe()
 {
     // std::cout << "\n" << "Enter strong_wolfe()" << "\n" << std::endl;
 
@@ -671,7 +671,7 @@ void LineSearch<TK, TR>::strong_wolfe()
         // if( std::abs( temp_num ) > 1e-12 )
         if( a_equal_b(trial_x, this->var_x) )
         {
-            std::cout << "\n" << "line_search_rdmft: the increase in var_x is too small !!!!!!!!!!!!" << "\n" << std::endl;
+            std::cout << "\n" << "line_search_ONs: the increase in var_x is too small !!!!!!!!!!!!" << "\n" << std::endl;
             continue;
         }
 
@@ -718,7 +718,7 @@ void LineSearch<TK, TR>::strong_wolfe()
 // zoom() does not require step_size_high>step_size_low to work
 // but the gradient dphi_low used for acceleration calculation must correspond to step_size_low
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low)
+void LineSearch_ONs<TK, TR>::zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low)
 {
     double alpha_lo = step_size_low;
     double alpha_hi = step_size_high;
@@ -817,14 +817,14 @@ void LineSearch<TK, TR>::zoom(double step_size_low, double phi_low, double step_
 
 // to be developed
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::wolfe()
+void LineSearch_ONs<TK, TR>::wolfe()
 {
 
 }
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::update_x(std::vector<double>& x_new)
+void LineSearch_ONs<TK, TR>::update_x(std::vector<double>& x_new)
 {
     std::fill(x_new.begin(), x_new.end(), 0.0);
     for(int i=0; i<x_new.size(); ++i)
@@ -834,7 +834,7 @@ void LineSearch<TK, TR>::update_x(std::vector<double>& x_new)
 }
 
 template<typename TK, typename TR>
-double LineSearch<TK, TR>::cal_phi(std::vector<double>& x_new)
+double LineSearch_ONs<TK, TR>::cal_phi(std::vector<double>& x_new)
 {
     // convert x_k+1 to occ_num
     this->param_occ_num->update_x_occ_num(x_new);
@@ -853,20 +853,20 @@ double LineSearch<TK, TR>::cal_phi(std::vector<double>& x_new)
 
 
 template<typename TK, typename TR>
-double LineSearch<TK, TR>::cal_dphi(std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr)
+double LineSearch_ONs<TK, TR>::cal_dphi(std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr)
 {
 
     this->cal_dE_dx(dE_dx_new, x_new_ptr);
 
     double dphi = 0.0;
-    rdmft::dgemm_lapack( dE_dx_new.data(), this->search_direction.data(), &dphi, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
+    rdmft::Tgemm_lapack( dE_dx_new.data(), this->search_direction.data(), &dphi, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
 
     return dphi;
 }
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr)
+void LineSearch_ONs<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr)
 {
     if( x_new_ptr != nullptr ) { this->cal_phi( *x_new_ptr ); }
 
@@ -895,7 +895,7 @@ void LineSearch<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vector<d
 
 
 template<typename TK, typename TR>
-void LineSearch<TK, TR>::cal_pk_dphi0(const bool new_landscape)
+void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 {
     // get pk: PARAM_ONs provide var_x and dE_dx to BFGS
     if( PARAM.inp.precond_occ_num )
@@ -914,21 +914,21 @@ void LineSearch<TK, TR>::cal_pk_dphi0(const bool new_landscape)
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->search_direction.data(), "search_direction");
 
     // get dphi_0
-    rdmft::dgemm_lapack( this->dE_dx.data(), this->search_direction.data(), &this->dphi_0, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
+    rdmft::Tgemm_lapack( this->dE_dx.data(), this->search_direction.data(), &this->dphi_0, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
 }
 
 
 
-template class LineSearch<double, double>;
-template class LineSearch<std::complex<double>, double>;
-template class LineSearch<std::complex<double>, std::complex<double>>;
+template class LineSearch_ONs<double, double>;
+template class LineSearch_ONs<std::complex<double>, double>;
+template class LineSearch_ONs<std::complex<double>, std::complex<double>>;
 
-// template class LineSearch<double, RDMFT<double, double>>;
-// template class LineSearch<double, RDMFT<std::complex<double>, double>>;
-// template class LineSearch<double, RDMFT<std::complex<double>, std::complex<double>>>;
-// template class LineSearch<std::complex<double>, RDMFT<double, double>>;
-// template class LineSearch<std::complex<double>, RDMFT<std::complex<double>, double>>;
-// template class LineSearch<std::complex<double>, RDMFT<std::complex<double>, std::complex<double>>>;
+// template class LineSearch_ONs<double, RDMFT<double, double>>;
+// template class LineSearch_ONs<double, RDMFT<std::complex<double>, double>>;
+// template class LineSearch_ONs<double, RDMFT<std::complex<double>, std::complex<double>>>;
+// template class LineSearch_ONs<std::complex<double>, RDMFT<double, double>>;
+// template class LineSearch_ONs<std::complex<double>, RDMFT<std::complex<double>, double>>;
+// template class LineSearch_ONs<std::complex<double>, RDMFT<std::complex<double>, std::complex<double>>>;
 
 
 }

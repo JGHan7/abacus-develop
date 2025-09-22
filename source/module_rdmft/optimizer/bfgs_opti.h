@@ -2,8 +2,8 @@
 // Author: Jingang Han
 // DATE : 2024-11-12
 //==========================================================
-#ifndef BFGS_OPTI_ONS_H
-#define BFGS_OPTI_ONS_H
+#ifndef BFGS_OPTI_H
+#define BFGS_OPTI_H
 
 
 #include "module_rdmft/rdmft.h"
@@ -27,7 +27,7 @@ class BFGS_ONs
     BFGS_ONs();
     ~BFGS_ONs();
 
-    void init(int nk_total_in, int nbands_in);
+    void init(const int dim_in, const int nk_total_in);
 
     //! pk is the search direction
     void get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk,
@@ -43,9 +43,12 @@ class BFGS_ONs
 
   protected:
 
-
+    // temp
     int nk_total = 0;
     int nbands = 0;
+
+    int dim = 0;
+    // Parallel_2D* para_mat = nullptr;
 
     //! the optimized variable x, and diff_x = x_k+1 - x_k
     std::vector<TX> var_x, diff_x;
