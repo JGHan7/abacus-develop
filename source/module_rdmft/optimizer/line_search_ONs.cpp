@@ -166,6 +166,33 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
         // this->exact_ls();
         this->strong_wolfe2();
     }
+    else if(this->ls_condition == "test")
+    {
+        // example
+        // std::vector<double> trial_x(n, 0.0);
+        // auto f = [this, &trial_x]() { cal_Etotal(trial_x, this->x0 ); };
+
+        std::cout << "\n" << "test ls" << "\n" << std::endl;
+
+        auto phi = [this](const double trial_alpha)
+        {
+            std::vector<double> x_new(this->var_x.size(), 0.0);
+            this->step_size = trial_alpha;
+            this->update_x(x_new);
+            double trial_phi = this->cal_phi(x_new);
+            return trial_phi;
+        };
+
+        auto dphi = [this]()
+        {
+            std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
+            double trial_dphi = this->cal_dphi(trial_dE_dx);
+            return trial_dphi;
+        };
+
+        this->step_size = this->ls.do_line_search(phi, dphi, this->phi_0, this->dphi_0, this->init_step);
+
+    }
     else // fixed step
     {
         this->step_size = PARAM.inp.ls_fixed_step;

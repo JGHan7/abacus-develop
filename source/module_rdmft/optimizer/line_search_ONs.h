@@ -9,6 +9,8 @@
 #include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
 #include "module_rdmft/optimizer/bfgs_opti.h"
 
+#include  "module_rdmft/optimizer/line_search_method.h"
+
 namespace rdmft
 {
 
@@ -122,6 +124,7 @@ class LineSearch_ONs
     rdmft::BFGS_ONs<double> bfgs_opti_x;
 
 
+    rdmft::LineSearch<double> ls;
 
 
 
