@@ -56,6 +56,7 @@ class LineSearch
                             const std::function<double()>& cal_dphi,
                             const double phi_0_in,
                             const double dphi_0_in,
+                            const double max_elem_pk_in = 1.0,
                             const double inital_step = 1.0);
 
 
@@ -64,6 +65,10 @@ class LineSearch
     // auto f = [this, &trial_x]() { cal_Etotal(trial_x, this->x0 ); };
 
     int max_ls = 25;
+
+
+    // 
+    double tolerance_change = 1e-9;
 
     Options get_options()
     {
@@ -76,10 +81,12 @@ class LineSearch
 
   protected:
 
-    //! Strong Wolfe condition, get the appropriate step length, learned from the pytorch source code
+    //! Strong Wolfe condition, get the appropriate step length
+    //! The framework is based on J. Nocedal's "Numerical Optimization."
+    //! For handling extreme values, refer to pyTorch: https://github.com/pytorch/pytorch/blob/main/torch/csrc/api/src/optim/lbfgs.cpp
     void strong_wolfe(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
 
-    //! Strong Wolfe condition, get the appropriate step length. By myself
+    //! Strong Wolfe condition, get the appropriate step length
     void strong_wolfe2(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
 
     //! Wolfe condition
@@ -87,6 +94,16 @@ class LineSearch
 
     //! used in Strong Wolfe condition, get the appropriate step length
     void zoom(const std::function<double(const double)>& cal_phi,
+                const std::function<double()>& cal_dphi,
+                double step_size_low,
+                double phi_low,
+                double dphi_low,
+                double step_size_high,
+                double phi_high,
+                double dphi_high);
+
+    //! used in Strong Wolfe condition, get the appropriate step length
+    void zoom2(const std::function<double(const double)>& cal_phi,
                 const std::function<double()>& cal_dphi,
                 double step_size_low,
                 double phi_low,
@@ -102,20 +119,15 @@ class LineSearch
     double ls_armijo_c1 = 0.0;
     double ls_armijo_c2 = 0.0;
 
+    //! conditions for selecting the step size used in inexact line search
     std::string ls_condition = "swolfe";
 
+    //! the maximum and minimum step sizes allowed for line search
     double max_step_size = 0.0;
     double min_step_size = 0.0;
 
-    // //! calculate the new x based on the current step size
-    // void update_x(std::vector<double>& x_new);
-
-
-    // //! x_k, (dE_dx)_k, search direction p_k and occupation numbers
-    // std::vector<double> var_x;
-    // std::vector<double> dE_dx;
-    // std::vector<double> search_direction;
-    // ModuleBase::matrix occ_number;
+    // the element with the largest modulus of the search direction vector pk
+    double max_elem_pk = 1.0;
 
     //! step_size, alpha: x_k+1 = x_k + alpha * p_k
     double step_size = 1.0;
@@ -133,9 +145,11 @@ class LineSearch
 
   private:
 
+    //！ the total number of times the cal_phi() function is called during the entire optimization period
+    int num_cal_phi = 0;
 
-
-
+    //! the number of times cal_phi() is called during a line search.
+    int ls_times = 0;
 
 
 };

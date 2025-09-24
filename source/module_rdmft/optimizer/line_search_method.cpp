@@ -3,8 +3,10 @@
 // DATE : 2025-09-22
 //==========================================================
 
-
+#include <algorithm>
+#include <map>
 #include  "module_rdmft/optimizer/line_search_method.h"
+#include "module_rdmft/optimizer/optimizer_tools.h"
 #include "module_parameter/parameter.h"
 
 namespace rdmft
@@ -38,10 +40,12 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
                                         const std::function<double()>& cal_dphi,
                                         const double phi_0_in,
                                         const double dphi_0_in,
+                                        const double max_elem_pk_in,
                                         const double inital_step)
 {
     this->phi_0 = phi_0_in;
     this->dphi_0 = dphi_0_in;
+    this->max_elem_pk = max_elem_pk_in;
     this->step_size = inital_step;
 
     if(this->ls_condition == "swolfe")
@@ -65,11 +69,195 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
 }
 
 
+// double cubic_interpolate(double x1, double f1, double g1,
+//                             double x2, double f2, double g2,
+//                             std::pair<double, double>* bounds = nullptr);
+
 template<typename TX>
 void LineSearch<TX>::strong_wolfe(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi)
 {
+    std::cout << "\n" << "test ls: strong_wolfe()" << "\n" << std::endl;
+
+    // strong wolfe condition
+    double step_size_old = 0.0;
+    double phi_old = this->phi_0;
+    double dphi_old = this->dphi_0;
+
+    bool done = false;
+    this->ls_times = 0;
+    std::vector<double> bracket, bracket_phi, bracket_dphi;
+
+    double trial_phi = cal_phi(this->step_size);
+    double trial_dphi = cal_dphi();
+    ++this->num_cal_phi;
+
+    while(this->ls_times < this->max_ls)
+    {
+        // Armijo condition
+        if( trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0 || ( this->ls_times > 1 && (trial_phi >= phi_old) ) )
+        {
+            bracket = {step_size_old, this->step_size};
+            bracket_phi = {phi_old, trial_phi};
+            bracket_dphi = {dphi_old, trial_dphi};
+            break;
+        }
+
+        // curvature condition
+        if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 )
+        {
+            bracket = {this->step_size, this->step_size};
+            bracket_phi = {trial_phi, trial_phi};
+            bracket_dphi = {trial_dphi, trial_dphi};
+            done = true;
+            break;
+        }
+
+        if( trial_dphi >= 0 )
+        {
+            bracket = {step_size_old, this->step_size};
+            bracket_phi = {phi_old, trial_phi};
+            bracket_dphi = {dphi_old, trial_dphi};
+            break;
+        }
+
+        // use interpolation algorithm to give the next trial step size, refer to pyTorch
+        double min_step = this->step_size + 0.01 * ( this->step_size - step_size_old );
+        double max_step = this->step_size * 10.0;
+        double temp_step = this->step_size;
+        std::pair<double,double> bounds{this->min_step_size, this->max_step_size};
+        this->step_size = rdmft::cubic_interpolate( step_size_old, phi_old, dphi_old,
+                                                    this->step_size, trial_phi, trial_dphi,
+                                                    &bounds );
+
+        step_size_old = temp_step;
+        phi_old = trial_phi;
+        dphi_old = trial_dphi;
+
+        trial_phi = cal_phi(this->step_size);
+        trial_dphi = cal_dphi();
+        ++this->num_cal_phi;
+        ++this->ls_times;
+    }
+
+    // safe fallback strategy
+    if( this->ls_times == this->max_ls )
+    {
+        bracket = {0.0, this->step_size};
+        bracket_phi = {this->phi_0, trial_phi};
+        bracket_dphi = {this->dphi_0, trial_dphi};
+    }
+
+    // ensure bracket_phi[low_pos] < bracket_phi[high_pos]
+    int low_pos = 0;
+    int high_pos = 1;
+    if( bracket_phi[0] > bracket_phi[1] )
+    {
+        std::swap(low_pos, high_pos);
+    }
+    if( !done && (this->ls_times < this->max_ls) )
+    {
+        // use zoom() to reduce the interval until a step size that satisfies the strong wolfe condition is found
+        this->zoom( cal_phi, cal_dphi,
+                    bracket[low_pos], bracket_phi[low_pos], bracket_dphi[low_pos],
+                    bracket[high_pos], bracket_phi[high_pos], bracket_dphi[high_pos] );
+    }
+    else
+    {
+        this->step_size = bracket[low_pos];
+    }
 
 }
+
+template<typename TX>
+void LineSearch<TX>::zoom(const std::function<double(const double)>& cal_phi,
+                            const std::function<double()>& cal_dphi,
+                            double step_size_low,
+                            double phi_low,
+                            double dphi_low,
+                            double step_size_high,
+                            double phi_high,
+                            double dphi_high)
+{
+    double alpha_lo = step_size_low;
+    double alpha_hi = step_size_high;
+    double f_lo = phi_low;
+    double f_hi = phi_high;
+    double df_lo = dphi_low;
+    double df_hi = dphi_high;
+
+    bool done = false;
+    bool small_progress = false;
+    while( !done && this->ls_times < this->max_ls )
+    {
+        this->step_size = rdmft::cubic_interpolate( alpha_lo, f_lo, df_lo,
+                                                        alpha_hi, f_hi, df_hi );
+
+        // prevent interpolation points from being too close to the boundary and causing insufficient progress
+        double epsilon = 0.1 * ( alpha_hi - alpha_lo );
+        if( std::min(alpha_hi - this->step_size, this->step_size - alpha_lo ) < epsilon )
+        {
+            if( small_progress || (this->step_size >= alpha_hi) || (this->step_size <= alpha_lo) )
+            {
+                this->step_size = ( std::abs(this->step_size - alpha_hi) < std::abs(this->step_size - alpha_lo) )
+                                    ? alpha_hi - epsilon : alpha_lo + epsilon ;
+                small_progress = false;
+            }
+            else
+            {
+                small_progress = true;
+            }
+        }
+        else
+        {
+            small_progress = false;
+        }
+
+        double trial_phi = cal_phi(this->step_size);
+        double trial_dphi = cal_dphi();
+        ++this->num_cal_phi;
+        ++this->ls_times;
+
+        if( (trial_phi > this->phi_0 + this->ls_wolfe_c1 * this->step_size * this->dphi_0) || trial_phi >= f_lo )
+        {
+            alpha_hi = this->step_size;
+            f_hi = trial_phi;
+            df_hi = trial_dphi;
+
+            if( f_hi < f_lo )
+            {
+                std::swap(alpha_lo, alpha_hi);
+                std::swap(f_lo, f_hi);
+                std::swap(df_lo, df_hi);
+            }
+        }
+        else
+        {
+            if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 )
+            {
+                done = true;
+            }
+
+            if( trial_dphi * (alpha_hi - alpha_lo) >= 0 )
+            {
+                alpha_hi = alpha_lo;
+                f_hi = f_lo;
+                df_hi = df_lo;
+            }
+
+            alpha_lo = this->step_size;
+            f_lo = trial_phi;
+            df_lo = trial_dphi;
+        }
+
+        if( std::abs(alpha_hi - alpha_lo) * this->max_elem_pk < this->tolerance_change )
+        {
+            break;
+        }
+    }
+
+    this->step_size = alpha_lo;
+}
+
 
 
 template<typename TX>
@@ -138,7 +326,7 @@ void LineSearch<TX>::strong_wolfe2(const std::function<double(const double)>& ca
                 // std::cout << "\n" << "find zoom failed! the energy must drop in armijo steps, update as: " << this->step_size << "\n" << std::endl;
 
                 std::cout << "\n" << "Enter SW condition 1, zoom()" << "\n" << std::endl;
-                this->zoom(cal_phi, cal_dphi, step_size_old, phi_old, this->step_size, trial_phi, dphi_old);
+                this->zoom2(cal_phi, cal_dphi, step_size_old, phi_old, this->step_size, trial_phi, dphi_old);
                 return;
             }
             else
@@ -161,8 +349,8 @@ void LineSearch<TX>::strong_wolfe2(const std::function<double(const double)>& ca
             this->armijo_step = this->step_size;
             std::cout << "\n" << "Armijo step size: " << this->armijo_step << std::endl;
 
-            this->zoom(cal_phi, cal_dphi, this->step_size, trial_phi, step_size_old, phi_old, trial_dphi);  // ? which one ???
-            // this->zoom(cal_phi, cal_dphi, step_size_old, phi_old, this->step_size, trial_phi, dphi_old);
+            this->zoom2(cal_phi, cal_dphi, this->step_size, trial_phi, step_size_old, phi_old, trial_dphi);  // ? which one ???
+            // this->zoom2(cal_phi, cal_dphi, step_size_old, phi_old, this->step_size, trial_phi, dphi_old);
             return;
         }
 
@@ -213,8 +401,10 @@ void LineSearch<TX>::strong_wolfe2(const std::function<double(const double)>& ca
 }
 
 
+
+
 template<typename TX>
-void LineSearch<TX>::zoom(const std::function<double(const double)>& cal_phi,
+void LineSearch<TX>::zoom2(const std::function<double(const double)>& cal_phi,
                             const std::function<double()>& cal_dphi,
                             double step_size_low,
                             double phi_low,

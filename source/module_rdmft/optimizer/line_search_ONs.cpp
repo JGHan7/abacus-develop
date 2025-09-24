@@ -152,52 +152,55 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
 
     std::vector<double> var_x_old = this->var_x;
 
-    // have pk, use strong wolfe to find step_size
-    if(this->ls_condition == "swolfe") // PARAM.inp.ls_condition == "swolfe"
+    auto phi = [this](const double trial_alpha)
     {
-        this->strong_wolfe();
-    }
-    else if(this->ls_condition == "wolfe")
+        std::vector<double> x_new(this->var_x.size(), 0.0);
+        this->step_size = trial_alpha;
+        this->update_x(x_new);
+        double trial_phi = this->cal_phi(x_new);
+        return trial_phi;
+    };
+
+    auto dphi = [this]()
     {
-        this->wolfe();
-    }
-    else if(this->ls_condition == "exact")
+        std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
+        double trial_dphi = this->cal_dphi(trial_dE_dx);
+        return trial_dphi;
+    };
+
+    double max_elem_pk = 0.0;
+    for(int i=0; i<this->search_direction.size(); ++i)
     {
-        // this->exact_ls();
-        this->strong_wolfe2();
+        max_elem_pk = std::max( max_elem_pk, std::abs(this->search_direction[i]) );
     }
-    else if(this->ls_condition == "test")
-    {
-        // example
-        // std::vector<double> trial_x(n, 0.0);
-        // auto f = [this, &trial_x]() { cal_Etotal(trial_x, this->x0 ); };
 
-        std::cout << "\n" << "test ls" << "\n" << std::endl;
+    this->step_size = this->ls.do_line_search(phi, dphi, this->phi_0, this->dphi_0, max_elem_pk, this->init_step);
 
-        auto phi = [this](const double trial_alpha)
-        {
-            std::vector<double> x_new(this->var_x.size(), 0.0);
-            this->step_size = trial_alpha;
-            this->update_x(x_new);
-            double trial_phi = this->cal_phi(x_new);
-            return trial_phi;
-        };
+    // // have pk, use strong wolfe to find step_size
+    // if(this->ls_condition == "swolfe") // PARAM.inp.ls_condition == "swolfe"
+    // {
+    //     this->strong_wolfe();
+    // }
+    // else if(this->ls_condition == "wolfe")
+    // {
+    //     this->wolfe();
+    // }
+    // else if(this->ls_condition == "exact")
+    // {
+    //     // this->exact_ls();
+    //     this->strong_wolfe2();
+    // }
+    // else if(this->ls_condition == "test")
+    // {
+    //     std::cout << "\n" << "test ls" << "\n" << std::endl;
 
-        auto dphi = [this]()
-        {
-            std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
-            double trial_dphi = this->cal_dphi(trial_dE_dx);
-            return trial_dphi;
-        };
-
-        this->step_size = this->ls.do_line_search(phi, dphi, this->phi_0, this->dphi_0, this->init_step);
-
-    }
-    else // fixed step
-    {
-        this->step_size = PARAM.inp.ls_fixed_step;
-        // this->strong_wolfe();
-    }
+    //     this->step_size = this->ls.do_line_search(phi, dphi, this->phi_0, this->dphi_0, max_elem_pk, this->init_step);
+    // }
+    // else // fixed step
+    // {
+    //     this->step_size = PARAM.inp.ls_fixed_step;
+    //     // this->strong_wolfe();
+    // }
     this->step_size = std::max(this->step_size, this->min_step_size);
 
     // update x_k+1 = x_k + step_size * p_k

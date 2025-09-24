@@ -349,6 +349,11 @@ void Tgemm_lapack<double>(const double* A,
 /********* the following function is used by the BFGS_opti method *********/
 
 
+//! implementation of cubic interpolation
+//! learned from pyTorch with minor modifications: https://github.com/pytorch/pytorch/blob/main/torch/csrc/api/src/optim/lbfgs.cpp
+double cubic_interpolate(double x1, double f1, double g1,
+                            double x2, double f2, double g2,
+                            std::pair<double, double>* bounds = nullptr);
 
 
 

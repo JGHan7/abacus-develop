@@ -205,7 +205,51 @@ void Tgemm_lapack<double>(const double* A,
 /********* the following function is used by the BFGS_opti method *********/
 
 
+//! implementation of cubic interpolation
+//! learned from pyTorch with minor modifications: https://github.com/pytorch/pytorch/blob/main/torch/csrc/api/src/optim/lbfgs.cpp
+double cubic_interpolate(double x1, double f1, double g1,
+                            double x2, double f2, double g2,
+                            std::pair<double, double>* bounds)
+{
+    double x_min = 0.0;
+    double x_max = 0.0;
+    if(bounds == nullptr)
+    {
+        auto p = std::minmax({x1, x2});
+        x_min = p.first;
+        x_max = p.second;
+    }
+    else
+    {
+        x_min = std::min(bounds->first, bounds->second);
+        x_max = std::max(bounds->first, bounds->second);
+    }
 
+    double trial_x = 0.0;
+    double d1 = (g1 + g2) - (3 * (f1 - f2) / (x1 - x2));
+    double d2_square = std::pow(d1, 2) - g1 * g2;
+    if (d2_square >= 0)
+    {
+        double d2 = std::sqrt(d2_square);
+        // minimum point of the fitted cubic polynomial
+        double min_point = 0.0;
+        if (x1 <= x2)
+        {
+            min_point = x2 - ((x2 - x1) * ((g2 + d2 - d1) / (g2 - g1 + 2 * d2)));
+        }
+        else
+        {
+            min_point = x1 - ((x1 - x2) * ((g1 + d2 - d1) / (g1 - g2 + 2 * d2)));
+        }
+        trial_x =  std::min(std::max(min_point, x_min), x_max);
+    }
+    else
+    {
+        trial_x =  (x_min + x_max) / 2.0;
+    }
+
+    return trial_x;
+}
 
 
 
