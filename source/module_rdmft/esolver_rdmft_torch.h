@@ -54,7 +54,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
 
     virtual void select_optimizer();
 
-    void before_opti();
+    void restart_opti();
 
     void do_optimize();
 

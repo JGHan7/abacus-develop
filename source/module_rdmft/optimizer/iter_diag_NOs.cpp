@@ -74,7 +74,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
         this->Fock_like_mat[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
         this->nos_rep_wfc[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
 
-        // or write in before_opti(), if you update the fixed NOs representation after each ONs optimization
+        // or write in restart_opti(), if you update the fixed NOs representation after each ONs optimization
         rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
     }
 
@@ -149,7 +149,7 @@ void IterDiag_NOs<TK, TR>::init(const int nk_total_in, const int nkstot_full_in,
 
 
 template<typename TK, typename TR>
-void IterDiag_NOs<TK, TR>::before_opti(hamilt::Hamilt<TK>* p_hamilt_in, int* scale_factor)
+void IterDiag_NOs<TK, TR>::restart_opti(hamilt::Hamilt<TK>* p_hamilt_in, int* scale_factor)
 {
     if( scale_factor != nullptr && scale_factor > 0 ) this->scale_zeta = *scale_factor;
     this->energy_drop = 0;

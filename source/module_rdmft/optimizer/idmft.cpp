@@ -67,7 +67,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
         this->Fock_like_mat[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
         this->nos_rep_wfc[ik].resize( para_Fij->get_row_size() * para_Fij->get_col_size(), 0.0 );
 
-        // or write in before_opti(), if you update the fixed NOs representation after each ONs optimization
+        // or write in restart_opti(), if you update the fixed NOs representation after each ONs optimization
         rdmft::get_identi_mat( para_Fij, this->rotation_mat[ik] );
     }
     
@@ -124,7 +124,7 @@ void IDMFT<TK, TR>::init(const int nk_total_in,
 
 
 template <typename TK, typename TR>
-void IDMFT<TK, TR>::before_opti(const std::vector< std::vector<TK> >& DM_in, hamilt::Hamilt<TK>* p_hamilt_in)
+void IDMFT<TK, TR>::restart_opti(const std::vector< std::vector<TK> >& DM_in, hamilt::Hamilt<TK>* p_hamilt_in)
 {
     // get the initial guess of DM
     this->DM = DM_in;   // could be delete now

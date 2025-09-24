@@ -78,11 +78,11 @@ void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_i
 
 
 template<typename TK, typename TR>
-void LineSearch_ONs<TK, TR>::before_opti()
+void LineSearch_ONs<TK, TR>::restart_opti()
 {
+    this->iter = 0;
     this->init_step = 1.0;
     this->Etotal_iter.clear();
-    this->iter = 0;
     this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
     this->phi_0 = this->rdmft_solver->Etotal;
 }

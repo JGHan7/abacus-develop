@@ -159,7 +159,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
             {
                 int small_diffE = 0;
-                this->iter_diag_orb.before_opti(this->p_hamilt);
+                this->iter_diag_orb.restart_opti(this->p_hamilt);
 
                 double temp_diag_ethr = iter_diag_ethr;
                 // if( !this->conver_initial_value && !this->dft_optimize )
@@ -282,7 +282,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 bool occ_num_conv = false;
 
                 init_maxniter = std::min(init_maxniter, PARAM.inp.maxniter_orb);
-                this->iter_diag_orb.before_opti(this->p_hamilt);
+                this->iter_diag_orb.restart_opti(this->p_hamilt);
                 for(int iter_orb=1; iter_orb <= init_maxniter; ++iter_orb)
                 {
                     // // temp test
@@ -331,7 +331,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                     break;
                 }
 
-                if(!this->dft_optimize) { this->ls_opti_occ_num.before_opti(); }
+                if(!this->dft_optimize) { this->ls_opti_occ_num.restart_opti(); }
                 for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)
                 {
                     // optimize natural occupation numbers
@@ -629,7 +629,7 @@ void ESolver_RDMFT<TK, TR>::get_start_guess(UnitCell& ucell, const int istep)
         if( PARAM.inp.mixing_rdmft )
         {
             rdmft::cal_special_DM(&this->pv, this->rdmft_solver.wg, this->rdmft_solver.wfc, this->DM);
-            this->idmft.before_opti(this->DM, this->p_hamilt);
+            this->idmft.restart_opti(this->DM, this->p_hamilt);
         }
     }
     else if( PARAM.inp.rdmft_orb_opti == "ft_rdmft" )
@@ -637,7 +637,7 @@ void ESolver_RDMFT<TK, TR>::get_start_guess(UnitCell& ucell, const int istep)
         if( PARAM.inp.mixing_rdmft )
         {
             rdmft::cal_special_DM(&this->pv, this->rdmft_solver.wg, this->rdmft_solver.wfc, this->DM);
-            this->ft_rdmft.before_opti(this->DM, this->p_hamilt);
+            this->ft_rdmft.restart_opti(this->DM, this->p_hamilt);
         }
     }
 

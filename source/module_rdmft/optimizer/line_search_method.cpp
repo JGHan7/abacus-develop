@@ -15,9 +15,10 @@ namespace rdmft
 
 
 template<typename TX>
-LineSearch<TX>::LineSearch(int max_ls_in)
+LineSearch<TX>::LineSearch(const int max_ls_in, const double tolerance_change_in)
 {
     this->max_ls = max_ls_in;
+    this->tolerance_change = tolerance_change_in;
     this->ls_wolfe_c1 = PARAM.inp.ls_wolfe_c1;
     this->ls_wolfe_c2 = PARAM.inp.ls_wolfe_c2;
     this->ls_armijo_c1 = PARAM.inp.ls_armijo_c1;
@@ -32,6 +33,16 @@ template<typename TX>
 LineSearch<TX>::~LineSearch()
 {
     ;
+}
+
+
+template<typename TX>
+Options LineSearch<TX>::get_options()
+{
+    return Options(this->ls_wolfe_c1, this->ls_wolfe_c2,
+                    this->ls_armijo_c1, this->ls_armijo_c2,
+                    this->max_step_size, this->min_step_size,
+                    this->ls_condition);
 }
 
 

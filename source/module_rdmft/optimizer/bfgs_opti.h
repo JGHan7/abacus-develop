@@ -20,12 +20,12 @@ namespace rdmft
 //! currently only unconstrained optimization of the occupancy numbers is considered 
 //! which means that in rdmft problem the EBI method must be used
 template<typename TX>
-class BFGS_ONs
+class BFGS_Opti
 {
   public:
     
-    BFGS_ONs();
-    ~BFGS_ONs();
+    BFGS_Opti();
+    ~BFGS_Opti();
 
     void init(const int dim_in, const int nk_total_in);
 
@@ -73,7 +73,7 @@ class BFGS_ONs
     std::vector<TX> rho_diffX_diffGrad, rho_diffX_diffX_T;
 
 
-
+    void cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape = false);
 
 
 

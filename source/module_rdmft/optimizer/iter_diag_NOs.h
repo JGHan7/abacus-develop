@@ -28,7 +28,7 @@ class IterDiag_NOs
     //! use initial values ​​to form a first guess for iterative diagonalization
     void get_start_guess(RDMFT<TK, TR>& rdmft_solver_in, const bool conver_initial_value = false); // delete conver_initial_value in the future?
 
-    void before_opti(hamilt::Hamilt<TK>* p_hamilt_in = nullptr, int* scale_factor = nullptr);
+    void restart_opti(hamilt::Hamilt<TK>* p_hamilt_in = nullptr, int* scale_factor = nullptr);
 
     //! optimizing natural orbitals
     double optimize_orb(RDMFT<TK, TR>& rdmft_solver_in);

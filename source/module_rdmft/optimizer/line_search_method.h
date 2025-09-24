@@ -45,13 +45,13 @@ class LineSearch
 
   public:
 
-    LineSearch(int max_ls_in = 25);
+    LineSearch(const int max_ls_in = 25, const double tolerance_change_in = 1e-9);
     ~LineSearch();
 
     //! use an approximate line search method to find a suitable step size
-    //! the only required parameter for cal_phi and cal_dphi is, const double trial_step_size 
+    //! the only required parameter for cal_phi() is, const double trial_step_size 
     //! line search can be implemented without explicitly knowing the search direction and other details,
-    //! everything related can be packaged in cal_phi/dphi (so there is no need to consider whether the matrix calculation is multi-process)
+    //! everything related can be packaged in cal_phi/dphi() (so there is no need to consider whether the matrix calculation is multi-process etc.)
     double do_line_search(const std::function<double(const double)>& cal_phi,
                             const std::function<double()>& cal_dphi,
                             const double phi_0_in,
@@ -59,27 +59,23 @@ class LineSearch
                             const double max_elem_pk_in = 1.0,
                             const double inital_step = 1.0);
 
-
-    // example
-    // std::vector<double> trial_x(n, 0.0);
-    // auto f = [this, &trial_x]() { cal_Etotal(trial_x, this->x0 ); };
-
-    int max_ls = 25;
-
-
-    // 
-    double tolerance_change = 1e-9;
-
-    Options get_options()
-    {
-        return Options(this->ls_wolfe_c1, this->ls_wolfe_c2,
-                       this->ls_armijo_c1, this->ls_armijo_c2,
-                       this->max_step_size, this->min_step_size,
-                       this->ls_condition);
-    }
+    //! get or modify line search parameters
+    Options get_options();
+    // {
+    //     return Options(this->ls_wolfe_c1, this->ls_wolfe_c2,
+    //                    this->ls_armijo_c1, this->ls_armijo_c2,
+    //                    this->max_step_size, this->min_step_size,
+    //                    this->ls_condition);
+    // }
 
 
   protected:
+
+    //! maximum number of calls to cal_phi() during a line search
+    int max_ls = 25;
+
+    //! minimum tolerance value of step interval effect
+    double tolerance_change = 1e-9;
 
     //! Strong Wolfe condition, get the appropriate step length
     //! The framework is based on J. Nocedal's "Numerical Optimization."
@@ -101,7 +97,7 @@ class LineSearch
 
     //! Strong Wolfe condition, get the appropriate step length
     void strong_wolfe2(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
-    
+
     //! used in Strong Wolfe condition, get the appropriate step length
     void zoom2(const std::function<double(const double)>& cal_phi,
                 const std::function<double()>& cal_dphi,
@@ -119,12 +115,12 @@ class LineSearch
     double ls_armijo_c1 = 0.0;
     double ls_armijo_c2 = 0.0;
 
-    //! conditions for selecting the step size used in inexact line search
-    std::string ls_condition = "swolfe";
-
     //! the maximum and minimum step sizes allowed for line search
     double max_step_size = 0.0;
     double min_step_size = 0.0;
+
+    //! conditions for selecting the step size used in inexact line search
+    std::string ls_condition = "swolfe";
 
     // the element with the largest modulus of the search direction vector pk
     double max_elem_pk = 1.0;

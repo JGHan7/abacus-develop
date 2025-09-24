@@ -29,7 +29,7 @@ class IDMFT
               RDMFT<TK, TR>* rdmft_solver_in);
 
     //! serves for mixing, can be deleted after refactoring
-    void before_opti(const std::vector< std::vector<TK> >& DM_in, hamilt::Hamilt<TK>* p_hamilt_in);
+    void restart_opti(const std::vector< std::vector<TK> >& DM_in, hamilt::Hamilt<TK>* p_hamilt_in);
 
     //! optimizing natural orbitals and occupation numbers
     double optimize();

@@ -24,50 +24,53 @@ LineSearch_NOs<TK, TR>::LineSearch_NOs()
 template<typename TK, typename TR>
 LineSearch_NOs<TK, TR>::~LineSearch_NOs()
 {
-    // delete this->param_occ_num;
+    ;
 }
 
 
 template<typename TK, typename TR>
 void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
 {
-    // this->rdmft_solver = rdmft_in;
+    this->rdmft_solver = rdmft_in;
+    this->nk_total = this->rdmft_solver->nk_total;
+    this->nbands64 = PARAM.inp.nbands;
+    this->nbasis64 = this->rdmft_solver->ParaV->get_wfc_global_nbasis();
     
-    // this->bfgs_opti_x.init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total);
-    // if(PARAM.inp.occ_num_func == "softmax")
-    // {
-    //     this->param_occ_num = new rdmft::SOFTMAX();
-    //     std::cout << "\n\nSOFTMAX parameterized ONs are only applicable to electron pairing approaches which we have not yet implemented\n\n" << std::endl;
-    //     assert(0);
-    // }
-    // else if(PARAM.inp.occ_num_func == "erf")
-    // {
-    //     this->param_occ_num = new rdmft::EBI();
-    // }
-    // else
-    // {
-    //     std::cout << "\n\n Please select the correct method to parameterize the occupation numbers \n\n" << std::endl;
-    //     assert(0);
-    // }
-    // this->param_occ_num->init(rdmft_solver->nk_total, kv_in.get_nkstot_full(), kv_in.wk);
+    // this->opti_deltaR = PARAM.inp.small_rotation;
 
-    // this->var_x.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
-    // this->dE_dx.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
-    // this->search_direction.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
-    // this->occ_number.create(rdmft_solver->nk_total, PARAM.inp.nbands);
+    this->R_optimizer.resize(this->nk_total);
+    this->thetaR.resize(nk_total);
+    this->R_tensor.resize(this->nk_total);
 
+    // wfc_new_tensor.resize(this->nk_total);
+    // wfc_0_tensor.resize(this->nk_total);
+    // dE_dwfc_tensor.resize(this->nk_total);
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        // thetaR_real[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<double>().requires_grad(true));
+        // thetaR_imag[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<double>().requires_grad(true));
+        this->thetaR[ik] = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<TK>().requires_grad(true));
+        this->R_tensor[ik] = torch::zeros({nbands64, nbands64}, torch_dtype<TK>());
+        
+        // wfc_new_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
+        // wfc_0_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
+        // dE_dwfc_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
+
+        this->R_optimizer[ik] = std::make_unique< rdmft::BFGS_Opti<TK> >();
+        this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, this->nk_total );
+    }
 
 }
 
 
 template<typename TK, typename TR>
-void LineSearch_NOs<TK, TR>::before_opti()
+void LineSearch_NOs<TK, TR>::restart_opti()
 {
-    // this->init_step = 1.0;
-    // this->Etotal_iter.clear();
-    // this->iter = 0;
-    // this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
-    // this->phi_0 = this->rdmft_solver->Etotal;
+    this->iter = 0;
+    this->init_step = 1.0;
+    this->Etotal_iter.clear();
+    this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
+    this->phi_0 = this->rdmft_solver->Etotal;
 }
 
 template<typename TK, typename TR>

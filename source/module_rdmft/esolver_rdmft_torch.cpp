@@ -232,7 +232,7 @@ void ESolver_RDMFT_Torch<TK, TR>::select_optimizer()
 
 
 template <typename TK, typename TR>
-void ESolver_RDMFT_Torch<TK, TR>::before_opti()
+void ESolver_RDMFT_Torch<TK, TR>::restart_opti()
 {
     this->var_x_optimizer->state().clear();
     for(int ik=0; ik<this->nk_total; ++ik)
@@ -421,7 +421,7 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
         bool occ_number_conv = false;
 
         // need more testing and thinking, has the landscape been changed ? ? ?
-        this->before_opti();
+        this->restart_opti();
 
         ModuleBase::matrix occ_num_old(this->nk_total, PARAM.inp.nbands);
         for(int iter_occ_num=1; iter_occ_num <= PARAM.inp.maxniter_occ_num; ++iter_occ_num)

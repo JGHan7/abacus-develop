@@ -82,7 +82,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     rdmft::FT_RDMFT<TK, TR> ft_rdmft;
 
     //! just for test
-    rdmft::BFGS_ONs<double> bfgs_opti_x;
+    rdmft::BFGS_Opti<double> bfgs_opti_x;
     int dim_x = 2;
     std::vector<double> data_x;
     std::vector<double> df_dx;
@@ -118,7 +118,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
     rdmft::LineSearch_ONs<TK, TR> ls_opti_occ_num;
 
-    // rdmft::BFGS_ONs<double> bfgs_rdmft;
+    // rdmft::BFGS_Opti<double> bfgs_rdmft;
 
     // std::vector< std::vector<TK> > lambda;
 

@@ -27,7 +27,7 @@ class LineSearch_ONs
     //! use an approximate line search method to find a suitable step size
     double do_line_search(const bool start_guess = false);
 
-    void before_opti();
+    void restart_opti();
 
     std::vector<double> Etotal_iter;
     int iter = 0;
@@ -120,7 +120,7 @@ class LineSearch_ONs
 
   private:
     //! optimizer: use the BFGS method to get the search direction, p_k
-    rdmft::BFGS_ONs<double> bfgs_opti_x;
+    rdmft::BFGS_Opti<double> bfgs_opti_x;
 
 
     rdmft::LineSearch<double> ls;
