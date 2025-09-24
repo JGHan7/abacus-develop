@@ -41,6 +41,7 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
     this->R_optimizer.resize(this->nk_total);
     this->thetaR.resize(nk_total);
     this->R_tensor.resize(this->nk_total);
+    this->Ek_iter.resize(this->nk_total);
 
     // wfc_new_tensor.resize(this->nk_total);
     // wfc_0_tensor.resize(this->nk_total);
@@ -68,9 +69,14 @@ void LineSearch_NOs<TK, TR>::restart_opti()
 {
     this->iter = 0;
     this->init_step = 1.0;
+    this->phi_0 = this->rdmft_solver->Etotal;
     this->Etotal_iter.clear();
     this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
-    this->phi_0 = this->rdmft_solver->Etotal;
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
+        this->Ek_iter[ik].clear();
+        this->Ek_iter[ik].push_back(this->rdmft_solver->Etotal);
+    }
 }
 
 template<typename TK, typename TR>
@@ -99,6 +105,21 @@ void LineSearch_NOs<TK, TR>::get_start_guess()
 template<typename TK, typename TR>
 double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 {
+    if( start_guess )
+    {
+        this->restart_opti();
+    }
+    bool new_landscape = (this->iter == 0) ? true: false;
+
+
+
+
+
+
+
+
+
+
 
     // if(start_guess)
     // {
@@ -169,6 +190,78 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 
 
 }
+
+
+template<typename TK, typename TR>
+double LineSearch_NOs<TK, TR>::cal_phi(const int* ik, std::vector<double>& x_new)
+{
+    for(int jk=0; jk<this->nk_total; ++jk)
+    {
+        if( ik != nullptr )
+        {
+            if( jk != *ik )
+            {
+                continue;
+            }
+        }
+
+
+
+
+    }
+}
+
+
+template<typename TK, typename TR>
+double LineSearch_NOs<TK, TR>::cal_dphi(const int* ik, std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr)
+{
+    for(int jk=0; jk<this->nk_total; ++jk)
+    {
+        if( ik != nullptr )
+        {
+            if( jk != *ik )
+            {
+                continue;
+            }
+        }
+
+
+
+
+    }
+}
+
+
+template<typename TK, typename TR>
+void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
+{
+    
+}
+
+
+template<typename TK, typename TR>
+void LineSearch_NOs<TK, TR>::cal_dE_dR(const int* ik, std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr)
+{
+    for(int jk=0; jk<this->nk_total; ++jk)
+    {
+        if( ik != nullptr )
+        {
+            if( jk != *ik )
+            {
+                continue;
+            }
+        }
+
+
+
+
+    }
+}
+
+
+
+
+
 
 
 

@@ -595,10 +595,10 @@ void ESolver_RDMFT<TK, TR>::get_start_guess(UnitCell& ucell, const int istep)
     }
     this->rdmft_solver.inital_wfc_occNum(this->pelec->wg, this->psi);
 
-    // test
-    GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
-    std::cout << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
-    this->rdmft_solver.cal_Energy();
+    // // test
+    // GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
+    // std::cout << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
+    // this->rdmft_solver.cal_Energy();
 
     if( PARAM.inp.rdmft_orb_opti == "iter_diag" )
     {

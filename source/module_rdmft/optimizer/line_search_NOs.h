@@ -34,6 +34,7 @@ class LineSearch_NOs
     void restart_opti();
 
     std::vector<double> Etotal_iter;
+    std::vector<std::vector<double>> Ek_iter;
     int iter = 0;
 
 
@@ -41,6 +42,20 @@ class LineSearch_NOs
 
     //! generate start guess
     virtual void get_start_guess();
+
+    //! calculate phi(alpha) = E(x_k + alpha * p_k) and return it. x_new = x_k + alpha*p_k
+    virtual double cal_phi(const int* ik, std::vector<double>& x_new);
+
+    //! calculate dE/dx, dphi/dalpha = E'(x_k + alpha * p_k) * p_k^T and return dphi.
+    //! x_new = x_k + alpha*p_k, if x is the same as the x in the last call to cal_phi(), nullptr is used.
+    virtual double cal_dphi(const int* ik, std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr = nullptr);  // is dE_dx_new useful here? Consider deleting the outgoing
+
+    //! calculate the direction of the line search: pk, and dphi_0
+    virtual void cal_pk_dphi0(const bool new_landscape = false);
+
+    //! calculate dE/dx
+    //! R_new = R_k + alpha*p_k, if R is the same as the R in the last call to cal_phi(), nullptr is used.
+    virtual void cal_dE_dR(const int* ik, std::vector<double>& dE_dx_new, std::vector<double>* x_new_ptr = nullptr);
 
     RDMFT<TK, TR>* rdmft_solver = nullptr;
 

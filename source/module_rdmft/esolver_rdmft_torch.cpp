@@ -582,10 +582,10 @@ void ESolver_RDMFT_Torch<TK, TR>::get_start_guess(UnitCell& ucell, const int ist
     this->wfc_new = *(this->psi);
     this->wfc_old = this->wfc_new;
 
-    // test
-    GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
-    std::cout << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
-    this->rdmft_solver.cal_Energy();
+    // // test
+    // GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
+    // std::cout << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;
+    // this->rdmft_solver.cal_Energy();
 
     // initialize var_x
     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
