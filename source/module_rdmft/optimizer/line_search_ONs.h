@@ -8,7 +8,6 @@
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
 #include "module_rdmft/optimizer/bfgs_opti.h"
-
 #include  "module_rdmft/optimizer/line_search_method.h"
 
 namespace rdmft
@@ -38,36 +37,36 @@ class LineSearch_ONs
     // temp?
     std::vector<double>* get_var_x() { return &this->var_x; }
 
-    //! parameters in strong wolfe or wolfe conditions
-    double ls_wolfe_c1 = 0.0;
-    double ls_wolfe_c2 = 0.0;
+    // //! parameters in strong wolfe or wolfe conditions
+    // double ls_wolfe_c1 = 0.0;
+    // double ls_wolfe_c2 = 0.0;
 
-    //! parameters in Armijo-Goldstein conditions
-    double ls_armijo_c1 = 0.0;
-    double ls_armijo_c2 = 0.0;
+    // //! parameters in Armijo-Goldstein conditions
+    // double ls_armijo_c1 = 0.0;
+    // double ls_armijo_c2 = 0.0;
 
-    std::string ls_condition;
+    // std::string ls_condition;
 
-    double max_step_size = 0.0;
-    double min_step_size = 0.0;
+    // double max_step_size = 0.0;
+    // double min_step_size = 0.0;
 
 
   protected:
 
-    //! Strong Wolfe condition, get the appropriate step length
-    void strong_wolfe();
+    // //! Strong Wolfe condition, get the appropriate step length
+    // void strong_wolfe();
 
-    //! Strong Wolfe condition, get the appropriate step length. By myself
-    void strong_wolfe2();
+    // //! Strong Wolfe condition, get the appropriate step length. By myself
+    // void strong_wolfe2();
 
-    //! exact line search, get the most appropriate step length, just be used to test or solve simple problem
-    void exact_ls();
+    // //! exact line search, get the most appropriate step length, just be used to test or solve simple problem
+    // void exact_ls();
 
-    //! Wolfe condition
-    void wolfe();
+    // //! Wolfe condition
+    // void wolfe();
 
-    //! used in Strong Wolfe condition, get the appropriate step length
-    void zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low);
+    // //! used in Strong Wolfe condition, get the appropriate step length
+    // void zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low);
 
     //! calculate the new x based on the current step size
     void update_x(std::vector<double>& x_new);

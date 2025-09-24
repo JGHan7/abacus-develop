@@ -1,0 +1,181 @@
+//==========================================================
+// Author: Jingang Han
+// DATE : 2025-09-24
+//==========================================================
+
+#include <algorithm>
+#include "module_rdmft/optimizer/line_search_NOs.h"
+#include "module_rdmft/optimizer/optimizer_tools.h"
+
+// #include <torch/torch.h>
+
+#include "module_rdmft/rdmft_tools.h" // temp
+
+namespace rdmft
+{
+
+template<typename TK, typename TR>
+LineSearch_NOs<TK, TR>::LineSearch_NOs()
+{
+    ;
+}
+
+
+template<typename TK, typename TR>
+LineSearch_NOs<TK, TR>::~LineSearch_NOs()
+{
+    // delete this->param_occ_num;
+}
+
+
+template<typename TK, typename TR>
+void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
+{
+    // this->rdmft_solver = rdmft_in;
+    
+    // this->bfgs_opti_x.init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total);
+    // if(PARAM.inp.occ_num_func == "softmax")
+    // {
+    //     this->param_occ_num = new rdmft::SOFTMAX();
+    //     std::cout << "\n\nSOFTMAX parameterized ONs are only applicable to electron pairing approaches which we have not yet implemented\n\n" << std::endl;
+    //     assert(0);
+    // }
+    // else if(PARAM.inp.occ_num_func == "erf")
+    // {
+    //     this->param_occ_num = new rdmft::EBI();
+    // }
+    // else
+    // {
+    //     std::cout << "\n\n Please select the correct method to parameterize the occupation numbers \n\n" << std::endl;
+    //     assert(0);
+    // }
+    // this->param_occ_num->init(rdmft_solver->nk_total, kv_in.get_nkstot_full(), kv_in.wk);
+
+    // this->var_x.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
+    // this->dE_dx.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
+    // this->search_direction.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
+    // this->occ_number.create(rdmft_solver->nk_total, PARAM.inp.nbands);
+
+
+}
+
+
+template<typename TK, typename TR>
+void LineSearch_NOs<TK, TR>::before_opti()
+{
+    // this->init_step = 1.0;
+    // this->Etotal_iter.clear();
+    // this->iter = 0;
+    // this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
+    // this->phi_0 = this->rdmft_solver->Etotal;
+}
+
+template<typename TK, typename TR>
+void LineSearch_NOs<TK, TR>::get_start_guess()
+{
+    // std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
+    // if(PARAM.inp.random_occ_num)
+    // {
+    //     this->param_occ_num->get_inital_guess(this->var_x);
+
+    //     // // update rdmft elec_state
+    //     // ModuleBase::matrix occ_number( this->param_occ_num->get_occ_number() );
+    //     // this->rdmft_solver->update_elec( &occ_number );
+    // }
+    // else
+    // {
+    //     this->param_occ_num->get_inital_guess(this->var_x, &rdmft_solver->occ_number);
+    // }
+
+    // this->occ_number = this->param_occ_num->get_occ_number();
+    // this->rdmft_solver->update_elec( &(this->occ_number) );
+    // this->phi_0 = this->rdmft_solver->cal_Energy();
+}
+
+
+template<typename TK, typename TR>
+double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
+{
+
+    // if(start_guess)
+    // {
+    //     this->get_start_guess();
+    //     std::cout << "\n******\n" << "start_guess: ls, 0.0" << "\n******\n" << std::endl;
+
+    //     this->init_step = 1.0;
+    //     this->Etotal_iter.clear();
+    //     this->phi_0 = this->rdmft_solver->Etotal;
+    //     this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
+
+    //     // return 0.0; // test !!!!!!!!!!
+    // }
+
+    // std::cout << "\n******\n" << "iter in occ_num: " << iter << "\n" << std::endl;
+
+    // // // test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // // this->phi_0 = this->cal_phi(this->var_x);
+
+    // // rdmft cal dE_docc_num, PARAM_ONs convert dE_docc_num to dE_dx
+    // this->cal_dE_dx(this->dE_dx);
+
+    // this->cal_pk_dphi0( (start_guess || this->iter == 0) );
+    // std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
+
+    // if( this->iter != 0 )
+    // {
+    //     this->init_step = 1.01 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
+    //     this->init_step = std::min(1.0, this->init_step);
+    //     // this->init_step = 1.0 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
+    //     std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+    // }
+
+    // std::vector<double> var_x_old = this->var_x;
+
+    // auto phi = [this](const double trial_alpha)
+    // {
+    //     std::vector<double> x_new(this->var_x.size(), 0.0);
+    //     this->step_size = trial_alpha;
+    //     this->update_x(x_new);
+    //     double trial_phi = this->cal_phi(x_new);
+    //     return trial_phi;
+    // };
+
+    // auto dphi = [this]()
+    // {
+    //     std::vector<double> trial_dE_dx(this->dE_dx.size(), 0.0);
+    //     double trial_dphi = this->cal_dphi(trial_dE_dx);
+    //     return trial_dphi;
+    // };
+
+    // double max_elem_pk = 0.0;
+    // for(int i=0; i<this->search_direction.size(); ++i)
+    // {
+    //     max_elem_pk = std::max( max_elem_pk, std::abs(this->search_direction[i]) );
+    // }
+
+    // this->step_size = this->ls.do_line_search(phi, dphi, this->phi_0, this->dphi_0, max_elem_pk, this->init_step);
+
+    // // update x_k+1 = x_k + step_size * p_k
+    // // can't use update_x(), because we need "+=" instead of "="
+    // for(int i=0; i<this->var_x.size(); ++i)
+    // {
+    //     this->var_x[i] += this->step_size * this->search_direction[i]; 
+    // }
+
+    // std::cout << "\n" << "the final step_size by lineSearch_NOs: " << this->step_size << "\n" << std::endl;
+
+
+}
+
+
+
+
+
+template class LineSearch_NOs<double, double>;
+template class LineSearch_NOs<std::complex<double>, double>;
+template class LineSearch_NOs<std::complex<double>, std::complex<double>>;
+
+
+
+}
+

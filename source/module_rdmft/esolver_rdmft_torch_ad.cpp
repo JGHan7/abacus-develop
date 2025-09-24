@@ -462,6 +462,23 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, c
     this->wfc_new_tensor[ik].backward( this->dE_dwfc_tensor[ik] );
 
     this->has_cal_E_occ_num = false;
+
+    // //************** test **************//
+    // // use auto-differ to get the value of factor
+    // std::vector<TK> dE_dR_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
+    // std::vector<TK> dE_dR_global_test;
+    // torch::Tensor dE_dR_global_tensor;
+    // this->rdmft_solver.cal_antisym_lambda(ik, dE_dR_local, this->grad_factor);
+    // rdmft::collect_vec(this->para_Fij, dE_dR_local, dE_dR_global_test);
+    // rdmft::vector2tensor(dE_dR_global_test, dE_dR_global_tensor, {nbands64, nbands64});
+
+    // std::vector<double> dE_dR_global_torch;
+    // torch::Tensor grad_by_torch = this->thetaR_real[ik].grad().clone();
+
+    // std::cout << "\n***\ndE_dR by me: \n" << dE_dR_global_tensor << "\n***\n" << std::endl;
+    // std::cout << "\n***\ndE_dR by torch: \n" << grad_by_torch << "\n***\n" << std::endl;
+    // //************** test **************//
+
 }
 
 

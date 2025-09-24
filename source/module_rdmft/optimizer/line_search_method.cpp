@@ -64,14 +64,11 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
     {
         this->step_size = PARAM.inp.ls_fixed_step;
     }
+    this->step_size = std::max(this->step_size, this->min_step_size);
 
     return this->step_size;
 }
 
-
-// double cubic_interpolate(double x1, double f1, double g1,
-//                             double x2, double f2, double g2,
-//                             std::pair<double, double>* bounds = nullptr);
 
 template<typename TX>
 void LineSearch<TX>::strong_wolfe(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi)
@@ -168,6 +165,7 @@ void LineSearch<TX>::strong_wolfe(const std::function<double(const double)>& cal
 
 }
 
+
 template<typename TX>
 void LineSearch<TX>::zoom(const std::function<double(const double)>& cal_phi,
                             const std::function<double()>& cal_dphi,
@@ -257,7 +255,6 @@ void LineSearch<TX>::zoom(const std::function<double(const double)>& cal_phi,
 
     this->step_size = alpha_lo;
 }
-
 
 
 template<typename TX>
@@ -397,7 +394,6 @@ void LineSearch<TX>::strong_wolfe2(const std::function<double(const double)>& ca
     this->armijo_step = this->step_size;
     std::cout << "\n" << "Strong Wolfe failed! the energy must drop in armijo steps, update as:: " << this->armijo_step << "\ndphi_0: " << this->dphi_0 << std::endl;
 
-
 }
 
 
@@ -499,8 +495,6 @@ void LineSearch<TX>::zoom2(const std::function<double(const double)>& cal_phi,
 
     }
 }
-
-
 
 
 

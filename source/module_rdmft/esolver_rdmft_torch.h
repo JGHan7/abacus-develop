@@ -172,7 +172,7 @@ class ESolver_RDMFT_Torch: public rdmft::ESolver_RDMFT<TK,TR>
     // void cal_dE_dR(std::vector<torch::Tensor>& dE_dR_tensor, const std::vector<torch::Tensor>* R_tensor = nullptr);
     virtual void cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, const int ik, const torch::Tensor* R_tensor_ik = nullptr);
 
-    const double grad_factor = 2.0;
+    const double grad_factor = 1.0;
     //
     virtual torch::Tensor trial_ER_Egrad(const int ik, bool cal_grad = true);
     //

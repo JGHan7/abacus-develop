@@ -925,7 +925,9 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, cons
     // for(int ik=0; ik<this->nk_total; ++ik)
     {
         // get dE_dR
-        this->rdmft_solver.cal_antisym_lambda(ik, dE_dR_local, this->grad_factor); // re-derive the formula to determine the factor !!!!!!!!!!!!!!!!!!!!!!
+        // re-derive the formula to determine the factor
+        // from the numerical results of automatic differentiation, factor=1, spin and k-point weights have been taken into account in cal_antisym_lambda()
+        this->rdmft_solver.cal_antisym_lambda(ik, dE_dR_local, this->grad_factor);
 
         // *************** test precondtion ***************** //
         // This is wrong. Taking BFGS/LBFGS as an example, this preprocessing should only affect the search direction pk = -Hk*(f_grad_xk/f_grad2_xk), but not yk = f_grad_xk+1 - f_grad_xk

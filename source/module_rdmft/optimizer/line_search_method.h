@@ -86,9 +86,6 @@ class LineSearch
     //! For handling extreme values, refer to pyTorch: https://github.com/pytorch/pytorch/blob/main/torch/csrc/api/src/optim/lbfgs.cpp
     void strong_wolfe(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
 
-    //! Strong Wolfe condition, get the appropriate step length
-    void strong_wolfe2(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
-
     //! Wolfe condition
     void wolfe(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
 
@@ -102,6 +99,9 @@ class LineSearch
                 double phi_high,
                 double dphi_high);
 
+    //! Strong Wolfe condition, get the appropriate step length
+    void strong_wolfe2(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
+    
     //! used in Strong Wolfe condition, get the appropriate step length
     void zoom2(const std::function<double(const double)>& cal_phi,
                 const std::function<double()>& cal_dphi,
