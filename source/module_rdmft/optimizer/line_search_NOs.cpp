@@ -143,7 +143,29 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 
 
 
+    for(int ik=0; ik<this->nk_total; ++ik)
+    {
 
+
+
+
+
+
+
+
+
+
+
+
+
+        // in this scope, tracing operations are prohibited (for thetaR)
+        torch::NoGradGuard no_grad;
+
+        torch::Tensor pk_tensor = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<TK>());
+        rdmft::vector2tensor(this->search_direction[ik], pk_tensor);
+        this->thetaR[ik] = this->thetaR[ik] + this->step_size_k[ik] * pk_tensor;
+
+    }
 
 
 
@@ -310,7 +332,7 @@ double LineSearch_NOs<TK, TR>::cal_dphi(const int* ik)
                 continue;
             }
         }
-        rdmft::Tgemm_lapack( this->dE_dthetaR_global[jk].data(), this->search_direction[jk].data(), &dphi, 1, 1, this->nk_total * PARAM.inp.nbands , 'T');
+        rdmft::Tgemm_lapack( this->dE_dthetaR_global[jk].data(), this->search_direction[jk].data(), &dphi, 1, 1, PARAM.inp.nbands , 'T');
     }
 
     return std::real(dphi);
@@ -364,7 +386,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
         }
 
         TK dphi_0_temp = 0.0;
-        rdmft::Tgemm_lapack( this->dE_dthetaR_global[jk].data(), this->search_direction[jk].data(), &dphi_0_temp, 1, 1, this->nk_total * PARAM.inp.nbands , 'T');
+        rdmft::Tgemm_lapack( this->dE_dthetaR_global[jk].data(), this->search_direction[jk].data(), &dphi_0_temp, 1, 1, PARAM.inp.nbands , 'T');
         this->dphi_0_k[jk] = std::real(dphi_0_temp);
     }
 }
@@ -409,7 +431,7 @@ void LineSearch_NOs<TK, TR>::cal_dE_dR(const int* ik)
 
             // convert data formats
             rdmft::collect_vec(this->para_Fij, dE_dR_local, dE_dR_global[jk]);
-            rdmft::vector2tensor(dE_dR_global[jk], dE_dR_tensor_jk, { PARAM.inp.nbands * PARAM.inp.nbands });
+            rdmft::vector2tensor(dE_dR_global[jk], dE_dR_tensor_jk, {nbands64, nbands64});
 
             // generate upper triangle index
             auto idx = torch::triu_indices(this->nbands64, this->nbands64);
