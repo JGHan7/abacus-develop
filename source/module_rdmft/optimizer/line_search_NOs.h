@@ -61,7 +61,8 @@ class LineSearch_NOs
 
     std::vector< std::unique_ptr<rdmft::BFGS_Opti<TK>> > R_optimizer;
 
-    rdmft::LineSearch<TK> ls;
+    // rdmft::LineSearch<TK> ls;
+    std::vector< std::unique_ptr<rdmft::LineSearch<TK>> > ls;
 
     std::vector<std::vector<TK>> search_direction;
 
@@ -91,6 +92,12 @@ class LineSearch_NOs
 
     const double grad_factor = 1.0;
 
+    //! the actual optimized parameters, only the optimized results of each step are stored (not affected by the intermediate values ​​of the line search)
+    // std::vector< std::vector<TK> > var_thetaR;
+    std::vector<torch::Tensor> var_thetaR_tensor;
+    std::vector<torch::Tensor> var_thetaR_for_bfgs;
+
+    //! thetaR is the leaf tensor of automatic differentiation (the starting point of the computational graph)
     std::vector<torch::Tensor> thetaR;
     std::vector<torch::Tensor> R_tensor;
     // std::vector<torch::Tensor> dE_dR_tensor;
@@ -111,6 +118,8 @@ class LineSearch_NOs
     const Parallel_2D* para_Fij = nullptr;
 
     void update_R_wfc(const int* ik = nullptr);
+
+    void update_thetaR(const int* ik = nullptr);
 
 
 };

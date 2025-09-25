@@ -522,7 +522,7 @@ void ESolver_RDMFT_Torch_AD<TK, TR>::iter_update_wfc()
 {
     for (int ik=0; ik < this->nk_total; ++ik)
     {
-        this->wfc_0_tensor[ik] = this->wfc_new_tensor[ik].detach();
+        this->wfc_0_tensor[ik] = this->wfc_new_tensor[ik].detach().clone();
     }
 }
 
