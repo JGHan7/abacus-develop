@@ -10,6 +10,7 @@
 #include "module_esolver/esolver_ks_lcao.h"
 #include "module_rdmft/optimizer/iter_diag_NOs.h"
 #include "module_rdmft/optimizer/line_search_ONs.h"
+#include "module_rdmft/optimizer/line_search_NOs.h"
 #include "module_rdmft/optimizer/parameterize_ONs/ebi_constraint.h"
 #include "module_rdmft/optimizer/bfgs_opti.h"
 #include "module_rdmft/optimizer/idmft.h"
@@ -117,6 +118,9 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
 
     //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
     rdmft::LineSearch_ONs<TK, TR> ls_opti_occ_num;
+
+    //! 
+    rdmft::LineSearch_NOs<TK, TR> ls_opti_orb;
 
     // rdmft::BFGS_Opti<double> bfgs_rdmft;
 

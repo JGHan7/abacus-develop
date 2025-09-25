@@ -681,7 +681,7 @@ struct Input_para
     double adam_lr_occ_num = 0.01;
     bool rdmft_dm_conv = true;
     double scaling_rotation = 1.0;
-    bool small_rotation = false;
+    bool small_rotation = true;
     bool precond_occ_num = false;
     bool precond_orb = false;
 
