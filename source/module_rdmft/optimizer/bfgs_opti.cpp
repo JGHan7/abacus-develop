@@ -225,7 +225,7 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
         this->rho = 1.0/std::real(rho_temp);
 
         std::cout << "******\n" << "in BFGS_Opti::get_pk(), 1.0/rho = y^/dagger s: " << rho_temp << "\n******" << std::endl;
-        std::cout << "******\n" << "in BFGS_Opti::get_pk(), rho: " << this->rho << "\n******" << std::endl;
+        // std::cout << "******\n" << "in BFGS_Opti::get_pk(), rho: " << this->rho << "\n******" << std::endl;
 
         rho_temp = this->rho;
         // cal rho * diffX * diffGrad^T, I - rho * diffX * diffGrad^T

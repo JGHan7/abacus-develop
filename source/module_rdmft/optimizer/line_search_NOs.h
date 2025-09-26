@@ -62,7 +62,7 @@ class LineSearch_NOs
     std::vector< std::unique_ptr<rdmft::BFGS_Opti<TK>> > R_optimizer;
 
     // rdmft::LineSearch<TK> ls;
-    std::vector< std::unique_ptr<rdmft::LineSearch<TK>> > ls;
+    std::vector< std::unique_ptr<rdmft::LineSearch<double>> > ls;
 
     std::vector<std::vector<TK>> search_direction;
 

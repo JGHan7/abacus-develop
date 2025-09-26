@@ -76,6 +76,7 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
         this->step_size = PARAM.inp.ls_fixed_step;
     }
     this->step_size = std::max(this->step_size, this->min_step_size);
+    std::cout << "\n***\nin ls, ls_time: " << this->ls_times  << "\n***\n" << std::endl;
 
     return this->step_size;
 }
@@ -84,7 +85,7 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
 template<typename TX>
 void LineSearch<TX>::strong_wolfe(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi)
 {
-    std::cout << "\n" << "test ls: strong_wolfe()" << "\n" << std::endl;
+    // std::cout << "\n" << "test ls: strong_wolfe()" << "\n" << std::endl;
 
     // strong wolfe condition
     double step_size_old = 0.0;
@@ -132,7 +133,8 @@ void LineSearch<TX>::strong_wolfe(const std::function<double(const double)>& cal
         double min_step = this->step_size + 0.01 * ( this->step_size - step_size_old );
         double max_step = this->step_size * 10.0;
         double temp_step = this->step_size;
-        std::pair<double,double> bounds{this->min_step_size, this->max_step_size};
+        // std::pair<double,double> bounds{this->min_step_size, this->max_step_size}; // error !
+        std::pair<double,double> bounds{min_step, max_step};
         this->step_size = rdmft::cubic_interpolate( step_size_old, phi_old, dphi_old,
                                                     this->step_size, trial_phi, trial_dphi,
                                                     &bounds );

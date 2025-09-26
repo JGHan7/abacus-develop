@@ -460,6 +460,7 @@ void RDMFT<TK, TR>::cal_E_grad2_Rpq(const int ik, std::vector<TK>& d2E_dRpq_2_in
     {
         d2E_dRpq_2_in[iloc] = this->d2E_dRpq_2[ik][iloc];
     }
+    // rdmft::printMatrix_pointer(1, this->d2E_dRpq_2[ik].size(), this->d2E_dRpq_2[ik].data(), "d2E_dRpq_2[ik]");
 }
 
 template <typename TK, typename TR>

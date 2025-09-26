@@ -127,7 +127,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
         // return 0.0; // test !!!!!!!!!!
     }
 
-    std::cout << "\n******\n" << "iter in occ_num: " << iter << "\n" << std::endl;
+    // std::cout << "\n******\n" << "iter in occ_num: " << iter << "\n" << std::endl;
 
     // // test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // this->phi_0 = this->cal_phi(this->var_x);
@@ -148,7 +148,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
         this->init_step = 1.01 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
         this->init_step = std::min(1.0, this->init_step);
         // this->init_step = 1.0 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
-        std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+        // std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
     }
 
     std::vector<double> var_x_old = this->var_x;
@@ -232,7 +232,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     // convert x_k+1 to occ_num, rdmft_solver update occ_num, Hk, etc.
     this->phi_0 = this->cal_phi(this->var_x);   // has be calculated in swolfe() or zoom() ?
 
-    std::cout << "\n******\n" << "ls, do_line_search, phi_0: " << this->phi_0 << "\n******\n" << std::endl;
+    // std::cout << "\n******\n" << "ls, do_line_search, phi_0: " << this->phi_0 << "\n******\n" << std::endl;
 
     // ModuleBase::matrix diff_occ_num = ( this->occ_number );
     // this->occ_number = this->param_occ_num->get_occ_number();
@@ -257,9 +257,11 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     auto num = std::max_element(diff_rate.begin(), diff_rate.end());
     this->diff_rate_max = *num;
     
+    if( iter%10 == 1 )
+    {
+        rdmft::printMatrix_pointer(temp_occ.nr, temp_occ.nc, diff_occ_num.data(), "after opti, diff_occ_num", 5);
+    }
 
-    rdmft::printMatrix_pointer(temp_occ.nr, temp_occ.nc, diff_occ_num.data(), "after opti, diff_occ_num", 5);
-    
     this->Etotal_iter.push_back(this->phi_0);
     ++this->iter;
 
@@ -901,7 +903,7 @@ void LineSearch_ONs<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vect
 {
     if( x_new_ptr != nullptr ) { this->cal_phi( *x_new_ptr ); }
 
-    std::cout << "\n******\n" << "in cal_dE_dx" << std::endl;
+    // std::cout << "\n******\n" << "in cal_dE_dx" << std::endl;
 
     // rdmft cal dE_docc_num
     this->rdmft_solver->cal_E_grad_occ_num();
@@ -917,11 +919,11 @@ void LineSearch_ONs<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vect
         norm_dE_dx += dE_dx_new[i] * dE_dx_new[i];
     }
     norm_dE_dx = std::sqrt(norm_dE_dx);
-    std::cout << "\n***\nin ls, norm_dE_dx: " << norm_dE_dx  << "\n***\n" << std::endl;
+    // std::cout << "\n***\nin ls, norm_dE_dx: " << norm_dE_dx  << "\n***\n" << std::endl;
 
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, dE_dx_new.data(), "look, dE_dx_new");
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->var_x.data(), "now var_x", 10);
-    std::cout << "\n******\n" << std::endl;
+    // std::cout << "\n******\n" << std::endl;
 }
 
 
@@ -929,7 +931,7 @@ template<typename TK, typename TR>
 void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 {
     // get pk: PARAM_ONs provide var_x and dE_dx to BFGS
-    if( PARAM.inp.precond_occ_num )
+    if( PARAM.inp.precond_occ_num && this->iter > 5 )
     {
         std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
         std::vector<double> d2E_dx2(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);

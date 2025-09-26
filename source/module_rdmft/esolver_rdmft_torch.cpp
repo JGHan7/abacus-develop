@@ -855,37 +855,40 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dx(torch::Tensor& dE_dx_tensor, const t
 
     // *************** test precondtion ***************** //
     // This is wrong. Taking BFGS/LBFGS as an example, this preprocessing should only affect the search direction pk = -Hk*(f_grad_xk/f_grad2_xk), but not yk = f_grad_xk+1 - f_grad_xk
-    std::vector<double> dE_dx_precond = this->dE_dx;
-    double norm_dE_dx = 0.0;
-    double norm_dE_dx_precond = 0.0;
-
-    std::vector<double> d2E_dx2(this->nk_total*PARAM.inp.nbands, 0.0);
-    this->ebi.get_d2E_dx2(dE_docc_num, d2E_dx2);
-    for(int i=0; i<this->dE_dx.size(); ++i)
+    if( PARAM.inp.precond_occ_num )
     {
-        // dE_dx_precond[i] /= std::max( 1e-8, std::abs(d2E_dx2[i]) );
-        dE_dx_precond[i] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dx2[i]) ) );
+        std::vector<double> dE_dx_precond = this->dE_dx;
+        double norm_dE_dx = 0.0;
+        double norm_dE_dx_precond = 0.0;
 
-        norm_dE_dx += this->dE_dx[i] * this->dE_dx[i];
-        norm_dE_dx_precond += dE_dx_precond[i] * dE_dx_precond[i];
-    }
-    norm_dE_dx = std::sqrt(norm_dE_dx);
-    norm_dE_dx_precond = std::sqrt(norm_dE_dx_precond);
-
-    if( norm_dE_dx > 1e-7 && norm_dE_dx_precond < 1e-7 )
-    {
-        double factor = norm_dE_dx / norm_dE_dx_precond;
+        std::vector<double> d2E_dx2(this->nk_total*PARAM.inp.nbands, 0.0);
+        this->ebi.get_d2E_dx2(dE_docc_num, d2E_dx2);
         for(int i=0; i<this->dE_dx.size(); ++i)
         {
-            this->dE_dx[i] =  dE_dx_precond[i] * factor;
-        }
-    }
-    else
-    {
-        this->dE_dx = dE_dx_precond;
-    }
+            // dE_dx_precond[i] /= std::max( 1e-8, std::abs(d2E_dx2[i]) );
+            dE_dx_precond[i] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dx2[i]) ) );
 
-    std::cout << "\n***\nnorm_dE_dx: " << norm_dE_dx << "\nnorm_dE_dx_precond: " << norm_dE_dx_precond << "\n***\n" << std::endl;
+            norm_dE_dx += this->dE_dx[i] * this->dE_dx[i];
+            norm_dE_dx_precond += dE_dx_precond[i] * dE_dx_precond[i];
+        }
+        norm_dE_dx = std::sqrt(norm_dE_dx);
+        norm_dE_dx_precond = std::sqrt(norm_dE_dx_precond);
+
+        if( norm_dE_dx > 1e-7 && norm_dE_dx_precond < 1e-7 )
+        {
+            double factor = norm_dE_dx / norm_dE_dx_precond;
+            for(int i=0; i<this->dE_dx.size(); ++i)
+            {
+                this->dE_dx[i] =  dE_dx_precond[i] * factor;
+            }
+        }
+        else
+        {
+            this->dE_dx = dE_dx_precond;
+        }
+
+        std::cout << "\n***\nnorm_dE_dx: " << norm_dE_dx << "\nnorm_dE_dx_precond: " << norm_dE_dx_precond << "\n***\n" << std::endl;
+    }
 
     // rdmft::printMatrix_pointer(this->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2");
 
@@ -931,23 +934,25 @@ void ESolver_RDMFT_Torch<TK, TR>::cal_dE_dR(torch::Tensor& dE_dR_tensor_ik, cons
 
         // *************** test precondtion ***************** //
         // This is wrong. Taking BFGS/LBFGS as an example, this preprocessing should only affect the search direction pk = -Hk*(f_grad_xk/f_grad2_xk), but not yk = f_grad_xk+1 - f_grad_xk
-        this->rdmft_solver.cal_E_grad2_Rpq(ik, d2E_dR2_local);
-
-        rdmft::collect_vec(this->para_Fij, dE_dR_local, dE_dR_global[ik]);
-        TK norm_dE_dR = 0.0;
-        for(int i=0; i<this->dE_dR_global[ik].size(); ++i)
+        if( PARAM.inp.precond_orb )
         {
-            norm_dE_dR += std::norm(this->dE_dR_global[ik][i]);
-        }
-        norm_dE_dR = std::sqrt(norm_dE_dR);
-        std::cout << "\n***\nnorm_dE_dR: " << norm_dE_dR << "\n***\n" << std::endl;
+            this->rdmft_solver.cal_E_grad2_Rpq(ik, d2E_dR2_local);
 
-        for(int iloc=0; iloc<dE_dR_local.size(); ++iloc)
-        {
-            // dE_dR_local[iloc] /= std::max( 1e-8, std::abs(d2E_dR2_local[iloc]) );
-            dE_dR_local[iloc] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dR2_local[iloc]) ) );
-        }
+            rdmft::collect_vec(this->para_Fij, dE_dR_local, dE_dR_global[ik]);
+            TK norm_dE_dR = 0.0;
+            for(int i=0; i<this->dE_dR_global[ik].size(); ++i)
+            {
+                norm_dE_dR += std::norm(this->dE_dR_global[ik][i]);
+            }
+            norm_dE_dR = std::sqrt(norm_dE_dR);
+            std::cout << "\n***\nnorm_dE_dR: " << norm_dE_dR << "\n***\n" << std::endl;
 
+            for(int iloc=0; iloc<dE_dR_local.size(); ++iloc)
+            {
+                // dE_dR_local[iloc] /= std::max( 1e-8, std::abs(d2E_dR2_local[iloc]) );
+                dE_dR_local[iloc] /= std::sqrt( std::max( 1e-8, std::abs(d2E_dR2_local[iloc]) ) );
+            }
+        }
 
         // *************** test precondtion ***************** //
 

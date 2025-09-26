@@ -81,7 +81,7 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
 
         this->R_optimizer[ik] = std::make_unique< rdmft::BFGS_Opti<TK> >();
         this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, this->nk_total );
-        this->ls[ik] = std::make_unique< rdmft::LineSearch<TK> >();
+        this->ls[ik] = std::make_unique< rdmft::LineSearch<double> >();
 
         this->dE_dR_global[ik].resize(PARAM.inp.nbands * PARAM.inp.nbands, 0.0);
         this->dE_dthetaR_global[ik].resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
@@ -105,6 +105,8 @@ void LineSearch_NOs<TK, TR>::restart_opti()
     this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
     for(int ik=0; ik<this->nk_total; ++ik)
     {
+        this->init_step_k[ik] = 1.0;
+        this->phi_0_k[ik] = this->rdmft_solver->Etotal;
         this->Ek_iter[ik].clear();
         this->Ek_iter[ik].push_back(this->rdmft_solver->Etotal);
     }
@@ -147,7 +149,7 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
         {
             this->init_step_k[ik] = 1.01 * 2.0 * ( this->Ek_iter[ik].back() - this->Ek_iter[ik][this->Ek_iter[ik].size() - 2] ) / this->dphi_0_k[ik];
             this->init_step_k[ik] = std::min(1.0, init_step_k[ik]);
-            std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+            // std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
         }
 
         auto phi = [this, ik](const double trial_alpha)
@@ -176,6 +178,7 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
         // use the final_step_size to update 
         this->phi_0_k[ik] = phi(this->step_size_k[ik]);
         this->Ek_iter[ik].push_back(this->phi_0_k[ik]);
+        std::cout << "\n" << "the final step_size by lineSearch_NOs: " << step_size_k[ik] << "\n" << std::endl;
 
         // 
         torch::Tensor pk_tensor = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<TK>());
@@ -348,7 +351,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
         // rdmft::tensor2vector(this->thetaR[jk], thetaR_vec); this->var_thetaR_for_bfgs[ik]
         rdmft::tensor2vector(this->var_thetaR_for_bfgs[jk], thetaR_vec);
         // get pk: provide thetaR and dE_dthetaR to BFGS
-        if( PARAM.inp.precond_orb )
+        if( PARAM.inp.precond_orb && this->iter >= 5  )
         {
             // get d2E_dR2
             this->rdmft_solver->cal_E_grad2_Rpq(jk, d2E_dR2_local);
