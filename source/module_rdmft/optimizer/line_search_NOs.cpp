@@ -46,8 +46,10 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
     this->var_thetaR_for_bfgs.resize(this->nk_total);
 
     this->R_optimizer.resize(this->nk_total);
+    this->ls.resize(this->nk_total);
     this->thetaR.resize(nk_total);
     this->R_tensor.resize(this->nk_total);
+    this->dE_dthetaR_tensor.resize(this->nk_total);
     this->dE_dR_global.resize(this->nk_total);
     this->dE_dthetaR_global.resize(this->nk_total);
     this->search_direction.resize(this->nk_total);
@@ -112,6 +114,7 @@ template<typename TK, typename TR>
 void LineSearch_NOs<TK, TR>::get_start_guess()
 {
     // get wfc0 by tensor type
+    this->restart_opti();
     std::vector<std::vector<TK>> wfc_vec(this->nk_total);
     for(int ik=0; ik<this->nk_total; ++ik)
     {
@@ -124,10 +127,10 @@ void LineSearch_NOs<TK, TR>::get_start_guess()
 template<typename TK, typename TR>
 double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 {
-    if( start_guess )
-    {
-        this->restart_opti();
-    }
+    // if( start_guess )
+    // {
+    //     this->restart_opti();
+    // }
     bool new_landscape = (this->iter == 0) ? true: false;
 
 

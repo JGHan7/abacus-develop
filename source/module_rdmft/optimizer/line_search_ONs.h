@@ -36,6 +36,7 @@ class LineSearch_ONs
 
     // temp?
     std::vector<double>* get_var_x() { return &this->var_x; }
+    ModuleBase::matrix get_occ_num() { return this->occ_number; }
 
     // //! parameters in strong wolfe or wolfe conditions
     // double ls_wolfe_c1 = 0.0;

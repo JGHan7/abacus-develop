@@ -124,7 +124,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     {
         this->data_x.resize(this->dim_x, 0.0);
         this->df_dx.resize(this->dim_x, 0.0);
-        this->bfgs_opti_x.init(1, this->dim_x);
+        this->bfgs_opti_x.init(this->dim_x, 1);
         this->pk.resize(this->dim_x, 0.0);
     }
 
@@ -512,7 +512,62 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     }
     else if( PARAM.inp.rdmft_orb_opti == "bfgs" || PARAM.inp.rdmft_orb_opti == "cg" )
     {
-        ;
+        
+        double Etotal_old = this->rdmft_solver.Etotal;
+        for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
+        {
+            // // record the occ_num obtained from the previous optimization
+            ModuleBase::matrix occ_num_old = this->ls_opti_occ_num.get_occ_num();
+
+            // optimize occ_num
+            double diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
+            double E_new1 = this->rdmft_solver.Etotal;
+
+            // 
+            this->rdmft_solver.update_elec( &occ_num_old, nullptr );
+
+            // optimize orb
+            double E_new2 = this->ls_opti_orb.do_line_search();
+
+            // "optimize occ_num"
+            ModuleBase::matrix occ_num_new = this->ls_opti_occ_num.get_occ_num();
+            this->rdmft_solver.update_elec( &occ_num_new, nullptr );
+            
+
+            double diff_E1 = E_new1 - Etotal_old;
+            double diff_E2 = E_new2 - Etotal_old;
+            double diff_E_all =  this->rdmft_solver.cal_Energy() - Etotal_old;
+            Etotal_old = this->rdmft_solver.Etotal;
+
+            std::cout << "\n******\nniter of rdmft: " << iter 
+                        << std::fixed << std::setprecision(15);
+            std::cout << "\n\nEtotal_rdmft by opti ONs: " << E_new1
+                        << "\ndiff_E: " << diff_E1 
+                        << "\ndiff_occ_num_max: " << diff_occ_num_max
+                        << "\n\nEtotal_rdmft by opti NOs: " << E_new2
+                        << "\ndiff_E: " << diff_E2
+                        << "\n\ndiff_E_all: " << diff_E_all
+                        // << "\ndiff_DM_max: " << this->diff_DM_max
+                        // << "\n\nmax_off_diag_F: " << this->max_off_diag_Fock
+                        // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
+                        // << "\n\ndiff_wfc_max: " << this->diff_wfc_max
+                        << std::endl;
+
+            if( iter%10 == 1 )
+            {
+                rdmft::printMatrix_pointer(this->rdmft_solver.nk_total, PARAM.inp.nbands, this->rdmft_solver.occ_number.c, "occ_number", 10);
+            }
+            std::cout << "******" << std::endl << std::defaultfloat;
+
+            if( diff_occ_num_max < this->occ_num_thr && std::abs(diff_E_all) < 1e-7 && iter > 10 )
+            {
+                break;
+            }
+
+        }
+
+        this->print_info();
+
     }
 
     // this->print_info();
@@ -656,6 +711,9 @@ void ESolver_RDMFT<TK, TR>::get_start_guess(UnitCell& ucell, const int istep)
         std::cout << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
 
         this->ls_opti_orb.get_start_guess();
+
+        // optimize occ_number
+        this->opti_occ_num(this->dft_optimize);
     }
 
 
