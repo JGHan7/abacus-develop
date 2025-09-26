@@ -136,7 +136,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     this->cal_dE_dx(this->dE_dx);
 
     this->cal_pk_dphi0( (start_guess || this->iter == 0) );
-    std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
+    // std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
     // if( std::abs(this->dphi_0) < 1e-8 )
     // {
     //     std::cout << "\n" << "dphi_0 is too small !!!!!!!  occ_num convergence ? " << "\n" << std::endl;
@@ -931,7 +931,7 @@ template<typename TK, typename TR>
 void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 {
     // get pk: PARAM_ONs provide var_x and dE_dx to BFGS
-    if( PARAM.inp.precond_occ_num && this->iter > 5 )
+    if( PARAM.inp.precond_occ_num && this->iter > 5 ) // && this->iter > 5 
     {
         std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
         std::vector<double> d2E_dx2(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);

@@ -143,7 +143,7 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
         // as well as the state update of rdmft_solver (k-point update or overall update) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         this->cal_dE_dR(&ik);
         this->cal_pk_dphi0(new_landscape, &ik);
-        std::cout << "\n******\n" << "ls, dphi_0_k: " << this->dphi_0_k[ik] << "\n******\n" << std::endl;
+        // std::cout << "\n******\n" << "ls, dphi_0_k: " << this->dphi_0_k[ik] << "\n******\n" << std::endl;
 
         if( this->iter != 0 )
         {
@@ -351,7 +351,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
         // rdmft::tensor2vector(this->thetaR[jk], thetaR_vec); this->var_thetaR_for_bfgs[ik]
         rdmft::tensor2vector(this->var_thetaR_for_bfgs[jk], thetaR_vec);
         // get pk: provide thetaR and dE_dthetaR to BFGS
-        if( PARAM.inp.precond_orb && this->iter >= 5  )
+        if( PARAM.inp.precond_orb && this->iter >= 5 ) // && this->iter >= 5
         {
             // get d2E_dR2
             this->rdmft_solver->cal_E_grad2_Rpq(jk, d2E_dR2_local);

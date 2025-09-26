@@ -514,6 +514,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
     {
         
         double Etotal_old = this->rdmft_solver.Etotal;
+        int E1_rise = 0;
+        int E2_rise = 0;
         for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
         {
             // // record the occ_num obtained from the previous optimization
@@ -538,6 +540,26 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             double diff_E2 = E_new2 - Etotal_old;
             double diff_E_all =  this->rdmft_solver.cal_Energy() - Etotal_old;
             Etotal_old = this->rdmft_solver.Etotal;
+
+            if( diff_E1 > 0 )
+            {
+                ++E1_rise;
+                if( E1_rise >= 3 )
+                {
+                    // restart of turn-off precond ?
+                    this->ls_opti_occ_num.restart_opti();
+                    E1_rise = 0;
+                }
+            }
+            if( diff_E2 > 0 )
+            {
+                ++E2_rise;
+                if( E2_rise >= 3 )
+                {
+                    this->ls_opti_orb.restart_opti();
+                    E2_rise = 0;
+                }
+            }
 
             std::cout << "\n******\nniter of rdmft: " << iter 
                         << std::fixed << std::setprecision(15);
