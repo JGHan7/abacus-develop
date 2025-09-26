@@ -518,23 +518,26 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
         int E2_rise = 0;
         for(int iter=1; iter<=PARAM.inp.scf_nmax; ++iter)
         {
-            // // record the occ_num obtained from the previous optimization
+            // record the occ_num obtained from the previous optimization
             ModuleBase::matrix occ_num_old = this->ls_opti_occ_num.get_occ_num();
 
             // optimize occ_num
             double diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
             double E_new1 = this->rdmft_solver.Etotal;
 
-            // 
-            this->rdmft_solver.update_elec( &occ_num_old, nullptr );
-
-            // optimize orb
+            // optimize NOs using the gradient before optimizing ONs (the gradient of the previous step)
+            if( !this->dft_optimize )
+            {
+                this->rdmft_solver.update_elec( &occ_num_old, nullptr );
+            }
             double E_new2 = this->ls_opti_orb.do_line_search();
 
             // "optimize occ_num"
-            ModuleBase::matrix occ_num_new = this->ls_opti_occ_num.get_occ_num();
-            this->rdmft_solver.update_elec( &occ_num_new, nullptr );
-            
+            if( !this->dft_optimize )
+            {
+                ModuleBase::matrix occ_num_new = this->ls_opti_occ_num.get_occ_num();
+                this->rdmft_solver.update_elec( &occ_num_new, nullptr );
+            }
 
             double diff_E1 = E_new1 - Etotal_old;
             double diff_E2 = E_new2 - Etotal_old;
@@ -787,7 +790,7 @@ double ESolver_RDMFT<TK, TR>::update_occ_num_dft(RDMFT<TK, TR>& rdmft_solver_in)
     }
     rdmft_solver_in.update_elec(&occ_number_ks);
 
-    return 1.0;
+    return 0.0;
 
 }
 

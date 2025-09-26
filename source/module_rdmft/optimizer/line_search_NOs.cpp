@@ -149,7 +149,7 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
         {
             this->init_step_k[ik] = 1.01 * 2.0 * ( this->Ek_iter[ik].back() - this->Ek_iter[ik][this->Ek_iter[ik].size() - 2] ) / this->dphi_0_k[ik];
             this->init_step_k[ik] = std::min(1.0, init_step_k[ik]);
-            // std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+            std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
         }
 
         auto phi = [this, ik](const double trial_alpha)

@@ -148,7 +148,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
         this->init_step = 1.01 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
         this->init_step = std::min(1.0, this->init_step);
         // this->init_step = 1.0 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
-        // std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+        std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
     }
 
     std::vector<double> var_x_old = this->var_x;

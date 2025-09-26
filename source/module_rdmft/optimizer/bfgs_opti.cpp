@@ -144,8 +144,8 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
         std::vector<TX> dE_dx_precond = dE_dx_new;
         for(int i=0; i<dE_dx_precond.size(); ++i)
         {
-            // dE_dx_precond[i] /= std::max( 1e-12, std::abs((*d2E_dx2)[i]) );
-            dE_dx_precond[i] /= std::sqrt( std::max( 1e-12, std::abs((*d2E_dx2)[i]) ) );
+            // dE_dx_precond[i] /= std::max( 1e-8, std::abs((*d2E_dx2)[i]) );
+            dE_dx_precond[i] /= std::sqrt( std::max( 1e-8, std::abs((*d2E_dx2)[i]) ) );
         }
         rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_precond.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', nega_one );
     }
