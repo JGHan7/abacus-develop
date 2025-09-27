@@ -29,10 +29,11 @@ BFGS_Opti<TX>::~BFGS_Opti()
 
 
 template<typename TX>
-void BFGS_Opti<TX>::init(const int dim_in, const int nk_total_in)
+void BFGS_Opti<TX>::init(const int dim_in, const int nk_total_in, const double precond_eps_in)
 {
 
     this->dim = dim_in;
+    this->precond_eps = precond_eps_in;
 
     // temp
     this->nk_total = nk_total_in;
@@ -135,19 +136,44 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
     // property: H = H^T, also depends on the initial guess H0!
     TX nega_one = -1.0;
-    if( d2E_dx2 == nullptr )
+    std::vector<TX> dE_dx_precond = dE_dx_new;
+    if( d2E_dx2 != nullptr )
     {
-        rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_new.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', nega_one );
-    }
-    else
-    {
-        std::vector<TX> dE_dx_precond = dE_dx_new;
         for(int i=0; i<dE_dx_precond.size(); ++i)
         {
-            // dE_dx_precond[i] /= std::max( 1e-8, std::abs((*d2E_dx2)[i]) );
-            dE_dx_precond[i] /= std::sqrt( std::max( 1e-8, std::abs((*d2E_dx2)[i]) ) );
+            // dE_dx_precond[i] /= std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) );
+            dE_dx_precond[i] /= std::sqrt( std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) ) );
         }
-        rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_precond.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', nega_one );
+    }
+    rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_precond.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', nega_one );
+    // if( d2E_dx2 == nullptr )
+    // {
+    //     rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_new.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', nega_one );
+    // }
+    // else
+    // {
+    //     std::vector<TX> dE_dx_precond = dE_dx_new;
+    //     for(int i=0; i<dE_dx_precond.size(); ++i)
+    //     {
+    //         // dE_dx_precond[i] /= std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) );
+    //         dE_dx_precond[i] /= std::sqrt( std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) ) );
+    //     }
+    //     rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_precond.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', nega_one );
+    // }
+
+    // 
+    TX gT_pk = 0.0;
+    const char op_tran = std::is_same<TX, std::complex<double>>::value ? 'C' : 'T';
+    rdmft::Tgemm_lapack( dE_dx_new.data(), this->search_direction.data(), &gT_pk, 1, 1, this->dim, op_tran, 'N' );
+    if( std::real(gT_pk) >= 0 )
+    {
+        std::cout << "******\n" << "test !!!: in BFGS_Opti::get_pk(), real(gT_pk) >= 0: " << gT_pk << "\n******" << std::endl;
+        this->cal_Hk(dE_dx_new, x_new, true);
+        for(int j=0; j<x_new.size(); ++j)
+        {
+            this->search_direction[j] = -dE_dx_precond[j];
+        }
+        ++this->num_restart_skip;
     }
 
     // update x, dE_dx, pass search_direction
@@ -220,6 +246,7 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
         rdmft::Tgemm_lapack(this->diff_grad.data(), this->diff_x.data(), &rho_temp, 1, 1, this->dim, op_tran, 'N');
         if( std::real(rho_temp) < 1e-10 )
         {
+            ++this->num_restart_skip;
             return;
         }
         this->rho = 1.0/std::real(rho_temp);

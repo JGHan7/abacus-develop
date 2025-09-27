@@ -39,6 +39,9 @@ class LineSearch_NOs
     std::vector<double> Etotal_iter;
     std::vector<std::vector<double>> Ek_iter;
     int iter = 0;
+    int num_restart = 0;
+
+    int get_num_bfgs_restart() { return this->R_optimizer[0]->num_restart_skip; }
 
 
   protected:

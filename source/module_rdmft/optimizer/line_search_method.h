@@ -61,12 +61,9 @@ class LineSearch
 
     //! get or modify line search parameters
     Options get_options();
-    // {
-    //     return Options(this->ls_wolfe_c1, this->ls_wolfe_c2,
-    //                    this->ls_armijo_c1, this->ls_armijo_c2,
-    //                    this->max_step_size, this->min_step_size,
-    //                    this->ls_condition);
-    // }
+
+    //！ the total number of times the cal_phi() function is called during the entire optimization period
+    int num_cal_phi = 0;
 
 
   protected:
@@ -140,9 +137,6 @@ class LineSearch
     double dphi_0 = 0.0;
 
   private:
-
-    //！ the total number of times the cal_phi() function is called during the entire optimization period
-    int num_cal_phi = 0;
 
     //! the number of times cal_phi() is called during a line search.
     int ls_times = 0;

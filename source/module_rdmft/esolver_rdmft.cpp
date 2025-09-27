@@ -593,6 +593,14 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
         this->print_info();
 
+        std::cout << "\n******\nNumber of NOs restart_opti = " << this->ls_opti_orb.num_restart 
+                    << "\nNumber of ONs restart_opti = " << this->ls_opti_occ_num.num_restart 
+                    // << "\n\nNumber of line search(NOs) = " << this->ls_opti_orb.get_num_bfgs_restart()
+                    // << "\nNumber of line search(ONs) = " << this->ls_opti_occ_num.get_num_bfgs_restart()
+                    << "\n\nNumber of BFGS(NOs) restart = " << this->ls_opti_orb.get_num_bfgs_restart()
+                    << "\nNumber of BFGS(ONs) restart = " << this->ls_opti_occ_num.get_num_bfgs_restart()
+                    << "\n******\n" << std::endl;
+
     }
 
     // this->print_info();

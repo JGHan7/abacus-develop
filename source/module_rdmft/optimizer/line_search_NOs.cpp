@@ -80,7 +80,7 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
         dE_dwfc_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
 
         this->R_optimizer[ik] = std::make_unique< rdmft::BFGS_Opti<TK> >();
-        this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, this->nk_total );
+        this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, this->nk_total, 1e-12 );
         this->ls[ik] = std::make_unique< rdmft::LineSearch<double> >();
 
         this->dE_dR_global[ik].resize(PARAM.inp.nbands * PARAM.inp.nbands, 0.0);
@@ -110,6 +110,7 @@ void LineSearch_NOs<TK, TR>::restart_opti()
         this->Ek_iter[ik].clear();
         this->Ek_iter[ik].push_back(this->rdmft_solver->Etotal);
     }
+    ++this->num_restart;
 }
 
 template<typename TK, typename TR>
@@ -351,7 +352,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
         // rdmft::tensor2vector(this->thetaR[jk], thetaR_vec); this->var_thetaR_for_bfgs[ik]
         rdmft::tensor2vector(this->var_thetaR_for_bfgs[jk], thetaR_vec);
         // get pk: provide thetaR and dE_dthetaR to BFGS
-        if( PARAM.inp.precond_orb && this->iter >= 5 ) // && this->iter >= 5
+        if( PARAM.inp.precond_orb ) // && this->iter >= 5
         {
             // get d2E_dR2
             this->rdmft_solver->cal_E_grad2_Rpq(jk, d2E_dR2_local);

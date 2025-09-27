@@ -27,7 +27,7 @@ class BFGS_Opti
     BFGS_Opti();
     ~BFGS_Opti();
 
-    void init(const int dim_in, const int nk_total_in);
+    void init(const int dim_in, const int nk_total_in, const double precond_eps_in = 1e-8);
 
     //! pk is the search direction
     void get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk,
@@ -39,7 +39,7 @@ class BFGS_Opti
     // std::vector<TX> x0, x1, diff_x;
     // std::vector<TX> dE_dx0, dE_dx1, diff_grad;
 
-
+    int num_restart_skip = 0;
 
   protected:
 
@@ -76,7 +76,7 @@ class BFGS_Opti
     void cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape = false);
 
 
-
+    double precond_eps = 1e-8;
 
 
 

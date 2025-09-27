@@ -35,7 +35,7 @@ void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_i
 {
     this->rdmft_solver = rdmft_in;
     
-    this->bfgs_opti_x.init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total);
+    this->bfgs_opti_x.init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total, 1e-10);
     if(PARAM.inp.occ_num_func == "softmax")
     {
         this->param_occ_num = new rdmft::SOFTMAX();
@@ -85,6 +85,7 @@ void LineSearch_ONs<TK, TR>::restart_opti()
     this->Etotal_iter.clear();
     this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
     this->phi_0 = this->rdmft_solver->Etotal;
+    ++this->num_restart;
 }
 
 template<typename TK, typename TR>
@@ -106,7 +107,7 @@ void LineSearch_ONs<TK, TR>::get_start_guess()
 
     this->occ_number = this->param_occ_num->get_occ_number();
     this->rdmft_solver->update_elec( &(this->occ_number) );
-    this->phi_0 = this->rdmft_solver->cal_Energy();
+    this->restart_opti();
 }
 
 
@@ -118,11 +119,6 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     {
         this->get_start_guess();
         std::cout << "\n******\n" << "start_guess: ls, 0.0" << "\n******\n" << std::endl;
-
-        this->init_step = 1.0;
-        this->Etotal_iter.clear();
-        this->phi_0 = this->rdmft_solver->Etotal;
-        this->Etotal_iter.push_back(this->rdmft_solver->Etotal);
 
         // return 0.0; // test !!!!!!!!!!
     }
@@ -931,7 +927,7 @@ template<typename TK, typename TR>
 void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 {
     // get pk: PARAM_ONs provide var_x and dE_dx to BFGS
-    if( PARAM.inp.precond_occ_num && this->iter > 5 ) // && this->iter > 5 
+    if( PARAM.inp.precond_occ_num ) // && this->iter > 5 
     {
         std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
         std::vector<double> d2E_dx2(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);

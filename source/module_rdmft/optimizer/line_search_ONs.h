@@ -31,6 +31,10 @@ class LineSearch_ONs
 
     std::vector<double> Etotal_iter;
     int iter = 0;
+    int num_restart = 0;
+
+    int get_num_bfgs_restart() { return this->bfgs_opti_x.num_restart_skip; }
+
     // temp
     double diff_rate_max = 1.0;
 

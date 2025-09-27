@@ -75,7 +75,7 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
     {
         this->step_size = PARAM.inp.ls_fixed_step;
     }
-    this->step_size = std::max(this->step_size, this->min_step_size);
+    // this->step_size = std::max(this->step_size, this->min_step_size);
     std::cout << "\n***\nin ls, ls_time: " << this->ls_times  << "\n***\n" << std::endl;
 
     return this->step_size;
