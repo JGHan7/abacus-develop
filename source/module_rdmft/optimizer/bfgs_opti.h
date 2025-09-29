@@ -41,6 +41,10 @@ class BFGS_Opti
 
     int num_restart_skip = 0;
 
+    bool scaling_H0 = true;
+    TX scaling_gamma0 = 1.0;
+    int iter = 0;
+
   protected:
 
     // temp
@@ -73,7 +77,7 @@ class BFGS_Opti
     std::vector<TX> rho_diffX_diffGrad, rho_diffX_diffX_T;
 
 
-    void cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape = false);
+    void cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape = false, const std::vector<TX>* d2E_dx2 = nullptr);
 
 
     double precond_eps = 1e-8;

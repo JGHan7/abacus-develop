@@ -34,6 +34,8 @@ void BFGS_Opti<TX>::init(const int dim_in, const int nk_total_in, const double p
 
     this->dim = dim_in;
     this->precond_eps = precond_eps_in;
+    this->iter = 0;
+    this->scaling_H0 = true;
 
     // temp
     this->nk_total = nk_total_in;
@@ -61,7 +63,7 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
     // set some vars zero?
 
     // get Hk
-    this->cal_Hk(dE_dx_new, x_new, new_landscape);
+    this->cal_Hk(dE_dx_new, x_new, new_landscape, d2E_dx2);
     // if( new_landscape || a_equal_b(x_new, this->var_x) )
     // {
     //     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
@@ -183,6 +185,7 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
         this->dE_dx[j] = dE_dx_new[j];
         pk[j] = this->search_direction[j];
     }
+    ++this->iter;
 
 }
 
@@ -209,7 +212,7 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
 
 
 template<typename TX>
-void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape)
+void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape, const std::vector<TX>* d2E_dx2)
 {
     if( new_landscape )
     {
@@ -222,6 +225,7 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
         {
             Hk[i*(this->dim) + i] = 1.0;
         }
+        this->iter = 0;
     }
     else
     {
@@ -250,6 +254,26 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
             return;
         }
         this->rho = 1.0/std::real(rho_temp);
+
+        // // scaling H0
+        // if( this->scaling_H0 && this->iter == 1)
+        // {
+        //     rdmft::Tgemm_lapack(this->diff_grad.data(), this->diff_grad.data(), &this->scaling_gamma0, 1, 1, this->dim, op_tran, 'N');
+        //     this->scaling_gamma0 = std::real(rho_temp) / this->scaling_gamma0;
+
+        //     for(int i=0; i<this->dim; ++i)
+        //     {
+        //         if( d2E_dx2 == nullptr )
+        //         {
+        //             Hk[i*(this->dim) + i] *= this->scaling_gamma0;
+        //         }
+        //         else
+        //         {
+        //             Hk[i*(this->dim) + i] *= this->scaling_gamma0 / std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) );
+        //         }
+        //     }
+        //     std::cout << "******\n" << "in BFGS_Opti::get_pk(), this->scaling_gamma0: " << this->scaling_gamma0 << "\n******" << std::endl;
+        // }
 
         std::cout << "******\n" << "in BFGS_Opti::get_pk(), 1.0/rho = y^/dagger s: " << rho_temp << "\n******" << std::endl;
         // std::cout << "******\n" << "in BFGS_Opti::get_pk(), rho: " << this->rho << "\n******" << std::endl;

@@ -35,7 +35,7 @@ void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_i
 {
     this->rdmft_solver = rdmft_in;
     
-    this->bfgs_opti_x.init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total, 1e-10);
+    this->bfgs_opti_x.init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total, 1e-8);
     if(PARAM.inp.occ_num_func == "softmax")
     {
         this->param_occ_num = new rdmft::SOFTMAX();
