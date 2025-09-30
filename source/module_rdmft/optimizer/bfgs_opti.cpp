@@ -64,71 +64,6 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
 
     // get Hk
     this->cal_Hk(dE_dx_new, x_new, new_landscape, d2E_dx2);
-    // if( new_landscape || a_equal_b(x_new, this->var_x) )
-    // {
-    //     std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
-    //     std::fill(this->dE_dx.begin(), this->dE_dx.end(), 0.0);
-    //     std::fill(this->search_direction.begin(), this->search_direction.end(), 0.0);
-    //     // identity matrix or other method to initialize H0
-    //     std::fill(Hk.begin(), Hk.end(), 0.0);
-    //     for(int i=0; i<this->dim; ++i) { Hk[i*(this->dim) + i] = 1.0; }
-
-    //     // delete in the future
-    //     if( !new_landscape )
-    //     {
-    //         std::cout << "\n" << "BFGS: the increase in var_x is too small !!!!!!!!" << "\n" << std::endl;
-    //         // assert(0);
-    //     }
-    // }
-    // else
-    // {
-    //     for(int j=0; j<x_new.size(); ++j)
-    //     {
-    //         // diff_x, sk = x_k+1 - x_k
-    //         this->diff_x[j] = x_new[j] - this->var_x[j];
-    //         // diff_grad, yk = (dE_dx)_k+1 - (dE_dx)_k
-    //         this->diff_grad[j] = dE_dx_new[j] - this->dE_dx[j];
-    //     }
-
-    //     if( PARAM.inp.print_BFGS_Hk )
-    //     {
-    //         rdmft::printMatrix_pointer(nk_total, nbands, this->diff_x.data(), "in BFGS_Opti, diff_x");
-    //         rdmft::printMatrix_pointer(nk_total, nbands, this->diff_grad.data(), "in BFGS_Opti, diff_grad");
-    //     }
-
-    //     char op_tran = 'T';
-    //     if constexpr (std::is_same<TX, std::complex<double>>::value)
-    //     {
-    //         op_tran = 'C';
-    //     }
-
-    //     // cal rho = 1/( diffGrad^T * diffX )
-    //     TX rho_temp = 0.0;
-    //     rdmft::Tgemm_lapack(this->diff_grad.data(), this->diff_x.data(), &rho_temp, 1, 1, this->dim, op_tran, 'N');
-    //     this->rho = 1.0/std::real(rho_temp);
-
-    //     if( std::real(rho_temp) < 1e-10 ) { } //////////////////////////
-
-    //     std::cout << "******\n" << "in BFGS_Opti::get_pk(), 1/rho = y^/dagger s: " << rho_temp << "\n******" << std::endl;
-    //     std::cout << "******\n" << "in BFGS_Opti::get_pk(), rho: " << this->rho << "\n******" << std::endl;
-
-    //     rho_temp = this->rho;
-    //     // cal rho * diffX * diffGrad^T, I - rho * diffX * diffGrad^T
-    //     rdmft::Tgemm_lapack( this->diff_x.data(), this->diff_grad.data(), this->rho_diffX_diffGrad.data(), this->dim, this->dim, 1, 'N', op_tran, -(rho_temp) );
-    //     for(int i=0; i<this->dim; ++i) { this->rho_diffX_diffGrad[i*this->dim + i] += 1.0; }
-
-    //     // cal rho * diffX * diffX^T
-    //     rdmft::Tgemm_lapack( this->diff_x.data(), this->diff_x.data(), this->rho_diffX_diffX_T.data(), this->dim, this->dim, 1, 'N', op_tran, rho_temp );
-
-    //     // cal H_k+1 = (I - rho * diffX * diffGrad^T) * H_k * (I - rho * diffX * diffGrad^T)^T + rho * diffX * diffX^T
-    //     std::vector<TX> H_tmp = this->Hk;
-    //     rdmft::Tgemm_lapack( this->rho_diffX_diffGrad.data(), this->Hk.data(), H_tmp.data(), this->dim, this->dim, this->dim );
-    //     rdmft::Tgemm_lapack( H_tmp.data(), this->rho_diffX_diffGrad.data(), this->Hk.data(), this->dim, this->dim, this->dim, 'N', op_tran );
-    //     // rdmft::Tgemm_lapack( this->rho_diffX_diffGrad.data(), this->Hk.data(), this->Hk.data(), this->dim, this->dim, this->dim );
-    //     // rdmft::Tgemm_lapack( this->Hk.data(), this->rho_diffX_diffGrad.data(), this->Hk.data(), this->dim, this->dim, this->dim, 'N', op_tran );
-    //     for(int i=0; i<this->Hk.size(); ++i) { this->Hk[i] += this->rho_diffX_diffX_T[i]; }
-
-    // }
 
     if( PARAM.inp.print_BFGS_Hk )
     {
@@ -149,20 +84,21 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
     }
     rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_precond.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', nega_one );
 
-    // // 
-    // TX gT_pk = 0.0;
-    // const char op_tran = std::is_same<TX, std::complex<double>>::value ? 'C' : 'T';
-    // rdmft::Tgemm_lapack( dE_dx_precond.data(), this->search_direction.data(), &gT_pk, 1, 1, this->dim, op_tran, 'N' );
-    // if( std::real(gT_pk) >= 0 )
-    // {
-    //     std::cout << "******\n" << "test !!!: in BFGS_Opti::get_pk(), real(gT_pk) >= 0: " << gT_pk << "\n******" << std::endl;
-    //     // this->cal_Hk(dE_dx_new, x_new, true);
-    //     // for(int j=0; j<x_new.size(); ++j)
-    //     // {
-    //     //     this->search_direction[j] = -dE_dx_precond[j];
-    //     // }
-    //     // ++this->num_restart_skip;
-    // }
+    // consider whether to keep this code, is it necessary to keep it in the preprocessing case?
+    // determine whether the search direction pk is in the descending direction, if not, restart
+    TX gT_pk = 0.0;
+    const char op_tran = std::is_same<TX, std::complex<double>>::value ? 'C' : 'T';
+    rdmft::Tgemm_lapack( dE_dx_new.data(), this->search_direction.data(), &gT_pk, 1, 1, this->dim, op_tran, 'N' );
+    if( std::real(gT_pk) >= 0 )
+    {
+        std::cout << "******\n" << "test !!!: in BFGS_Opti::get_pk(), real(gT_pk) >= 0: " << gT_pk << "\n******" << std::endl;
+        this->cal_Hk(dE_dx_new, x_new, true, d2E_dx2);
+        for(int j=0; j<x_new.size(); ++j)
+        {
+            this->search_direction[j] = -dE_dx_precond[j];
+        }
+        ++this->num_restart_skip;
+    }
 
     // update x, dE_dx, pass search_direction
     for(int j=0; j<x_new.size(); ++j)
@@ -174,27 +110,6 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
     ++this->iter;
 
 }
-
-
-// template<typename TX>
-// void BFGS_Opti<TX>::get_start_guess(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk)
-// {
-//     // identity matrix or other method to initialize H0
-//     for(int i=0; i<this->dim; ++i) { Hk[i*(this->dim) + i] = 1.0; }
-
-//     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
-//     // property: H = H^T, also depends on the initial guess H0!
-//     rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_new.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', -1.0 );
-
-//     // update x, dE_dx, pass search_direction
-//     for(int j=0; j<x_new.size(); ++j)
-//     {
-//         this->var_x[j] = x_new[j];
-//         this->dE_dx[j] = dE_dx_new[j];
-//         pk[j] = this->search_direction[j];
-//     }
-
-// }
 
 
 template<typename TX>
@@ -209,7 +124,7 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
         std::fill(Hk.begin(), Hk.end(), 0.0);
         for(int i=0; i<this->dim; ++i)
         {
-            // consider and test again !!!
+            // // consider and test again !!!
             // if( d2E_dx2 == nullptr )
             // {
             //     Hk[i*(this->dim) + i] = 1.0 / std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) );
@@ -300,7 +215,25 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
 }
 
 
+// template<typename TX>
+// void BFGS_Opti<TX>::get_start_guess(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk)
+// {
+//     // identity matrix or other method to initialize H0
+//     for(int i=0; i<this->dim; ++i) { Hk[i*(this->dim) + i] = 1.0; }
 
+//     // cal search_direction, p_k+1 = -H_k+1 * (dE_dx)_k+1
+//     // property: H = H^T, also depends on the initial guess H0!
+//     rdmft::Tgemm_lapack( this->Hk.data(), dE_dx_new.data(), this->search_direction.data(), this->dim, 1, this->dim, 'N', 'N', -1.0 );
+
+//     // update x, dE_dx, pass search_direction
+//     for(int j=0; j<x_new.size(); ++j)
+//     {
+//         this->var_x[j] = x_new[j];
+//         this->dE_dx[j] = dE_dx_new[j];
+//         pk[j] = this->search_direction[j];
+//     }
+
+// }
 
 
 

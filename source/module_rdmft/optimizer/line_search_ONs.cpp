@@ -132,7 +132,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     this->cal_dE_dx(this->dE_dx);
 
     this->cal_pk_dphi0( (start_guess || this->iter == 0) );
-    // std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
+    std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
     // if( std::abs(this->dphi_0) < 1e-8 )
     // {
     //     std::cout << "\n" << "dphi_0 is too small !!!!!!!  occ_num convergence ? " << "\n" << std::endl;
@@ -142,7 +142,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     if( this->iter != 0 )
     {
         this->init_step = 1.01 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
-        this->init_step = std::min(1.0, this->init_step);
+        this->init_step = std::min(1.0, std::abs(this->init_step));
         // this->init_step = 1.0 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
         std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
     }

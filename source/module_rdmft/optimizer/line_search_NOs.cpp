@@ -80,7 +80,7 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
         dE_dwfc_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
 
         this->R_optimizer[ik] = std::make_unique< rdmft::BFGS_Opti<TK> >();
-        this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, this->nk_total, 1e-12 );
+        this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, this->nk_total, 1e-10 );
         this->ls[ik] = std::make_unique< rdmft::LineSearch<double> >();
 
         this->dE_dR_global[ik].resize(PARAM.inp.nbands * PARAM.inp.nbands, 0.0);
@@ -149,7 +149,7 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
         if( this->iter != 0 )
         {
             this->init_step_k[ik] = 1.01 * 2.0 * ( this->Ek_iter[ik].back() - this->Ek_iter[ik][this->Ek_iter[ik].size() - 2] ) / this->dphi_0_k[ik];
-            this->init_step_k[ik] = std::min(1.0, init_step_k[ik]);
+            this->init_step_k[ik] = std::min(1.0, std::abs(init_step_k[ik]));
             std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
         }
 

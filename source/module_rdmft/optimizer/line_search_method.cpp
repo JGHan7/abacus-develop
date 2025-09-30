@@ -57,7 +57,7 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
     this->phi_0 = phi_0_in;
     this->dphi_0 = dphi_0_in;
     this->max_elem_pk = max_elem_pk_in;
-    this->step_size = inital_step;
+    this->step_size = std::abs(inital_step);
 
     if(this->ls_condition == "swolfe")
     {
