@@ -35,7 +35,7 @@ void BFGS_Opti<TX>::init(const int dim_in, const int nk_total_in, const double p
     this->dim = dim_in;
     this->precond_eps = precond_eps_in;
     this->iter = 0;
-    this->scaling_H0 = true;
+    this->scaling_H0 = false;
 
     // temp
     this->nk_total = nk_total_in;

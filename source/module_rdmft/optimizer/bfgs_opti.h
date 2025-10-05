@@ -41,7 +41,7 @@ class BFGS_Opti
 
     int num_restart_skip = 0;
 
-    bool scaling_H0 = true;
+    bool scaling_H0 = false; // delete?
     TX scaling_gamma0 = 1.0;
     int iter = 0;
 
