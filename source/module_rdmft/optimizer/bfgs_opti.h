@@ -38,6 +38,7 @@ class BFGS_Opti
 
     // std::vector<TX> x0, x1, diff_x;
     // std::vector<TX> dE_dx0, dE_dx1, diff_grad;
+    void transport(const std::vector<TX>& diag_T);
 
     int num_restart_skip = 0;
 
@@ -82,7 +83,8 @@ class BFGS_Opti
 
     double precond_eps = 1e-8;
 
-
+    // test
+    std::vector<TX> transport_mat;
 
 
 };

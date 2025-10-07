@@ -684,6 +684,7 @@ struct Input_para
     bool small_rotation = true;
     bool precond_occ_num = false;
     bool precond_orb = false;
+    int precond_type = 1;
 
     // ==============   #Parameters (22.EXX PW) =====================
     // EXX for planewave basis, rhx0820 2025-03-10

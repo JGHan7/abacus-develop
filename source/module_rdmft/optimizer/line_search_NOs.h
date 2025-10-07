@@ -95,6 +95,9 @@ class LineSearch_NOs
 
     const double grad_factor = 1.0;
 
+    std::vector<TK> scaling_P; // test
+    std::vector< std::vector<TK> > scaling_P_old; // test
+
     //! the actual optimized parameters, only the optimized results of each step are stored (not affected by the intermediate values ​​of the line search)
     // std::vector< std::vector<TK> > var_thetaR;
     std::vector<torch::Tensor> var_thetaR_tensor;

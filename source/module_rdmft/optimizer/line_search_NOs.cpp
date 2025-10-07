@@ -41,6 +41,8 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
     
     this->opti_deltaR = PARAM.inp.small_rotation;
 
+    this->scaling_P_old.resize(this->nk_total);
+
     // this->var_thetaR.resize(this->nk_total);
     this->var_thetaR_tensor.resize(this->nk_total);
     this->var_thetaR_for_bfgs.resize(this->nk_total);
@@ -86,8 +88,12 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
         this->dE_dR_global[ik].resize(PARAM.inp.nbands * PARAM.inp.nbands, 0.0);
         this->dE_dthetaR_global[ik].resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
         this->search_direction[ik].resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
+
+        this->scaling_P_old[ik].resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
     }
 
+    this->scaling_P.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
+    
     this->wfc_new.resize(this->nk_total, this->ParaV->ncol_bands, this->ParaV->nrow);
     this->wfc_new.zero_out();
     this->wfc_old = this->wfc_new;
@@ -117,13 +123,20 @@ template<typename TK, typename TR>
 void LineSearch_NOs<TK, TR>::get_start_guess()
 {
     // get wfc0 by tensor type
-    this->restart_opti();
     std::vector<std::vector<TK>> wfc_vec(this->nk_total);
     for(int ik=0; ik<this->nk_total; ++ik)
     {
         rdmft::psi2vec(ik, *this->ParaV, this->rdmft_solver->wfc, wfc_vec[ik]);
         rdmft::vector2tensor( wfc_vec[ik], this->wfc_0_tensor[ik], {nbands64, nbasis64} );
     }
+
+    // perform a forward calculation before all optimizations begin
+    if( PARAM.inp.rdmft_auto_diff )
+    {
+        this->cal_phi(nullptr);
+    }
+
+    this->restart_opti();
 }
 
 
@@ -134,7 +147,9 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
     // {
     //     this->restart_opti();
     // }
+
     bool new_landscape = (this->iter == 0) ? true: false;
+    // bool new_landscape = (this->iter == 0 || (PARAM.inp.precond_type != 1 && this->iter%10 == 0) ) ? true: false;
 
 
     for(int ik=0; ik<this->nk_total; ++ik)
@@ -150,7 +165,7 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
         {
             this->init_step_k[ik] = 1.01 * 2.0 * ( this->Ek_iter[ik].back() - this->Ek_iter[ik][this->Ek_iter[ik].size() - 2] ) / this->dphi_0_k[ik];
             this->init_step_k[ik] = std::min(1.0, std::abs(init_step_k[ik]));
-            std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+            // std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
         }
 
         auto phi = [this, ik](const double trial_alpha)
@@ -208,9 +223,6 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 template<typename TK, typename TR>
 void LineSearch_NOs<TK, TR>::update_thetaR(const int* ik)
 {
-    // in this scope, tracing operations are prohibited (for thetaR)
-    torch::NoGradGuard no_grad;
-
     torch::Tensor pk_tensor = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<TK>());
     for(int jk=0; jk<this->nk_total; ++jk)
     {
@@ -222,9 +234,17 @@ void LineSearch_NOs<TK, TR>::update_thetaR(const int* ik)
             }
         }
 
-        rdmft::vector2tensor(this->search_direction[jk], pk_tensor, { nbands64*(nbands64 + 1) / 2 });
-        this->thetaR[jk] = this->var_thetaR_tensor[jk] + this->step_size_k[jk] * pk_tensor;
+        // the curly braces are required
+        {
+            // in this scope, tracing operations are prohibited (for thetaR)
+            torch::NoGradGuard no_grad;
+
+            rdmft::vector2tensor(this->search_direction[jk], pk_tensor, { nbands64*(nbands64 + 1) / 2 });
+            this->thetaR[jk] = this->var_thetaR_tensor[jk] + this->step_size_k[jk] * pk_tensor;
+        }
+        this->thetaR[jk].set_requires_grad(true);
     }
+
 }
 
 
@@ -330,12 +350,16 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
     torch::Tensor d2E_dR2_tensor;
     torch::Tensor d2E_dthetaR_2_tensor;
     std::vector<TK> d2E_dthetaR_2_global;
+    std::vector<TK> dE_dthetaR_u; // test
+    // std::vector<TK> transport; // test
     if( PARAM.inp.precond_orb )
     {
         d2E_dR2_local.resize(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
         d2E_dR2_global.resize(PARAM.inp.nbands * PARAM.inp.nbands, 0.0);
         d2E_dthetaR_2_tensor = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<TK>());
         d2E_dthetaR_2_global.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
+        dE_dthetaR_u.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
+        // transport.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
     }
 
     std::vector<TK> thetaR_vec(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
@@ -369,7 +393,42 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
             // convert data formats
             rdmft::tensor2vector(d2E_dthetaR_2_tensor, d2E_dthetaR_2_global);
 
-            this->R_optimizer[jk]->get_pk(this->dE_dthetaR_global[jk], thetaR_vec, this->search_direction[jk], new_landscape, &d2E_dthetaR_2_global);
+            if( PARAM.inp.precond_type == 1 )
+            {
+                this->R_optimizer[jk]->get_pk(this->dE_dthetaR_global[jk], thetaR_vec, this->search_direction[jk], new_landscape, &d2E_dthetaR_2_global);
+            }
+            else
+            {
+                if( new_landscape || this->iter%5 == 0 )
+                {
+                    for(int i=0; i<this->scaling_P.size(); ++i)
+                    {
+                        this->scaling_P[i] = std::sqrt( std::max( 1e-10, std::abs(d2E_dthetaR_2_global[i]) ) );
+                    }
+                }
+
+                if( !new_landscape && this->iter%5 == 0 )
+                {
+                    // get transport mat: T = S_k+1 Sk^-1
+                    for(int i=0; i<this->scaling_P.size(); ++i)
+                    {
+                        this->scaling_P_old[jk][i] = this->scaling_P[i] / this->scaling_P_old[jk][i];
+                    }
+                    this->R_optimizer[jk]->transport(this->scaling_P_old[jk]);
+                }
+                this->scaling_P_old[jk] = this->scaling_P;
+
+                for(int i=0; i<this->scaling_P.size(); ++i)
+                {
+                    thetaR_vec[i] *= this->scaling_P[i];
+                    dE_dthetaR_u[i] = this->dE_dthetaR_global[jk][i] / this->scaling_P[i];
+                }
+                this->R_optimizer[jk]->get_pk(dE_dthetaR_u, thetaR_vec, this->search_direction[jk], new_landscape);
+                for(int i=0; i<this->search_direction[jk].size(); ++i)
+                {
+                    this->search_direction[jk][i] /= this->scaling_P[i];
+                }
+            }
         }
         else
         {

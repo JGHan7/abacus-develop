@@ -57,6 +57,8 @@ void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_i
     this->dE_dx.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
     this->search_direction.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
     this->occ_number.create(rdmft_solver->nk_total, PARAM.inp.nbands);
+    this->scaling_P.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
+    this->scaling_P_old.resize(rdmft_solver->nk_total * PARAM.inp.nbands);
 
     // this->ls_wolfe_c1 = 0.0001;
     // this->ls_wolfe_c2 = 0.999;
@@ -128,10 +130,13 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     // // test !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // this->phi_0 = this->cal_phi(this->var_x);
 
+    bool new_landscape = ( start_guess || this->iter == 0);
+    // bool new_landscape = ( start_guess || this->iter == 0 || (PARAM.inp.precond_type != 1 && this->iter%50 == 0) ) ? true: false;
+
     // rdmft cal dE_docc_num, PARAM_ONs convert dE_docc_num to dE_dx
     this->cal_dE_dx(this->dE_dx);
 
-    this->cal_pk_dphi0( (start_guess || this->iter == 0) );
+    this->cal_pk_dphi0( new_landscape );
     std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
     // if( std::abs(this->dphi_0) < 1e-8 )
     // {
@@ -144,7 +149,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
         this->init_step = 1.01 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
         this->init_step = std::min(1.0, std::abs(this->init_step));
         // this->init_step = 1.0 * 2.0 * ( this->Etotal_iter.back() - this->Etotal_iter[this->Etotal_iter.size() - 2] ) / this->dphi_0;
-        std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+        // std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
     }
 
     std::vector<double> var_x_old = this->var_x;
@@ -933,7 +938,45 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
         std::vector<double> d2E_dx2(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
         this->param_occ_num->get_d2E_dx2(dE_docc_num, d2E_dx2);
 
-        this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape, &d2E_dx2);
+        if( PARAM.inp.precond_type == 1 )
+        {
+            this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape, &d2E_dx2);
+        }
+        else
+        {
+            if( new_landscape || this->iter%5 == 0 )
+            {
+                for(int i=0; i<this->scaling_P.size(); ++i)
+                {
+                    this->scaling_P[i] = std::sqrt( std::max( 1e-8, std::abs(d2E_dx2[i]) ) );
+                }
+            }
+
+            if( !new_landscape && this->iter%5 == 0 )
+            {
+                // get transport mat: T = S_k+1 Sk^-1
+                for(int i=0; i<this->scaling_P.size(); ++i)
+                {
+                    this->scaling_P_old[i] = this->scaling_P[i] / this->scaling_P_old[i];
+                }
+                this->bfgs_opti_x.transport(this->scaling_P_old);
+            }
+            this->scaling_P_old = this->scaling_P;
+
+            std::vector<double> var_u= this->var_x;
+            std::vector<double> dE_du= this->dE_dx;
+
+            for(int i=0; i<this->scaling_P.size(); ++i)
+            {
+                var_u[i] *= this->scaling_P[i];
+                dE_du[i] /= this->scaling_P[i];
+            }
+            this->bfgs_opti_x.get_pk(dE_du, var_u, this->search_direction, new_landscape);
+            for(int i=0; i<this->search_direction.size(); ++i)
+            {
+                this->search_direction[i] /= this->scaling_P[i];
+            }
+        }
     }
     else
     {

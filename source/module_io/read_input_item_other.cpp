@@ -831,7 +831,12 @@ void ReadInput::item_others()
         read_sync_bool(input.read_occ_num);
         this->add_item(item);
     }
-
+    {
+        Input_Item item("precond_type");
+        item.annotation = "the optimizer performs precond in two ways: 1 or 2";
+        read_sync_int(input.precond_type);
+        this->add_item(item);
+    }
 
 
     // EXX PW by rhx0820, 2025-03-10

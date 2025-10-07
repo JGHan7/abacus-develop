@@ -50,6 +50,7 @@ void BFGS_Opti<TX>::init(const int dim_in, const int nk_total_in, const double p
     dE_dx.resize(this->dim);
     diff_grad.resize(this->dim);
     Hk.resize( this->dim * this->dim, 0.0 );
+    transport_mat.resize( this->dim * this->dim, 0.0 ); // test
     search_direction.resize(this->dim);
 
     rho_diffX_diffGrad.resize( this->dim * this->dim );
@@ -212,6 +213,21 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
         }
     }
 
+}
+
+
+template<typename TX>
+void BFGS_Opti<TX>::transport(const std::vector<TX>& diag_T)
+{
+    for(int j=0; j<this->dim; ++j)
+    {
+        this->var_x[j] *= diag_T[j];
+        this->dE_dx[j] /= diag_T[j];
+        transport_mat[j*(this->dim) + j] = 1.0 / diag_T[j];
+    }
+    std::vector<TX> H_tmp = this->Hk;
+    rdmft::Tgemm_lapack( this->transport_mat.data(), this->Hk.data(), H_tmp.data(), this->dim, this->dim, this->dim );
+    rdmft::Tgemm_lapack( H_tmp.data(), this->transport_mat.data(), this->Hk.data(), this->dim, this->dim, this->dim );
 }
 
 

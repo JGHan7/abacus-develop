@@ -130,7 +130,8 @@ class LineSearch_ONs
 
     rdmft::LineSearch<double> ls;
 
-
+    std::vector<double> scaling_P; // test
+    std::vector<double> scaling_P_old; // test
 
 };
 
