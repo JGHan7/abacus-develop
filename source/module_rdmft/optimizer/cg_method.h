@@ -6,6 +6,7 @@
 #define CG_METHOD_H
 
 
+#include <string>
 #include "module_rdmft/optimizer/opti_method.h"
 
 
@@ -31,10 +32,20 @@ class CG_method: public rdmft::Opti_method<TX>
 
   protected:
 
+    void cal_beta(const std::vector<TX>& dE_dx_new, const bool new_landscape = false, const bool precond = false);
 
+    double beta = 0.0;
 
+    std::string beta_type = "PR";
 
   private:
+
+    //! gradient after precond: z_k, z_k-1
+    std::vector<TX> precond_grad;
+    std::vector<TX> precond_grad_old;
+
+    //! diff_z = z_k - z_k-1
+    std::vector<TX> diff_precond_grad;
 
 
 

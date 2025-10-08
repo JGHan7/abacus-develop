@@ -32,8 +32,8 @@ void Opti_method<TX>::init(const int dim_in, const double precond_eps_in)
     this->precond_eps = precond_eps_in;
     this->iter = 0;
 
-    dE_dx.resize(this->dim);
-    search_direction.resize(this->dim);
+    dE_dx.resize(this->dim, 0.0);
+    search_direction.resize(this->dim, 0.0);
 }
 
 

@@ -160,7 +160,11 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
     }
     if( PARAM.inp.precond_orb )
     {
-        d2E_dRpq_2 = Hij_no_exx;
+        d2E_dRpq_2.resize(nk_total);
+        for(int ik=0; ik<nk_total; ++ik)
+        {
+            d2E_dRpq_2[ik].resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
+        }
     }
 
     // 

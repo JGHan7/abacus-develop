@@ -9,6 +9,8 @@
 #include "module_rdmft/optimizer/optimizer_tools.h" // temporary
 #include <cmath> // temporary
 #include "module_elecstate/elecstate_tools.h" // temporary
+#include "module_rdmft/optimizer/bfgs_method.h" // temporary
+#include "module_rdmft/optimizer/cg_method.h" // temporary
 
 #include <torch/torch.h>
 
@@ -122,9 +124,19 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
 
     if( PARAM.inp.rdmft_orb_opti == "test" )
     {
+        if( PARAM.inp.occ_num_opti == "cg" )
+        {
+            this->x_optimizer = std::make_unique< rdmft::CG_method<double> >();
+            // this->x_optimizer = std::make_unique< rdmft::CG_method<std::complex<double>> >();
+        }
+        else
+        {
+            this->x_optimizer = std::make_unique< rdmft::BFGS_method<double> >();
+            // this->x_optimizer = std::make_unique< rdmft::BFGS_method<std::complex<double>> >();
+        }
+        this->x_optimizer->init(this->dim_x);
         this->data_x.resize(this->dim_x, 0.0);
         this->df_dx.resize(this->dim_x, 0.0);
-        this->bfgs_opti_x.init(this->dim_x);
         this->pk.resize(this->dim_x, 0.0);
     }
 
@@ -498,13 +510,25 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
             if( norm_grad_x < 1e-8 ) { break; }
             
-            this->bfgs_opti_x.get_pk(this->df_dx, this->data_x, this->pk, first_time);
+            this->x_optimizer->get_pk(this->df_dx, this->data_x, this->pk, first_time);
+            double step_size = 0.0;
+            if(PARAM.inp.ls_condition != "test")
+            {
+
+            }
             rdmft::printMatrix_pointer(1, this->data_x.size(), this->pk.data(), "pk");
             std::cout << "\n******\n\n" << std::endl;
 
             for(int j=0; j<this->data_x.size(); ++j)
             {
-                this->data_x[j] += PARAM.inp.ls_fixed_step * this->pk[j];
+                if(PARAM.inp.ls_condition == "test")
+                {
+                    this->data_x[j] += PARAM.inp.ls_fixed_step * this->pk[j];
+                }
+                else
+                {
+                     this->data_x[j] += step_size * this->pk[j];
+                }
             }
 
             first_time = false;

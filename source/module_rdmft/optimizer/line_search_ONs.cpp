@@ -37,7 +37,17 @@ void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_i
 {
     this->rdmft_solver = rdmft_in;
     
-    this->x_optimizer = std::make_unique< rdmft::BFGS_method<double> >();
+    if( PARAM.inp.occ_num_opti == "cg" )
+    {
+        this->x_optimizer = std::make_unique< rdmft::CG_method<double> >();
+
+        // test
+        this->ls.get_options().ls_wolfe_c2 = 0.1;
+    }
+    else
+    {
+        this->x_optimizer = std::make_unique< rdmft::BFGS_method<double> >();
+    }
     this->x_optimizer->init(rdmft_solver->nk_total*PARAM.inp.nbands, 1e-8);
     if(PARAM.inp.occ_num_func == "softmax")
     {
