@@ -4,7 +4,7 @@
 //==========================================================
 
 
-#include "module_rdmft/optimizer/bfgs_opti.h"
+#include "module_rdmft/optimizer/bfgs_method.h"
 #include "module_rdmft/optimizer/optimizer_tools.h"
 
 #include "module_rdmft/rdmft_tools.h" // temp

@@ -13,7 +13,7 @@
 
 // #include "module_rdmft/rdmft.h"
 // #include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
-// #include "module_rdmft/optimizer/bfgs_opti.h"
+// #include "module_rdmft/optimizer/bfgs_method.h"
 
 namespace rdmft
 {

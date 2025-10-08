@@ -346,7 +346,7 @@ void Tgemm_lapack<double>(const double* A,
 
 
 
-/********* the following function is used by the BFGS_opti method *********/
+/********* the following function is used by the BFGS_method *********/
 
 
 //! implementation of cubic interpolation

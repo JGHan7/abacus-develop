@@ -35,7 +35,8 @@ void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_i
 {
     this->rdmft_solver = rdmft_in;
     
-    this->bfgs_opti_x.init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total, 1e-8);
+    this->x_optimizer = std::make_unique< rdmft::BFGS_method<double> >();
+    this->x_optimizer->init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total, 1e-8);
     if(PARAM.inp.occ_num_func == "softmax")
     {
         this->param_occ_num = new rdmft::SOFTMAX();
@@ -940,7 +941,7 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 
         if( PARAM.inp.precond_type == 1 )
         {
-            this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape, &d2E_dx2);
+            this->x_optimizer->get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape, &d2E_dx2);
         }
         else
         {
@@ -959,7 +960,7 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
                 {
                     this->scaling_P_old[i] = this->scaling_P[i] / this->scaling_P_old[i];
                 }
-                this->bfgs_opti_x.transport(this->scaling_P_old);
+                this->x_optimizer->transport(this->scaling_P_old);
             }
             this->scaling_P_old = this->scaling_P;
 
@@ -971,7 +972,7 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
                 var_u[i] *= this->scaling_P[i];
                 dE_du[i] /= this->scaling_P[i];
             }
-            this->bfgs_opti_x.get_pk(dE_du, var_u, this->search_direction, new_landscape);
+            this->x_optimizer->get_pk(dE_du, var_u, this->search_direction, new_landscape);
             for(int i=0; i<this->search_direction.size(); ++i)
             {
                 this->search_direction[i] /= this->scaling_P[i];
@@ -980,7 +981,7 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
     }
     else
     {
-        this->bfgs_opti_x.get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape);
+        this->x_optimizer->get_pk(this->dE_dx, this->var_x, this->search_direction, new_landscape);
     }
 
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, this->search_direction.data(), "search_direction");

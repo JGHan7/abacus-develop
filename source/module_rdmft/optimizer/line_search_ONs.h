@@ -7,7 +7,7 @@
 
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
-#include "module_rdmft/optimizer/bfgs_opti.h"
+#include "module_rdmft/optimizer/bfgs_method.h"
 #include  "module_rdmft/optimizer/line_search_method.h"
 
 namespace rdmft
@@ -33,7 +33,7 @@ class LineSearch_ONs
     int iter = 0;
     int num_restart = 0;
 
-    int get_num_bfgs_restart() { return this->bfgs_opti_x.num_restart_skip; }
+    int get_num_bfgs_restart() { return this->x_optimizer->num_restart_skip; }
 
     // temp
     double diff_rate_max = 1.0;
@@ -125,7 +125,7 @@ class LineSearch_ONs
 
   private:
     //! optimizer: use the BFGS method to get the search direction, p_k
-    rdmft::BFGS_method<double> bfgs_opti_x;
+    std::unique_ptr< rdmft::BFGS_method<double> > x_optimizer;
 
 
     rdmft::LineSearch<double> ls;

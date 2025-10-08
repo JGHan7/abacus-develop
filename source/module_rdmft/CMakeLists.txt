@@ -12,7 +12,7 @@
 #         optimizer/iter_diag_NOs.cpp
 #         optimizer/optimizer_tools.cpp
 #         optimizer/.cpp
-#         optimizer/bfgs_opti.cpp
+#         optimizer/bfgs_method.cpp
 #         optimizer/parameterize_ONs/param_ONs.cpp
 #         optimizer/parameterize_ONs/ebi_constraint.cpp
 #         optimizer/idmft.cpp
@@ -43,7 +43,7 @@ if(ENABLE_LCAO)
         optimizer/line_search_method.cpp
         optimizer/line_search_ONs.cpp
         optimizer/line_search_NOs.cpp
-        optimizer/bfgs_opti.cpp
+        optimizer/bfgs_method.cpp
         optimizer/parameterize_ONs/param_ONs.cpp
         optimizer/parameterize_ONs/ebi_constraint.cpp
         optimizer/idmft.cpp

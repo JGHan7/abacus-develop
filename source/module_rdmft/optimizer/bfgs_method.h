@@ -2,8 +2,8 @@
 // Author: Jingang Han
 // DATE : 2024-11-12
 //==========================================================
-#ifndef BFGS_OPTI_H
-#define BFGS_OPTI_H
+#ifndef BFGS_METHOD_H
+#define BFGS_METHOD_H
 
 
 // #include "module_rdmft/rdmft.h"

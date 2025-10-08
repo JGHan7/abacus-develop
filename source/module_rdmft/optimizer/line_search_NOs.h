@@ -9,7 +9,7 @@
 #include <torch/torch.h>
 
 #include "module_rdmft/rdmft.h"
-#include "module_rdmft/optimizer/bfgs_opti.h"
+#include "module_rdmft/optimizer/bfgs_method.h"
 #include  "module_rdmft/optimizer/line_search_method.h"
 
 

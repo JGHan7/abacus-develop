@@ -11,7 +11,7 @@
 // #include "module_rdmft/optimizer/iter_diag_NOs.h"
 // #include "module_rdmft/optimizer/line_search_ONs.h"
 // #include "module_rdmft/optimizer/parameterize_ONs/ebi_constraint.h"
-// #include "module_rdmft/optimizer/bfgs_opti.h"
+// #include "module_rdmft/optimizer/bfgs_method.h"
 // #include "module_rdmft/optimizer/idmft.h"
 
 // #include "module_rdmft/optimizer/ft_rdmft.h"
