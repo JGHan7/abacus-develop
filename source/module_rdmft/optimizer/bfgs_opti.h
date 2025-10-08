@@ -20,12 +20,12 @@ namespace rdmft
 //! currently only unconstrained optimization of the occupancy numbers is considered 
 //! which means that in rdmft problem the EBI method must be used
 template<typename TX>
-class BFGS_Opti
+class BFGS_method
 {
   public:
     
-    BFGS_Opti();
-    ~BFGS_Opti();
+    BFGS_method();
+    ~BFGS_method();
 
     void init(const int dim_in, const int nk_total_in, const double precond_eps_in = 1e-8);
 

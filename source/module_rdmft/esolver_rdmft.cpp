@@ -743,8 +743,8 @@ void ESolver_RDMFT<TK, TR>::get_start_guess(UnitCell& ucell, const int istep)
         
         std::cout << "\n******\n" << "get inital value in occ_num !!!!!!" << "\n******\n" << std::endl;
 
-        // // optimize occ_number
-        // this->opti_occ_num(this->dft_optimize);
+        // optimize occ_number
+        this->opti_occ_num(this->dft_optimize);
 
         this->ls_opti_orb.get_start_guess();
     }

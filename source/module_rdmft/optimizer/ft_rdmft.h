@@ -43,7 +43,7 @@ class FT_RDMFT: public rdmft::IDMFT<TK,TR>
 
     double max_diff_kappa = 0.0;
 
-    rdmft::BFGS_Opti<double> bfgs_opti_k;
+    rdmft::BFGS_method<double> bfgs_opti_k;
 
 
 

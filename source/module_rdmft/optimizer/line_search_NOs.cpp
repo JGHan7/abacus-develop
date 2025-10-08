@@ -81,7 +81,7 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
         wfc_0_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
         dE_dwfc_tensor[ik] = torch::zeros({nbands64, nbasis64}, torch_dtype<TK>());
 
-        this->R_optimizer[ik] = std::make_unique< rdmft::BFGS_Opti<TK> >();
+        this->R_optimizer[ik] = std::make_unique< rdmft::BFGS_method<TK> >();
         this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, this->nk_total, 1e-10 );
         this->ls[ik] = std::make_unique< rdmft::LineSearch<double> >();
 

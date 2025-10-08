@@ -62,7 +62,7 @@ class LineSearch_NOs
 
     RDMFT<TK, TR>* rdmft_solver = nullptr;
 
-    std::vector< std::unique_ptr<rdmft::BFGS_Opti<TK>> > R_optimizer;
+    std::vector< std::unique_ptr<rdmft::BFGS_method<TK>> > R_optimizer;
 
     // rdmft::LineSearch<TK> ls;
     std::vector< std::unique_ptr<rdmft::LineSearch<double>> > ls;

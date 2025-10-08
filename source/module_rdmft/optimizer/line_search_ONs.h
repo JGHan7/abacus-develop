@@ -125,7 +125,7 @@ class LineSearch_ONs
 
   private:
     //! optimizer: use the BFGS method to get the search direction, p_k
-    rdmft::BFGS_Opti<double> bfgs_opti_x;
+    rdmft::BFGS_method<double> bfgs_opti_x;
 
 
     rdmft::LineSearch<double> ls;

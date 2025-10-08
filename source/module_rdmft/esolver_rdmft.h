@@ -83,7 +83,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     rdmft::FT_RDMFT<TK, TR> ft_rdmft;
 
     // //! just for test
-    // rdmft::BFGS_Opti<double> bfgs_opti_x;
+    // rdmft::BFGS_method<double> bfgs_opti_x;
     // int dim_x = 2;
     // std::vector<double> data_x;
     // std::vector<double> df_dx;
@@ -112,7 +112,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     // }
 
     //! just for test (complex positive-definite quadratic)
-    rdmft::BFGS_Opti<std::complex<double>> bfgs_opti_x;
+    rdmft::BFGS_method<std::complex<double>> bfgs_opti_x;
     int dim_x = 2;
     std::vector<std::complex<double>> data_x;
     std::vector<std::complex<double>> df_dx;
@@ -187,7 +187,7 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     //! 
     rdmft::LineSearch_NOs<TK, TR> ls_opti_orb;
 
-    // rdmft::BFGS_Opti<double> bfgs_rdmft;
+    // rdmft::BFGS_method<double> bfgs_rdmft;
 
     // std::vector< std::vector<TK> > lambda;
 

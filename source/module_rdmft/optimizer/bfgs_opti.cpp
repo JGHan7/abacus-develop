@@ -15,21 +15,21 @@ namespace rdmft
 
 
 template<typename TX>
-BFGS_Opti<TX>::BFGS_Opti()
+BFGS_method<TX>::BFGS_method()
 {
 
 }
 
 
 template<typename TX>
-BFGS_Opti<TX>::~BFGS_Opti()
+BFGS_method<TX>::~BFGS_method()
 {
     
 }
 
 
 template<typename TX>
-void BFGS_Opti<TX>::init(const int dim_in, const int nk_total_in, const double precond_eps_in)
+void BFGS_method<TX>::init(const int dim_in, const int nk_total_in, const double precond_eps_in)
 {
 
     this->dim = dim_in;
@@ -62,7 +62,7 @@ void BFGS_Opti<TX>::init(const int dim_in, const int nk_total_in, const double p
 
 
 template<typename TX>
-void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool new_landscape, const std::vector<TX>* d2E_dx2)
+void BFGS_method<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk, const bool new_landscape, const std::vector<TX>* d2E_dx2)
 {
     // set some vars zero?
 
@@ -95,7 +95,7 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
     rdmft::Tgemm_lapack( dE_dx_new.data(), this->search_direction.data(), &gT_pk, 1, 1, this->dim, op_tran, 'N' );
     if( std::real(gT_pk) >= 0 )
     {
-        std::cout << "******\n" << "test !!!: in BFGS_Opti::get_pk(), real(gT_pk) >= 0: " << gT_pk << "\n******" << std::endl;
+        std::cout << "******\n" << "test !!!: in BFGS_method::get_pk(), real(gT_pk) >= 0: " << gT_pk << "\n******" << std::endl;
         this->cal_Hk(dE_dx_new, x_new, true, d2E_dx2);
         for(int j=0; j<x_new.size(); ++j)
         {
@@ -117,7 +117,7 @@ void BFGS_Opti<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
 
 
 template<typename TX>
-void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape, const std::vector<TX>* d2E_dx2)
+void BFGS_method<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape, const std::vector<TX>* d2E_dx2)
 {
     if( new_landscape )
     {
@@ -152,8 +152,8 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
 
         if( PARAM.inp.print_BFGS_Hk )
         {
-            rdmft::printMatrix_pointer(nk_total, nbands, this->diff_x.data(), "in BFGS_Opti, diff_x");
-            rdmft::printMatrix_pointer(nk_total, nbands, this->diff_grad.data(), "in BFGS_Opti, diff_grad");
+            rdmft::printMatrix_pointer(nk_total, nbands, this->diff_x.data(), "in BFGS_method, diff_x");
+            rdmft::printMatrix_pointer(nk_total, nbands, this->diff_grad.data(), "in BFGS_method, diff_grad");
         }
 
         const char op_tran = std::is_same<TX, std::complex<double>>::value ? 'C' : 'T';
@@ -164,7 +164,7 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
         if( std::real(rho_temp) < 1e-10 )
         {   
             // considering damped BFGS !!!
-            std::cout << "******\n" << "test !!!: in BFGS_Opti::get_pk(), std::real(rho_temp) < 1e-10: " << rho_temp << "\n******" << std::endl;
+            std::cout << "******\n" << "test !!!: in BFGS_method::get_pk(), std::real(rho_temp) < 1e-10: " << rho_temp << "\n******" << std::endl;
             ++this->num_restart_skip;
             return;
         }
@@ -187,11 +187,11 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
         //             Hk[i*(this->dim) + i] *= this->scaling_gamma0 / std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) );
         //         }
         //     }
-        //     std::cout << "******\n" << "in BFGS_Opti::get_pk(), this->scaling_gamma0: " << this->scaling_gamma0 << "\n******" << std::endl;
+        //     std::cout << "******\n" << "in BFGS_method::get_pk(), this->scaling_gamma0: " << this->scaling_gamma0 << "\n******" << std::endl;
         // }
 
-        std::cout << "******\n" << "in BFGS_Opti::get_pk(), 1.0/rho = y^/dagger s: " << rho_temp << "\n******" << std::endl;
-        // std::cout << "******\n" << "in BFGS_Opti::get_pk(), rho: " << this->rho << "\n******" << std::endl;
+        std::cout << "******\n" << "in BFGS_method::get_pk(), 1.0/rho = y^/dagger s: " << rho_temp << "\n******" << std::endl;
+        // std::cout << "******\n" << "in BFGS_method::get_pk(), rho: " << this->rho << "\n******" << std::endl;
 
         rho_temp = this->rho;
         // cal rho * diffX * diffGrad^T, I - rho * diffX * diffGrad^T
@@ -220,7 +220,7 @@ void BFGS_Opti<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<T
 
 
 template<typename TX>
-void BFGS_Opti<TX>::transport(const std::vector<TX>& diag_T)
+void BFGS_method<TX>::transport(const std::vector<TX>& diag_T)
 {
     for(int j=0; j<this->dim; ++j)
     {
@@ -235,7 +235,7 @@ void BFGS_Opti<TX>::transport(const std::vector<TX>& diag_T)
 
 
 // template<typename TX>
-// void BFGS_Opti<TX>::get_start_guess(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk)
+// void BFGS_method<TX>::get_start_guess(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk)
 // {
 //     // identity matrix or other method to initialize H0
 //     for(int i=0; i<this->dim; ++i) { Hk[i*(this->dim) + i] = 1.0; }
@@ -256,8 +256,8 @@ void BFGS_Opti<TX>::transport(const std::vector<TX>& diag_T)
 
 
 
-template class BFGS_Opti<double>;
-template class BFGS_Opti<std::complex<double>>;
+template class BFGS_method<double>;
+template class BFGS_method<std::complex<double>>;
 
 }
 
