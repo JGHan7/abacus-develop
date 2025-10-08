@@ -6,7 +6,7 @@
 #define BFGS_OPTI_H
 
 
-#include "module_rdmft/rdmft.h"
+// #include "module_rdmft/rdmft.h"
 // #include "module_base/matrix.h"
 
 #include <vector>
@@ -70,7 +70,7 @@ class BFGS_Opti
     //! rho_k = 1.0/(diff_grad^T * diff_x)
     double rho;
 
-
+    double precond_eps = 1e-8;
 
   private:
 
@@ -80,8 +80,6 @@ class BFGS_Opti
 
     void cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, const bool new_landscape = false, const std::vector<TX>* d2E_dx2 = nullptr);
 
-
-    double precond_eps = 1e-8;
 
     // test
     std::vector<TX> transport_mat;

@@ -35,23 +35,26 @@ void BFGS_Opti<TX>::init(const int dim_in, const int nk_total_in, const double p
     this->dim = dim_in;
     this->precond_eps = precond_eps_in;
     this->iter = 0;
-    this->scaling_H0 = false;
+
+    dE_dx.resize(this->dim);
+    search_direction.resize(this->dim);
 
     // temp
     this->nk_total = nk_total_in;
     this->nbands = dim_in / nk_total_in;
 
+    this->scaling_H0 = false;
     // x0.resize(this->dim);
     // x1.resize(this->dim);
     var_x.resize(this->dim, 0.0);
     diff_x.resize(this->dim, 0.0);
     // dE_dx0.resize(this->dim);
     // dE_dx1.resize(this->dim);
-    dE_dx.resize(this->dim);
+
     diff_grad.resize(this->dim);
     Hk.resize( this->dim * this->dim, 0.0 );
     transport_mat.resize( this->dim * this->dim, 0.0 ); // test
-    search_direction.resize(this->dim);
+
 
     rho_diffX_diffGrad.resize( this->dim * this->dim );
     rho_diffX_diffX_T.resize( this->dim * this->dim );
