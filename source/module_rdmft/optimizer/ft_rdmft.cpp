@@ -34,7 +34,7 @@ void FT_RDMFT<TK, TR>::init(const int nk_total_in,
 
     this->dE_dk.resize(this->nk_total*this->nbands, 0.0);
     this->pk.resize(this->nk_total*this->nbands, 0.0);
-    this->bfgs_opti_k.init(this->nk_total, this->nbands);
+    this->bfgs_opti_k.init(this->nk_total*this->nbands);
     this->kappa_tensor.resize(this->nk_total*this->nbands, this->kappa);
     this->average_k = this->kappa;
 

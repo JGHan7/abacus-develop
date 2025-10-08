@@ -779,7 +779,9 @@ OBJS_RDMFT=rdmft.o\
         line_search_method.o\
         line_search_ONs.o\
         line_search_NOs.o\
+        opti_method.o\
         bfgs_method.o\
+        cg_method.o\
         param_ONs.o\
         ebi_constraint.o\
         idmft.o\

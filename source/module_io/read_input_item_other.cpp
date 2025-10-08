@@ -835,6 +835,12 @@ void ReadInput::item_others()
         Input_Item item("precond_type");
         item.annotation = "the optimizer performs precond in two ways: 1 or 2";
         read_sync_int(input.precond_type);
+        item.reset_value = [](const Input_Item& item, Parameter& para) {
+            if( para.input.rdmft_orb_opti == "cg" || para.input.occ_num_opti == "cg" )
+            {
+                para.input.precond_type = 1;
+            }
+        };
         this->add_item(item);
     }
 

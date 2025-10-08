@@ -124,7 +124,7 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     {
         this->data_x.resize(this->dim_x, 0.0);
         this->df_dx.resize(this->dim_x, 0.0);
-        this->bfgs_opti_x.init(this->dim_x, 1);
+        this->bfgs_opti_x.init(this->dim_x);
         this->pk.resize(this->dim_x, 0.0);
     }
 

@@ -9,13 +9,14 @@
 #include <torch/torch.h>
 
 #include "module_rdmft/rdmft.h"
-#include "module_rdmft/optimizer/bfgs_method.h"
+#include "module_rdmft/optimizer/opti_method.h"
 #include  "module_rdmft/optimizer/line_search_method.h"
 
 
 namespace rdmft
 {
 
+  //! @brief physical notation: natural orbitals = ONs
 
 template<typename TK, typename TR>
 class LineSearch_NOs
@@ -62,7 +63,7 @@ class LineSearch_NOs
 
     RDMFT<TK, TR>* rdmft_solver = nullptr;
 
-    std::vector< std::unique_ptr<rdmft::BFGS_method<TK>> > R_optimizer;
+    std::vector< std::unique_ptr<rdmft::Opti_method<TK>> > R_optimizer;
 
     // rdmft::LineSearch<TK> ls;
     std::vector< std::unique_ptr<rdmft::LineSearch<double>> > ls;

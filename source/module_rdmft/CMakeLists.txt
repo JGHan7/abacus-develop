@@ -43,7 +43,9 @@ if(ENABLE_LCAO)
         optimizer/line_search_method.cpp
         optimizer/line_search_ONs.cpp
         optimizer/line_search_NOs.cpp
+        optimizer/opti_method.cpp
         optimizer/bfgs_method.cpp
+        optimizer/cg_method.cpp
         optimizer/parameterize_ONs/param_ONs.cpp
         optimizer/parameterize_ONs/ebi_constraint.cpp
         optimizer/idmft.cpp

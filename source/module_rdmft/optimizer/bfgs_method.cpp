@@ -29,19 +29,17 @@ BFGS_method<TX>::~BFGS_method()
 
 
 template<typename TX>
-void BFGS_method<TX>::init(const int dim_in, const int nk_total_in, const double precond_eps_in)
+void BFGS_method<TX>::init(const int dim_in, const double precond_eps_in)
 {
 
-    this->dim = dim_in;
-    this->precond_eps = precond_eps_in;
-    this->iter = 0;
+    // this->dim = dim_in;
+    // this->precond_eps = precond_eps_in;
+    // this->iter = 0;
 
-    dE_dx.resize(this->dim);
-    search_direction.resize(this->dim);
+    // this->dE_dx.resize(this->dim);
+    // this->search_direction.resize(this->dim);
 
-    // temp
-    this->nk_total = nk_total_in;
-    this->nbands = dim_in / nk_total_in;
+    rdmft::Opti_method<TX>::init(dim_in, precond_eps_in);
 
     this->scaling_H0 = false;
     // x0.resize(this->dim);
@@ -152,8 +150,8 @@ void BFGS_method<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector
 
         if( PARAM.inp.print_BFGS_Hk )
         {
-            rdmft::printMatrix_pointer(nk_total, nbands, this->diff_x.data(), "in BFGS_method, diff_x");
-            rdmft::printMatrix_pointer(nk_total, nbands, this->diff_grad.data(), "in BFGS_method, diff_grad");
+            rdmft::printMatrix_pointer(this->dim, 1, this->diff_x.data(), "in BFGS_method, diff_x", 10);
+            rdmft::printMatrix_pointer(this->dim, 1, this->diff_grad.data(), "in BFGS_method, diff_grad", 10);
         }
 
         const char op_tran = std::is_same<TX, std::complex<double>>::value ? 'C' : 'T';

@@ -8,6 +8,8 @@
 #include "module_rdmft/optimizer/optimizer_tools.h"
 #include "module_rdmft/optimizer/parameterize_ONs/ebi_constraint.h"
 #include "module_rdmft/optimizer/parameterize_ONs/softmax.h"
+#include "module_rdmft/optimizer/bfgs_method.h"
+#include "module_rdmft/optimizer/cg_method.h"
 
 #include <torch/torch.h>
 
@@ -36,7 +38,7 @@ void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_i
     this->rdmft_solver = rdmft_in;
     
     this->x_optimizer = std::make_unique< rdmft::BFGS_method<double> >();
-    this->x_optimizer->init(rdmft_solver->nk_total*PARAM.inp.nbands, rdmft_solver->nk_total, 1e-8);
+    this->x_optimizer->init(rdmft_solver->nk_total*PARAM.inp.nbands, 1e-8);
     if(PARAM.inp.occ_num_func == "softmax")
     {
         this->param_occ_num = new rdmft::SOFTMAX();

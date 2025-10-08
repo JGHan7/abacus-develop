@@ -7,11 +7,13 @@
 
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/parameterize_ONs/param_ONs.h"
-#include "module_rdmft/optimizer/bfgs_method.h"
+#include "module_rdmft/optimizer/opti_method.h"
 #include  "module_rdmft/optimizer/line_search_method.h"
 
 namespace rdmft
 {
+
+  //! @brief physical notation: natural occupation numbers = ONs
 
 template<typename TK, typename TR>
 class LineSearch_ONs
@@ -125,7 +127,7 @@ class LineSearch_ONs
 
   private:
     //! optimizer: use the BFGS method to get the search direction, p_k
-    std::unique_ptr< rdmft::BFGS_method<double> > x_optimizer;
+    std::unique_ptr< rdmft::Opti_method<double> > x_optimizer;
 
 
     rdmft::LineSearch<double> ls;
