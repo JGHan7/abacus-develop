@@ -843,7 +843,12 @@ void ReadInput::item_others()
         };
         this->add_item(item);
     }
-
+    {
+        Input_Item item("precond_g");
+        item.annotation = "precond_g";
+        read_sync_double(input.precond_g);
+        this->add_item(item);
+    }
 
     // EXX PW by rhx0820, 2025-03-10
     {

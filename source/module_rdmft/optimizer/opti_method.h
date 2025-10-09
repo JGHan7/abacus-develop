@@ -31,6 +31,9 @@ class Opti_method
     int iter = 0;
     int num_restart_skip = 0;
 
+    //! 
+    // virtual void get_diag_Bk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& diag_Bk, const bool new_landscape = false) {};
+
     // test
     virtual void transport(const std::vector<TX>& diag_T) {};
 

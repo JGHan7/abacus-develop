@@ -30,6 +30,9 @@ class BFGS_method: public rdmft::Opti_method<TX>
     // // ! initialize H0 and obtain p0
     // void get_start_guess(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& pk);
 
+    //! 
+    void get_diag_Bk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& diag_Bk, const bool new_landscape = false);
+
     // std::vector<TX> x0, x1, diff_x;
     // std::vector<TX> dE_dx0, dE_dx1, diff_grad;
     void transport(const std::vector<TX>& diag_T) override;
@@ -60,8 +63,14 @@ class BFGS_method: public rdmft::Opti_method<TX>
     //! diff_grad = (dE_dx)_k+1 - (dE_dx)_k
     std::vector<TX> diff_grad;
 
-    //! approximate Hessian matrix
+    //! approximate inverse Hessian matrix
     std::vector<TX> Hk;
+
+    //! approximate Hessian matrix
+    std::vector<TX> Bk;
+
+    std::vector<TX> y_yT;
+    std::vector<TX> B_ssT_BT;
 
     //! rho_k = 1.0/(diff_grad^T * diff_x)
     double rho;

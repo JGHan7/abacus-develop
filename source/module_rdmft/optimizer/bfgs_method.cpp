@@ -50,12 +50,18 @@ void BFGS_method<TX>::init(const int dim_in, const double precond_eps_in)
     // dE_dx1.resize(this->dim);
 
     diff_grad.resize(this->dim);
-    Hk.resize( this->dim * this->dim, 0.0 );
-    transport_mat.resize( this->dim * this->dim, 0.0 ); // test
-
-
     rho_diffX_diffGrad.resize( this->dim * this->dim );
     rho_diffX_diffX_T.resize( this->dim * this->dim );
+    Hk.resize( this->dim * this->dim, 0.0 );
+    if( PARAM.inp.precond_occ_num && PARAM.inp.occ_num_opti == "cg")
+    {
+        this->Bk.resize( this->dim * this->dim, 0.0 );
+        this->y_yT.resize( this->dim * this->dim, 0.0 );
+        this->B_ssT_BT.resize( this->dim * this->dim, 0.0 );
+    }
+
+    transport_mat.resize( this->dim * this->dim, 0.0 ); // test
+
 }
 
 
@@ -214,6 +220,82 @@ void BFGS_method<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector
         }
     }
 
+}
+
+
+template<typename TX>
+void BFGS_method<TX>::get_diag_Bk(const std::vector<TX>& dE_dx_new, const std::vector<TX>& x_new, std::vector<TX>& diag_Bk, const bool new_landscape)
+{
+    if( new_landscape )
+    {
+        std::fill(this->var_x.begin(), this->var_x.end(), 0.0);
+        std::fill(this->dE_dx.begin(), this->dE_dx.end(), 0.0);
+        std::fill(Bk.begin(), Bk.end(), 0.0);
+        for(int i=0; i<this->dim; ++i)
+        {
+            Bk[i*(this->dim) + i] = 1.0;
+        }
+        this->iter = 0;
+    }
+    else
+    {
+        for(int j=0; j<x_new.size(); ++j)
+        {
+            // diff_x, sk = x_k+1 - x_k
+            this->diff_x[j] = x_new[j] - this->var_x[j];
+            // diff_grad, yk = (dE_dx)_k+1 - (dE_dx)_k
+            this->diff_grad[j] = dE_dx_new[j] - this->dE_dx[j];
+        }
+
+        const char op_tran = std::is_same<TX, std::complex<double>>::value ? 'C' : 'T';
+        // this->B_ssT_BT.resize( this->dim * this->dim, 0.0 );
+
+        // cal rho = 1/( diffGrad^T * diffX )
+        TX rho_temp = 0.0;
+        rdmft::Tgemm_lapack(this->diff_grad.data(), this->diff_x.data(), &rho_temp, 1, 1, this->dim, op_tran, 'N');
+        // if( std::real(rho_temp) < 1e-10 )
+        // {   
+        //     // considering damped BFGS !!!
+        //     std::cout << "******\n" << "test !!!: in BFGS_method::get_diag_Bk, std::real(rho_temp) < 1e-10: " << rho_temp << "\n******" << std::endl;
+        //     ++this->num_restart_skip;
+        // }
+        // else
+        {
+            this->rho = 1.0/std::real(rho_temp);
+            rho_temp = this->rho;
+            rdmft::Tgemm_lapack( this->diff_grad.data(), this->diff_grad.data(), this->y_yT.data(), this->dim, this->dim, 1, 'N', op_tran, rho_temp );
+
+            TX sT_B_s = 0.0;
+            std::vector<TX> B_s(this->dim, 0.0);
+            rdmft::Tgemm_lapack( this->Bk.data(), this->diff_x.data(), B_s.data(), this->dim, 1, this->dim, 'N', 'N' );
+            rdmft::Tgemm_lapack( this->diff_x.data(), B_s.data(), &sT_B_s, 1, 1, this->dim, op_tran, 'N' );
+            sT_B_s = 1.0/std::real(sT_B_s);
+
+            std::vector<TX> B_s_sT(this->dim * this->dim, 0.0);
+            rdmft::Tgemm_lapack( this->diff_x.data(), this->diff_x.data(), this->B_ssT_BT.data(), this->dim, this->dim, 1, 'N', op_tran );
+            rdmft::Tgemm_lapack( this->Bk.data(), this->B_ssT_BT.data(), B_s_sT.data(), this->dim, this->dim, this->dim, 'N', 'N' );
+            rdmft::Tgemm_lapack( B_s_sT.data(), this->Bk.data(), this->B_ssT_BT.data(), this->dim, this->dim, this->dim, 'N', op_tran, sT_B_s );
+
+            for(int j=0; j<this->Bk.size(); ++j)
+            {
+                this->Bk[j] += this->y_yT[j] - this->B_ssT_BT[j];
+            }
+        }
+
+    }
+
+    for(int i=0; i<this->dim; ++i)
+    {
+       diag_Bk[i] = Bk[i*(this->dim) + i];
+    }
+
+    // update x, dE_dx, pass search_direction
+    for(int j=0; j<x_new.size(); ++j)
+    {
+        this->var_x[j] = x_new[j];
+        this->dE_dx[j] = dE_dx_new[j];
+    }
+    ++this->iter;
 }
 
 

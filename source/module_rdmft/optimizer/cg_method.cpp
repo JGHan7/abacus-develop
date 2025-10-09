@@ -48,6 +48,10 @@ void CG_method<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
         for(int i=0; i<this->dim; ++i)
         {
             this->precond_grad[i] = dE_dx_new[i] / std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) );
+            // this->precond_grad[i] = dE_dx_new[i] / (*d2E_dx2)[i];
+
+            // TX num_temp = this->precond_eps > std::abs((*d2E_dx2)[i]) ? this->precond_eps: (*d2E_dx2)[i];
+            // this->precond_grad[i] = dE_dx_new[i] / num_temp;
         }
     }
     else
@@ -60,13 +64,14 @@ void CG_method<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
     // get new pk
     for(int i=0; i<this->dim; ++i)
     {
-        pk[i] = - this->precond_grad[i] + this->beta * this->search_direction[i];
+        pk[i] = - (this->precond_grad[i] + this->beta * this->search_direction[i]);
 
-        this->search_direction[i] = pk[i];
+        this->search_direction[i] = - pk[i];
         this->precond_grad_old[i] = this->precond_grad[i];
         this->dE_dx[i] = dE_dx_new[i];
     }
 
+    ++this->iter;
 }
 
 
@@ -76,6 +81,7 @@ void CG_method<TX>::cal_beta(const std::vector<TX>& dE_dx_new, const bool new_la
     if( new_landscape )
     {
         this->beta = 0.0;
+        this->iter = 0;
         return;
     }
     else
@@ -88,16 +94,19 @@ void CG_method<TX>::cal_beta(const std::vector<TX>& dE_dx_new, const bool new_la
             // cal something
             TX pT_g = 0.0;
             TX pT_g_old = 0.0;
-            TX nega_one = -1.0;
-            rdmft::Tgemm_lapack( this->search_direction.data(), dE_dx_new.data(), &pT_g, 1, 1, this->dim, op_tran, 'N', nega_one );
-            rdmft::Tgemm_lapack( this->search_direction.data(), this->dE_dx.data(), &pT_g_old, 1, 1, this->dim, op_tran, 'N', nega_one );
+            // TX nega_one = -1.0;
+            TX posi_one = 1.0;
+            rdmft::Tgemm_lapack( this->search_direction.data(), dE_dx_new.data(), &pT_g, 1, 1, this->dim, op_tran, 'N', posi_one );
+            rdmft::Tgemm_lapack( this->search_direction.data(), this->dE_dx.data(), &pT_g_old, 1, 1, this->dim, op_tran, 'N', posi_one );
 
-            if( std::abs( std::real(pT_g) ) > 0.2 * std::abs( std::real(pT_g_old) ) )
+            // if( std::abs( std::real(pT_g) ) > 0.2 * std::abs( std::real(pT_g_old) ) )
+            if( std::abs( std::real(pT_g) ) > 0.2 * std::real(pT_g_old) )
             {
                 // print something 
+                std::cout << "\n\nrestart CG: \npT_g: " << pT_g << "\npT_g_old: " << pT_g_old << "\n" << std::endl;
 
-                
                 this->beta = 0.0;
+                ++this->num_restart_skip;
                 return;
             }
         }
