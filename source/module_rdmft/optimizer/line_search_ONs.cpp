@@ -330,7 +330,7 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 
         if( PARAM.inp.precond_type == 1 )
         {
-            if( PARAM.inp.occ_num_opti == "cg" || PARAM.inp.occ_num_opti == "bfgs" ) // "bfgs" is test
+            if( PARAM.inp.occ_num_opti == "cg" ) // || PARAM.inp.occ_num_opti == "bfgs" is test
             {
                 std::vector<double> diag_Bk(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
                 this->precond_bfgs->get_diag_Bk(this->dE_dx, this->var_x, diag_Bk, new_landscape);

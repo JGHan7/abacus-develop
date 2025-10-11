@@ -350,6 +350,9 @@ void EBI::get_d2E_dx2(const std::vector<double>& dE_docc_num, std::vector<double
         this->cal_d2occ_num_dx2(d2mu_dx2, d2occ_num_dx2, is);
 
         rdmft::Tgemm_lapack( d2occ_num_dx2.data(), dE_deta[is].data(), (d2E_dx2.data() + is*N), N, 1, N );
+
+        // // test
+        // rdmft::Tgemm_lapack( d2occ_num_dx2.data(), dE_deta[is].data(), (d2E_dx2.data() + is*N), N, 1, N, 'T' );
     }
 
     // rdmft::printMatrix_pointer(nk_nospin, nbands, d2E_dx2.data(), "d2E_dx2");
@@ -674,6 +677,7 @@ void EBI::cal_d2mu_dx2(std::vector<double>& d2mu_dx2, int is)
         d2mu_dx2[j] = - ( erf_der2(this->x[is][j] + this->mu[is]) * (1 + 2*this->dmu_dx[is][j]) + sum_der[1] ) / sum_der[0];
     }
 }
+
 
 void EBI::cal_docc_num_dx(const std::vector<double>& dmu_dx_in, std::vector<double>& docc_num_dx, int is)
 {

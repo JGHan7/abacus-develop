@@ -60,42 +60,42 @@ void BFGS_method<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector
     // get Hk
     this->cal_Hk(dE_dx_new, x_new, new_landscape, d2E_dx2);
 
-    // test Bk
-    if( PARAM.inp.precond_occ_num && (PARAM.inp.occ_num_opti == "cg" || PARAM.inp.occ_num_opti == "bfgs") ) // "bfgs" is test!
-    {
-        this->cal_Bk(new_landscape);
-        std::vector<TX> H_tmp(this->Hk.size(), 0.0);
-        rdmft::Tgemm_lapack( this->Hk.data(), this->Bk.data(), H_tmp.data(), this->dim, this->dim, this->dim );
+    // // test Bk
+    // if( PARAM.inp.precond_occ_num && (PARAM.inp.occ_num_opti == "cg" || PARAM.inp.occ_num_opti == "bfgs") ) // "bfgs" is test!
+    // {
+    //     this->cal_Bk(new_landscape);
+    //     std::vector<TX> H_tmp(this->Hk.size(), 0.0);
+    //     rdmft::Tgemm_lapack( this->Hk.data(), this->Bk.data(), H_tmp.data(), this->dim, this->dim, this->dim );
 
-        double sum = 0.0;
-        for(int i=0; i<this->dim; ++i)
-        {
-            for(int j=0; j<this->dim; ++j)
-            {
-                if(i == j)
-                {
-                    sum += std::norm( H_tmp[i*(this->dim) + j] - 1.0 );
-                }
-                else
-                {
-                    sum += std::norm( H_tmp[i*(this->dim) + j] );
-                }
-            }
-        }
+    //     double sum = 0.0;
+    //     for(int i=0; i<this->dim; ++i)
+    //     {
+    //         for(int j=0; j<this->dim; ++j)
+    //         {
+    //             if(i == j)
+    //             {
+    //                 sum += std::norm( H_tmp[i*(this->dim) + j] - 1.0 );
+    //             }
+    //             else
+    //             {
+    //                 sum += std::norm( H_tmp[i*(this->dim) + j] );
+    //             }
+    //         }
+    //     }
 
-        sum = std::sqrt(sum);
-        if( sum > 1e-10 )
-        {
-            std::cout << "******\n" << "Error !!!: in BFGS_method::cal_Bk or cal_Hk is error: |Bk*Hk - I| = " << sum << "\n******" << std::endl;
-            // rdmft::printMatrix_pointer(this->dim, this->dim, this->Hk.data(), "BFGS: Hk", 10);
-            // rdmft::printMatrix_pointer(this->dim, this->dim, this->Bk.data(), "BFGS: Bk", 10);
-            // rdmft::printMatrix_pointer(this->dim, this->dim, H_tmp.data(), "Hk * Bk", 10);
-        }
-        else
-        {
-            std::cout << "******\n" << "success !!!: in BFGS_method::cal_Bk and cal_Hk is success: |Bk*Hk - I| = " << sum << "\n******" << std::endl;
-        }
-    }
+    //     sum = std::sqrt(sum);
+    //     if( sum > 1e-10 )
+    //     {
+    //         std::cout << "******\n" << "Error !!!: in BFGS_method::cal_Bk or cal_Hk is error: |Bk*Hk - I| = " << sum << "\n******" << std::endl;
+    //         // rdmft::printMatrix_pointer(this->dim, this->dim, this->Hk.data(), "BFGS: Hk", 10);
+    //         // rdmft::printMatrix_pointer(this->dim, this->dim, this->Bk.data(), "BFGS: Bk", 10);
+    //         // rdmft::printMatrix_pointer(this->dim, this->dim, H_tmp.data(), "Hk * Bk", 10);
+    //     }
+    //     else
+    //     {
+    //         std::cout << "******\n" << "success !!!: in BFGS_method::cal_Bk and cal_Hk is success: |Bk*Hk - I| = " << sum << "\n******" << std::endl;
+    //     }
+    // }
 
 
     if( PARAM.inp.print_BFGS_Hk )

@@ -351,14 +351,14 @@ double erf_inv_own(double x)
 
 double erf_der1(double x)
 {
-    double y = ( 2 * std::exp( -std::pow(x, 2) ) )/std::sqrt(ModuleBase::PI);
+    double y = ( 2.0 * std::exp( -std::pow(x, 2) ) )/std::sqrt(ModuleBase::PI);
     return y;
 }
 
 
 double erf_der2(double x)
 {
-    double y = ( -4 * x * std::exp( -std::pow(x, 2) ) )/std::sqrt(ModuleBase::PI);
+    double y = ( -4.0 * x * std::exp( -std::pow(x, 2) ) )/std::sqrt(ModuleBase::PI);
     return y;
 }
 
