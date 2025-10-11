@@ -653,8 +653,14 @@ void ReadInput::item_others()
     }
     {
         Input_Item item("ls_wolfe_c2");
-        item.annotation = "the second parameter of the wolfe condition. Recommended: Quasi-Newton method 0.9, Nonlinear Conjugate Gradient method 0.1 (relaxed conditions, BFGS: 0.999, NLCG: 0.4)";
+        item.annotation = "the second parameter of the wolfe condition. Recommended: Quasi-Newton method 0.9(relaxed conditions: 0.999)";
         read_sync_double(input.ls_wolfe_c2);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("ls_wolfe_c2_cg");
+        item.annotation = "the second parameter of the wolfe condition. Recommended: Nonlinear Conjugate Gradient method 0.1 (relaxed conditions: 0.4)";
+        read_sync_double(input.ls_wolfe_c2_cg);
         this->add_item(item);
     }
     {

@@ -53,7 +53,7 @@ void BFGS_method<TX>::init(const int dim_in, const double precond_eps_in)
     rho_diffX_diffGrad.resize( this->dim * this->dim );
     rho_diffX_diffX_T.resize( this->dim * this->dim );
     Hk.resize( this->dim * this->dim, 0.0 );
-    if( PARAM.inp.precond_occ_num && PARAM.inp.occ_num_opti == "cg")
+    if( PARAM.inp.precond_occ_num && (PARAM.inp.occ_num_opti == "cg" || PARAM.inp.occ_num_opti == "bfgs") ) // "bfgs" is test!
     {
         this->Bk.resize( this->dim * this->dim, 0.0 );
         this->y_yT.resize( this->dim * this->dim, 0.0 );

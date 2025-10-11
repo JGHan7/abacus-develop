@@ -34,7 +34,7 @@ void CG_method<TX>::init(const int dim_in, const double precond_eps_in)
     rdmft::Opti_method<TX>::init(dim_in, precond_eps_in);
 
     this->precond_grad.resize(this->dim, 0.0);
-    this->precond_grad_old.resize(this->dim, 1.0);
+    this->precond_grad_old.resize(this->dim, 0.0);
     this->diff_precond_grad.resize(this->dim, 0.0);
 }
 
@@ -64,12 +64,17 @@ void CG_method<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
     // get new pk
     for(int i=0; i<this->dim; ++i)
     {
-        pk[i] = - (this->precond_grad[i] + this->beta * this->search_direction[i]);
+        // pk[i] = - (this->precond_grad[i] + this->beta * this->search_direction[i]);
 
-        this->search_direction[i] = - pk[i];
+        // this->search_direction[i] = - pk[i];
+        pk[i] = - this->precond_grad[i] + this->beta * this->search_direction[i];
+
+        this->search_direction[i] = pk[i];
         this->precond_grad_old[i] = this->precond_grad[i];
         this->dE_dx[i] = dE_dx_new[i];
     }
+
+    std::cout << "\n\nin CG: \nbeta: " << this->beta << "\n" << std::endl;
 
     ++this->iter;
 }
@@ -94,13 +99,14 @@ void CG_method<TX>::cal_beta(const std::vector<TX>& dE_dx_new, const bool new_la
             // cal something
             TX pT_g = 0.0;
             TX pT_g_old = 0.0;
-            // TX nega_one = -1.0;
-            TX posi_one = 1.0;
-            rdmft::Tgemm_lapack( this->search_direction.data(), dE_dx_new.data(), &pT_g, 1, 1, this->dim, op_tran, 'N', posi_one );
-            rdmft::Tgemm_lapack( this->search_direction.data(), this->dE_dx.data(), &pT_g_old, 1, 1, this->dim, op_tran, 'N', posi_one );
+            // rdmft::Tgemm_lapack( this->search_direction.data(), dE_dx_new.data(), &pT_g, 1, 1, this->dim, op_tran, 'N' );
+            // rdmft::Tgemm_lapack( this->search_direction.data(), this->dE_dx.data(), &pT_g_old, 1, 1, this->dim, op_tran, 'N' );
+            TX nega_one = -1.0;
+            rdmft::Tgemm_lapack( this->search_direction.data(), dE_dx_new.data(), &pT_g, 1, 1, this->dim, op_tran, 'N', nega_one );
+            rdmft::Tgemm_lapack( this->search_direction.data(), this->dE_dx.data(), &pT_g_old, 1, 1, this->dim, op_tran, 'N', nega_one );
 
-            // if( std::abs( std::real(pT_g) ) > 0.2 * std::abs( std::real(pT_g_old) ) )
-            if( std::abs( std::real(pT_g) ) > 0.2 * std::real(pT_g_old) )
+            if( std::abs( std::real(pT_g) ) > 0.2 * std::abs( std::real(pT_g_old) ) )
+            // if( std::abs( std::real(pT_g) ) > 0.2 * std::real(pT_g_old) )
             {
                 // print something 
                 std::cout << "\n\nrestart CG: \npT_g: " << pT_g << "\npT_g_old: " << pT_g_old << "\n" << std::endl;
@@ -126,14 +132,25 @@ void CG_method<TX>::cal_beta(const std::vector<TX>& dE_dx_new, const bool new_la
             rdmft::Tgemm_lapack( dE_dx_new.data(), this->diff_precond_grad.data(), &gT_diff_z, 1, 1, this->dim, op_tran, 'N' );
             rdmft::Tgemm_lapack( this->dE_dx.data(), this->precond_grad_old.data(), &gT_z_old, 1, 1, this->dim, op_tran, 'N' );
 
-            this->beta = std::real( gT_diff_z / gT_z_old );
+            if( std::abs(gT_z_old) < 1e-16 )
+            {
+                this->beta = 0.0;
+                ++this->num_restart_skip;
+                return;
+            }
+            else
+            {
+                // this->beta = std::real( gT_diff_z / gT_z_old );
+                // this->beta = std::real( gT_diff_z )/ std::real( gT_z_old ); // ?
+                
+                this->beta = std::max( std::real( gT_diff_z / gT_z_old ), 0.0 ); // need?
+            }
         }
         else
         {
             std::cout << "\n\n CG_method only support beta_type == 'PR' now \n\n" << std::endl;
             assert(0);
         }
-
 
     }
 

@@ -36,19 +36,22 @@ template<typename TK, typename TR>
 void LineSearch_ONs<TK, TR>::init(const K_Vectors& kv_in, RDMFT<TK, TR>* rdmft_in)
 {
     this->rdmft_solver = rdmft_in;
-    
+
+    if( PARAM.inp.precond_occ_num )
+    {
+        this->precond_bfgs = std::make_unique< rdmft::BFGS_method<double> >();
+        this->precond_bfgs->init(rdmft_solver->nk_total*PARAM.inp.nbands);
+    }
+
     if( PARAM.inp.occ_num_opti == "cg" )
     {
         this->x_optimizer = std::make_unique< rdmft::CG_method<double> >();
-
-        if( PARAM.inp.precond_occ_num )
-        {
-            this->precond_bfgs = std::make_unique< rdmft::BFGS_method<double> >();
-            this->precond_bfgs->init(rdmft_solver->nk_total*PARAM.inp.nbands);
-        }
-
-        // test
-        this->ls.get_options().ls_wolfe_c2 = 0.1;
+        this->ls.get_options().ls_wolfe_c2 = PARAM.inp.ls_wolfe_c2_cg;
+        // if( PARAM.inp.precond_occ_num )
+        // {
+        //     this->precond_bfgs = std::make_unique< rdmft::BFGS_method<double> >();
+        //     this->precond_bfgs->init(rdmft_solver->nk_total*PARAM.inp.nbands);
+        // }
     }
     else
     {
@@ -327,7 +330,7 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 
         if( PARAM.inp.precond_type == 1 )
         {
-            if( PARAM.inp.occ_num_opti == "cg" )
+            if( PARAM.inp.occ_num_opti == "cg" || PARAM.inp.occ_num_opti == "bfgs" ) // "bfgs" is test
             {
                 std::vector<double> diag_Bk(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
                 this->precond_bfgs->get_diag_Bk(this->dE_dx, this->var_x, diag_Bk, new_landscape);

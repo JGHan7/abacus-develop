@@ -112,7 +112,7 @@ void LineSearch<TX>::strong_wolfe(const std::function<double(const double)>& cal
         }
 
         // curvature condition
-        if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 )
+        if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 ) // need abs? dphi_0 should be negative, but...
         {
             bracket = {this->step_size, this->step_size};
             bracket_phi = {trial_phi, trial_phi};
@@ -243,7 +243,7 @@ void LineSearch<TX>::zoom(const std::function<double(const double)>& cal_phi,
         }
         else
         {
-            if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 )
+            if( std::abs(trial_dphi) <= -this->ls_wolfe_c2 * this->dphi_0 ) // need abs? dphi_0 should be negative, but...
             {
                 done = true;
             }

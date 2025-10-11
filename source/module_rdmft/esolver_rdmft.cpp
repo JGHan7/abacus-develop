@@ -126,16 +126,18 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     {
         if( PARAM.inp.occ_num_opti == "cg" )
         {
-            this->x_optimizer = std::make_unique< rdmft::CG_method<double> >();
-            // this->x_optimizer = std::make_unique< rdmft::CG_method<std::complex<double>> >();
+            // this->x_optimizer = std::make_unique< rdmft::CG_method<double> >();
+            this->x_optimizer = std::make_unique< rdmft::CG_method<std::complex<double>> >();
+            // this->ls.get_options().ls_wolfe_c2 = PARAM.inp.ls_wolfe_c2_cg;
         }
         else
         {
-            this->x_optimizer = std::make_unique< rdmft::BFGS_method<double> >();
-            // this->x_optimizer = std::make_unique< rdmft::BFGS_method<std::complex<double>> >();
+            // this->x_optimizer = std::make_unique< rdmft::BFGS_method<double> >();
+            this->x_optimizer = std::make_unique< rdmft::BFGS_method<std::complex<double>> >();
         }
         this->x_optimizer->init(this->dim_x);
         this->data_x.resize(this->dim_x, 0.0);
+        this->ls_data_x.resize(this->dim_x, 0.0);
         this->df_dx.resize(this->dim_x, 0.0);
         this->pk.resize(this->dim_x, 0.0);
     }
@@ -514,8 +516,49 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             double step_size = 0.0;
             if(PARAM.inp.ls_condition != "test")
             {
+                std::complex<double> dphi_0_ = 0.0;
+                double max_pk_elem = 0.0;
+                for(int j=0; j<this->dim_x; ++j)
+                {
+                    dphi_0_ += this->df_dx[j] * std::conj(this->pk[j]);
+                    max_pk_elem = std::max( max_pk_elem, std::abs(this->pk[j]) );
+                }
+                double dphi_0 = std::real(dphi_0_);
 
+                // std::vector<std::complex<double>> ls_data_x(this->dim_x, 0.0);
+
+                auto update_x = [this](const double trial_alpha)
+                {
+                    for(int j=0; j<this->dim_x; ++j)
+                    {
+                        this->ls_data_x[j] = this->data_x[j] + trial_alpha * this->pk[j];
+                    }
+                };
+
+                auto phi = [this, update_x](const double trial_alpha)
+                {
+                    update_x(trial_alpha);
+                    double trial_phi = this->fx(this->ls_data_x);
+                    return trial_phi;
+                };
+
+                auto dphi = [this]()
+                {
+                    this->df_dx = this->grad_f(this->ls_data_x);
+                    std::complex<double> dphi_ = 0.0;
+                    for(int j=0; j<this->dim_x; ++j)
+                    {
+                        dphi_ += this->df_dx[j] * std::conj(this->pk[j]);
+                    }
+                    double trial_dphi = std::real(dphi_);
+                    return trial_dphi;
+                };
+
+                step_size = this->ls.do_line_search(phi, dphi, f_value, dphi_0, max_pk_elem, 1.0);
+                std::cout << "\nstep_size in test: " << step_size << "\nphi_0: " << f_value << "\ndphi_0: " << dphi_0 << "\n" << std::endl;
             }
+
+
             rdmft::printMatrix_pointer(1, this->data_x.size(), this->pk.data(), "pk");
             std::cout << "\n******\n\n" << std::endl;
 

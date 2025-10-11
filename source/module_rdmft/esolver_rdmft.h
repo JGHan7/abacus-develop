@@ -86,98 +86,100 @@ class ESolver_RDMFT: public ModuleESolver::ESolver_KS_LCAO<TK,TR>
     //! just for test
     rdmft::LineSearch<double> ls;
 
-    //! just for test
-    std::unique_ptr< rdmft::Opti_method<double> > x_optimizer;
-    int dim_x = 2;
-    std::vector<double> data_x;
-    std::vector<double> df_dx;
-    std::vector<double> pk;
-    // the only minimum point is (−3.2, 2.8), f0=13.8
-    double fx(std::vector<double>& x)
-    {
-        double f = std::pow(x[0]-1, 2) + std::pow(x[1]+2, 2) + 3 * x[0] *x[1];
-        return f;
-    }
-    std::vector<double> grad_f(std::vector<double>& x)
-    {
-        std::vector<double> df_dx(x.size(), 0.0);
-        df_dx[0] = 2*(x[0]-1) + 3*x[1];
-        df_dx[1] = 2*(x[1]+2) + 3*x[0];
-        return df_dx;
-    }
-    double norm_grad(std::vector<double>& df_dx)
-    {
-        double num = 0.0;
-        for(int i=0; i<df_dx.size(); ++i)
-        {
-          num += std::pow(df_dx[i], 2);
-        }
-        return std::sqrt(num);
-    }
-
-    // //! just for test (complex positive-definite quadratic)
-    // std::unique_ptr< rdmft::Opti_method<std::complex<double>> > x_optimizer;
+    // //! just for test
+    // std::unique_ptr< rdmft::Opti_method<double> > x_optimizer;
     // int dim_x = 2;
-    // std::vector<std::complex<double>> data_x;
-    // std::vector<std::complex<double>> df_dx;
-    // std::vector<std::complex<double>> pk;
-
-    // // Define H (Hermitian, positive-definite) and z_star:
-    // // H = [ [3, 0.5+0.2i],
-    // //       [0.5-0.2i, 4] ]
-    // // z_star = (1+2i, 2+1i)
-    // const std::complex<double> H00 = {3.0, 0.0};
-    // const std::complex<double> H01 = {0.5, 0.2};
-    // const std::complex<double> H10 = {0.5, -0.2};
-    // const std::complex<double> H11 = {4.0, 0.0};
-
-    // const std::complex<double> z0_0 = {1.0, 2.0};
-    // const std::complex<double> z0_1 = {2.0, 1.0};
-
-    // // f(z) = (z - z0)^H H (z - z0)
-    // inline double fx(std::vector<std::complex<double>>& x)
+    // std::vector<double> data_x;
+    // std::vector<double> ls_data_x;
+    // std::vector<double> df_dx;
+    // std::vector<double> pk;
+    // // the only minimum point is (−3.2, 2.8), f0=13.8
+    // double fx(const std::vector<double>& x)
     // {
-    //     std::complex<double> dz0 = x[0] - z0_0;
-    //     std::complex<double> dz1 = x[1] - z0_1;
-
-    //     // w = H * dz
-    //     std::complex<double> w0 = H00 * dz0 + H01 * dz1;
-    //     std::complex<double> w1 = H10 * dz0 + H11 * dz1;
-
-    //     // val = conj(dz0)*w0 + conj(dz1)*w1
-    //     std::complex<double> val = std::conj(dz0) * w0 + std::conj(dz1) * w1;
-
-    //     const double tol_imag = 1e-12;
-    //     if (std::abs(val.imag()) > tol_imag) {
-    //         std::cerr << "Warning: fx returned complex with non-negligible imag part = "
-    //                   << val.imag() << "\n";
-    //     }
-    //     return val.real();
+    //     double f = std::pow(x[0]-1, 2) + std::pow(x[1]+2, 2) + 0.5 * x[0] *x[1];
+    //     return f;
     // }
-
-    // // gradient (Wirtinger): df/d(conj(z)) = H (z - z0)
-    // inline std::vector<std::complex<double>> grad_f(std::vector<std::complex<double>>& x)
+    // std::vector<double> grad_f(const std::vector<double>& x)
     // {
-    //     std::vector<std::complex<double>> df_dx(x.size(), {0.0, 0.0});
-    //     std::complex<double> dz0 = x[0] - z0_0;
-    //     std::complex<double> dz1 = x[1] - z0_1;
-
-    //     df_dx[0] = H00 * dz0 + H01 * dz1; // ∂f/∂conj(z1)
-    //     df_dx[1] = H10 * dz0 + H11 * dz1; // ∂f/∂conj(z2)
-
+    //     std::vector<double> df_dx(x.size(), 0.0);
+    //     df_dx[0] = 2*(x[0]-1) + 0.5*x[1];
+    //     df_dx[1] = 2*(x[1]+2) + 0.5*x[0];
     //     return df_dx;
     // }
-
-    // inline double norm_grad(std::vector<std::complex<double>>& df_dx)
+    // double norm_grad(const std::vector<double>& df_dx)
     // {
     //     double num = 0.0;
-    //     for (size_t i = 0; i < df_dx.size(); ++i)
+    //     for(int i=0; i<df_dx.size(); ++i)
     //     {
-    //         // std::norm returns |z|^2 for complex
-    //         num += std::norm(df_dx[i]);
+    //       num += std::pow(df_dx[i], 2);
     //     }
     //     return std::sqrt(num);
     // }
+
+    //! just for test (complex positive-definite quadratic)
+    std::unique_ptr< rdmft::Opti_method<std::complex<double>> > x_optimizer;
+    int dim_x = 2;
+    std::vector<std::complex<double>> data_x;
+    std::vector<std::complex<double>> ls_data_x;
+    std::vector<std::complex<double>> df_dx;
+    std::vector<std::complex<double>> pk;
+
+    // Define H (Hermitian, positive-definite) and z_star:
+    // H = [ [3, 0.5+0.2i],
+    //       [0.5-0.2i, 4] ]
+    // z_star = (1+2i, 2+1i)
+    const std::complex<double> H00 = {3.0, 0.0};
+    const std::complex<double> H01 = {0.5, 0.2};
+    const std::complex<double> H10 = {0.5, -0.2};
+    const std::complex<double> H11 = {4.0, 0.0};
+
+    const std::complex<double> z0_0 = {1.0, 2.0};
+    const std::complex<double> z0_1 = {2.0, 1.0};
+
+    // f(z) = (z - z0)^H H (z - z0)
+    inline double fx(std::vector<std::complex<double>>& x)
+    {
+        std::complex<double> dz0 = x[0] - z0_0;
+        std::complex<double> dz1 = x[1] - z0_1;
+
+        // w = H * dz
+        std::complex<double> w0 = H00 * dz0 + H01 * dz1;
+        std::complex<double> w1 = H10 * dz0 + H11 * dz1;
+
+        // val = conj(dz0)*w0 + conj(dz1)*w1
+        std::complex<double> val = std::conj(dz0) * w0 + std::conj(dz1) * w1;
+
+        const double tol_imag = 1e-12;
+        if (std::abs(val.imag()) > tol_imag) {
+            std::cerr << "Warning: fx returned complex with non-negligible imag part = "
+                      << val.imag() << "\n";
+        }
+        return val.real();
+    }
+
+    // gradient (Wirtinger): df/d(conj(z)) = H (z - z0)
+    inline std::vector<std::complex<double>> grad_f(std::vector<std::complex<double>>& x)
+    {
+        std::vector<std::complex<double>> df_dx(x.size(), {0.0, 0.0});
+        std::complex<double> dz0 = x[0] - z0_0;
+        std::complex<double> dz1 = x[1] - z0_1;
+
+        df_dx[0] = H00 * dz0 + H01 * dz1; // ∂f/∂conj(z1)
+        df_dx[1] = H10 * dz0 + H11 * dz1; // ∂f/∂conj(z2)
+
+        return df_dx;
+    }
+
+    inline double norm_grad(std::vector<std::complex<double>>& df_dx)
+    {
+        double num = 0.0;
+        for (size_t i = 0; i < df_dx.size(); ++i)
+        {
+            // std::norm returns |z|^2 for complex
+            num += std::norm(df_dx[i]);
+        }
+        return std::sqrt(num);
+    }
 
   protected:
 

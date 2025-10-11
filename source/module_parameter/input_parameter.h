@@ -652,7 +652,8 @@ struct Input_para
     double tot_nelec_thr = 1e-10;
     double min_occ_num = 1e-12;
     double ls_wolfe_c1 = 0.0001;
-    double ls_wolfe_c2 = 0.9; // recommended: Quasi-Newton method 0.9, Nonlinear Conjugate Gradient method 0.1 (relaxed conditions, BFGS: 0.999, NLCG: 0.4)
+    double ls_wolfe_c2 = 0.9; // recommended: Quasi-Newton method 0.9 (relaxed conditions: 0.999)
+    double ls_wolfe_c2_cg = 0.1; // recommended: Nonlinear Conjugate Gradient method 0.1 (relaxed conditions: 0.4)
     double ls_armijo_c1 = 0.0001;
     double ls_armijo_c2 = 0.9;
     double max_step_size = 1000.0;

@@ -87,9 +87,7 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
         if( PARAM.inp.rdmft_orb_opti == "cg" )
         {
             this->R_optimizer[ik] = std::make_unique< rdmft::CG_method<TK> >();
-            
-            // test
-            this->ls[ik]->get_options().ls_wolfe_c2 = 0.1;
+            this->ls[ik]->get_options().ls_wolfe_c2 = PARAM.inp.ls_wolfe_c2_cg;
         }
         else
         {
