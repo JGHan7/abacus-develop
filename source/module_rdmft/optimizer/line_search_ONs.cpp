@@ -235,10 +235,10 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     auto num = std::max_element(diff_rate.begin(), diff_rate.end());
     this->diff_rate_max = *num;
     
-    if( iter%10 == 1 )
-    {
-        rdmft::printMatrix_pointer(temp_occ.nr, temp_occ.nc, diff_occ_num.data(), "after opti, diff_occ_num", 5);
-    }
+    // if( iter%10 == 1 )
+    // {
+    //     rdmft::printMatrix_pointer(temp_occ.nr, temp_occ.nc, diff_occ_num.data(), "after opti, diff_occ_num", 5);
+    // }
 
     this->Etotal_iter.push_back(this->phi_0);
     ++this->iter;

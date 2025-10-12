@@ -633,11 +633,11 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
             std::cout << "\n******\nniter of rdmft: " << iter 
                         << std::fixed << std::setprecision(15);
-            std::cout << "\n\nEtotal_rdmft by opti ONs: " << E_new1
+            std::cout << "\n\nEtotal_rdmft by opti NOs: " << E_new2
+                        << "\ndiff_E: " << diff_E2
+                        << "\n\nEtotal_rdmft by opti ONs: " << E_new1
                         << "\ndiff_E: " << diff_E1 
                         << "\ndiff_occ_num_max: " << diff_occ_num_max
-                        << "\n\nEtotal_rdmft by opti NOs: " << E_new2
-                        << "\ndiff_E: " << diff_E2
                         << "\n\ndiff_E_all: " << diff_E_all
                         // << "\ndiff_DM_max: " << this->diff_DM_max
                         // << "\n\nmax_off_diag_F: " << this->max_off_diag_Fock

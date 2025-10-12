@@ -138,6 +138,9 @@ void LineSearch_NOs<TK, TR>::get_start_guess()
     {
         rdmft::psi2vec(ik, *this->ParaV, this->rdmft_solver->wfc, wfc_vec[ik]);
         rdmft::vector2tensor( wfc_vec[ik], this->wfc_0_tensor[ik], {nbands64, nbasis64} );
+
+        // // test
+        // rdmft::vec2psi(ik, *this->ParaV, wfc_vec[ik], this->wfc_new);
     }
 
     // perform a forward calculation before all optimizations begin
@@ -164,6 +167,10 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 
     for(int ik=0; ik<this->nk_total; ++ik)
     {
+        // // test
+        // this->rdmft_solver->update_elec( nullptr, &(this->wfc_new) );
+        // this->Ek_iter[ik].back() = this->rdmft_solver->cal_Energy();
+        // this->phi_0_k[ik] = this->Ek_iter[ik].back();
 
         // for multiple k-point problems, we need to consider whether these two functions should be inside or outside the loop !!!!!!!!!!!!!!!!!
         // as well as the state update of rdmft_solver (k-point update or overall update) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -206,6 +213,7 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 
         // do line search
         this->step_size_k[ik] = this->ls[ik]->do_line_search(phi, dphi, this->phi_0_k[ik], this->dphi_0_k[ik], max_elem_pk, this->init_step_k[ik]);
+        // this->step_size_k[ik] = PARAM.inp.ls_fixed_step;
 
         // use the final_step_size to update 
         this->phi_0_k[ik] = phi(this->step_size_k[ik]);
@@ -402,12 +410,27 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
             // generate upper triangle index
             auto idx = torch::triu_indices(this->nbands64, this->nbands64);
 
-            // fill upper triangle dE_dthetaR_tensor
-            d2E_dthetaR_2_tensor = d2E_dR2_tensor.index({idx[0], idx[1]}) 
-                                            - d2E_dR2_tensor.index({idx[1], idx[0]}).conj();
-            
+            // // fill upper triangle dE_dthetaR_tensor
+            // d2E_dthetaR_2_tensor = d2E_dR2_tensor.index({idx[0], idx[1]}) 
+            //                                 - d2E_dR2_tensor.index({idx[1], idx[0]}).conj();
+            // auto d2E_dthetaR_2_tensor = torch::zeros({this->nbands64, this->nbands64}, d2E_dR2_tensor.options());
+            // for (int i = 0; i < this->nbands64; ++i)
+            // {
+            //     for (int j = i; j < this->nbands64; ++j)
+            //     {
+            //         d2E_dthetaR_2_tensor[i][j] = d2E_dR2_tensor[i][j] - d2E_dR2_tensor[j][i].conj();
+            //     }
+            // }
+            d2E_dthetaR_2_tensor = d2E_dR2_tensor.index({idx[0], idx[1]});
+
             // convert data formats
             rdmft::tensor2vector(d2E_dthetaR_2_tensor, d2E_dthetaR_2_global);
+
+            // // print
+            // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dR2_global.data(), "d2E_dR2", 10);
+
+            // // print
+            // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2", 10);
 
             if( PARAM.inp.precond_type == 1 )
             {
