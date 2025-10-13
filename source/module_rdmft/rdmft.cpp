@@ -579,7 +579,7 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
 #endif
 
         // contribution of DFT's xc functional to energy
-        E_RDMFT[2] += etxc;
+        E_RDMFT[2] += this->etxc;
 
         // dft_xc has not been considered yet !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ModuleBase::matrix E_n_k(wg.nr, wg.nc, true);
@@ -677,9 +677,10 @@ double RDMFT<TK, TR>::cal_Energy(const int cal_type)
                 << "\nE_entropy(-TS):  " << E_entropy 
                 << "\nE_descf:         " << E_descf 
                 << "\n\nEtotal_RDMFT:    " << Etotal 
+                << "\n\nE_exxType_rdmft: " << E_exxType_rdmft
+                << "\nE_dftType_rdmft: " << this->etxc
                 << "\n\nExc_ksdft:       " << E_xc_KS 
                 << "\nE_exx_ksdft:     " << E_exx_KS
-                << "\nE_exxType_rdmft: " << E_exxType_rdmft
                 <<"\n******\n" << std::endl;
     }
     std::cout << std::defaultfloat;

@@ -37,6 +37,8 @@ class LineSearch_NOs
 
     void restart_opti();
 
+    double get_grad_norm() { return this->grad_norm; }
+
     std::vector<double> Etotal_iter;
     std::vector<std::vector<double>> Ek_iter;
     int iter = 0;
@@ -123,6 +125,10 @@ class LineSearch_NOs
     const Parallel_Orbitals* ParaV = nullptr;
 
     const Parallel_2D* para_Fij = nullptr;
+
+    double grad_norm = 0.0;
+
+    void cal_grad_norm();
 
     void update_R_wfc(const int* ik = nullptr);
 

@@ -363,6 +363,9 @@ double LineSearch_NOs<TK, TR>::cal_dphi(const int* ik)
 template<typename TK, typename TR>
 void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* ik)
 {
+    // 
+    this->cal_grad_norm();
+
     // std::vector<TK> d2E_dR2_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
     // std::vector<TK> d2E_dR2_global(PARAM.inp.nbands * PARAM.inp.nbands, 0.0);
     // torch::Tensor d2E_dR2_tensor;
@@ -421,7 +424,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
             //         d2E_dthetaR_2_tensor[i][j] = d2E_dR2_tensor[i][j] - d2E_dR2_tensor[j][i].conj();
             //     }
             // }
-            d2E_dthetaR_2_tensor = d2E_dR2_tensor.index({idx[0], idx[1]});
+            d2E_dthetaR_2_tensor = 2.0 * d2E_dR2_tensor.index({idx[0], idx[1]});
 
             // convert data formats
             rdmft::tensor2vector(d2E_dthetaR_2_tensor, d2E_dthetaR_2_global);
@@ -536,7 +539,19 @@ void LineSearch_NOs<TK, TR>::cal_dE_dR(const int* ik)
 }
 
 
-
+template<typename TK, typename TR>
+void LineSearch_NOs<TK, TR>::cal_grad_norm()
+{
+    this->grad_norm = 0.0;
+    for(int jk=0; jk<this->nk_total; ++jk)
+    {
+        for(int i=0; i<this->dE_dthetaR_global[jk].size(); ++i)
+        {
+            this->grad_norm += std::norm(this->dE_dthetaR_global[jk][i]);
+        }
+    }
+    this->grad_norm = std::sqrt(this->grad_norm);
+}
 
 
 

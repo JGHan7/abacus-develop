@@ -303,13 +303,13 @@ void LineSearch_ONs<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vect
     std::vector<double> dE_docc_num = this->rdmft_solver->get_dE_docc_num();
     this->param_occ_num->get_dE_dx(dE_docc_num, dE_dx_new);
     
-    // test
-    double norm_dE_dx = 0.0;
-    for(int i=0; i<dE_dx_new.size(); ++i)
-    {
-        norm_dE_dx += dE_dx_new[i] * dE_dx_new[i];
-    }
-    norm_dE_dx = std::sqrt(norm_dE_dx);
+    // // test
+    // double norm_dE_dx = 0.0;
+    // for(int i=0; i<dE_dx_new.size(); ++i)
+    // {
+    //     norm_dE_dx += dE_dx_new[i] * dE_dx_new[i];
+    // }
+    // norm_dE_dx = std::sqrt(norm_dE_dx);
     // std::cout << "\n***\nin ls, norm_dE_dx: " << norm_dE_dx  << "\n***\n" << std::endl;
 
     // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, dE_dx_new.data(), "look, dE_dx_new");
@@ -321,6 +321,9 @@ void LineSearch_ONs<TK, TR>::cal_dE_dx(std::vector<double>& dE_dx_new, std::vect
 template<typename TK, typename TR>
 void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 {
+    //
+    this->cal_grad_norm();
+
     // get pk: PARAM_ONs provide var_x and dE_dx to BFGS
     if( PARAM.inp.precond_occ_num ) // && this->iter > 5 
     {
@@ -335,9 +338,16 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
                 std::vector<double> diag_Bk(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
                 this->precond_bfgs->get_diag_Bk(this->dE_dx, this->var_x, diag_Bk, new_landscape);
                 const double g_factor = PARAM.inp.precond_g;
+
+                // print
+                rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, diag_Bk.data(), "diag_Bk", 10);
+                rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2", 10);
+
+
                 for(int i=0; i<diag_Bk.size(); ++i)
                 {
-                    d2E_dx2[i] = g_factor * diag_Bk[i] + (1 - g_factor) * d2E_dx2[i];
+                    // d2E_dx2[i] = g_factor * diag_Bk[i] + (1 - g_factor) * d2E_dx2[i];
+                    d2E_dx2[i] = g_factor * std::abs(diag_Bk[i]) + (1 - g_factor) * std::abs(d2E_dx2[i]);
                 }
             }
 
@@ -388,6 +398,18 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 
     // get dphi_0
     rdmft::Tgemm_lapack( this->dE_dx.data(), this->search_direction.data(), &this->dphi_0, 1, 1, rdmft_solver->nk_total * PARAM.inp.nbands , 'T');
+}
+
+
+template<typename TK, typename TR>
+void LineSearch_ONs<TK, TR>::cal_grad_norm()
+{
+    this->grad_norm = 0.0;
+    for(int i=0; i<this->dE_dx.size(); ++i)
+    {
+        this->grad_norm += std::norm(this->dE_dx[i]);
+    }
+    this->grad_norm = std::sqrt(this->grad_norm);
 }
 
 

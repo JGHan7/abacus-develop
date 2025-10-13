@@ -605,11 +605,12 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 ModuleBase::matrix occ_num_new = this->ls_opti_occ_num.get_occ_num();
                 this->rdmft_solver.update_elec( &occ_num_new, nullptr );
             }
+            double E_new = this->rdmft_solver.cal_Energy();
 
             double diff_E1 = E_new1 - Etotal_old;
             double diff_E2 = E_new2 - Etotal_old;
-            double diff_E_all =  this->rdmft_solver.cal_Energy() - Etotal_old;
-            Etotal_old = this->rdmft_solver.Etotal;
+            double diff_E_all =  E_new - Etotal_old;
+            Etotal_old = E_new;
 
             if( diff_E1 > 0 )
             {
@@ -633,12 +634,15 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
 
             std::cout << "\n******\nniter of rdmft: " << iter 
                         << std::fixed << std::setprecision(15);
-            std::cout << "\n\nEtotal_rdmft by opti NOs: " << E_new2
-                        << "\ndiff_E: " << diff_E2
-                        << "\n\nEtotal_rdmft by opti ONs: " << E_new1
+            std::cout << "\n\nEtotal_rdmft by opti ONs: " << E_new1
                         << "\ndiff_E: " << diff_E1 
+                        << "\n\nEtotal_rdmft by opti NOs: " << E_new2
+                        << "\ndiff_E: " << diff_E2
                         << "\ndiff_occ_num_max: " << diff_occ_num_max
-                        << "\n\ndiff_E_all: " << diff_E_all
+                        << "\n\nEtotal_rdmft by opti NOs and ONs: " << E_new
+                        << "\ndiff_E_all: " << diff_E_all
+                        << "\n\ndE_dR_norm: " << this->ls_opti_orb.get_grad_norm()
+                        << "\ndE_dx_norm: " << this->ls_opti_occ_num.get_grad_norm()
                         // << "\ndiff_DM_max: " << this->diff_DM_max
                         // << "\n\nmax_off_diag_F: " << this->max_off_diag_Fock
                         // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
@@ -651,7 +655,9 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             }
             std::cout << "******" << std::endl << std::defaultfloat;
 
-            if( diff_occ_num_max < this->occ_num_thr && std::abs(diff_E_all) < 1e-7 && iter > 10 )
+            if( std::abs(diff_E_all) < 1e-8 
+                && this->ls_opti_orb.get_grad_norm() < 1e-4 
+                && this->ls_opti_occ_num.get_grad_norm() < 1e-4 ) // diff_occ_num_max < this->occ_num_thr
             {
                 break;
             }

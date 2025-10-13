@@ -32,6 +32,8 @@ class LineSearch_ONs
 
     void restart_opti();
 
+    double get_grad_norm() { return this->grad_norm; }
+
     std::vector<double> Etotal_iter;
     int iter = 0;
     int num_restart = 0;
@@ -134,6 +136,10 @@ class LineSearch_ONs
     std::unique_ptr< rdmft::BFGS_method<double> > precond_bfgs;
 
     rdmft::LineSearch<double> ls;
+
+    double grad_norm = 0.0;
+
+    void cal_grad_norm();
 
     std::vector<double> scaling_P; // test
     std::vector<double> scaling_P_old; // test
