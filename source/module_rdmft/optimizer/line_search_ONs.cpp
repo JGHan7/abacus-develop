@@ -333,36 +333,39 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 
         // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2", 10);
 
-        double min_grad2 = *std::min_element(d2E_dx2.begin(), d2E_dx2.end());
+        // double min_grad2 = *std::min_element(d2E_dx2.begin(), d2E_dx2.end());
 
-        // double second_min_grad2 = std::numeric_limits<double>::infinity();
-        // for (int j=0; j<d2E_dx2.size(); ++j)
+        // // double second_min_grad2 = std::numeric_limits<double>::infinity();
+        // // for (int j=0; j<d2E_dx2.size(); ++j)
+        // // {
+        // //     if (d2E_dx2[j] > min_grad2 && d2E_dx2[j] < second_min_grad2)
+        // //     {
+        // //         second_min_grad2 = d2E_dx2[j];
+        // //     }
+        // // }
+
+        // double average_grad2 = 0.0;
+        // if( min_grad2 < 0 )
         // {
-        //     if (d2E_dx2[j] > min_grad2 && d2E_dx2[j] < second_min_grad2)
+        //     for(int i=0; i<d2E_dx2.size(); ++i)
         //     {
-        //         second_min_grad2 = d2E_dx2[j];
+        //         d2E_dx2[i] -= min_grad2;
+        //         // d2E_dx2[i] = std::max( d2E_dx2[i], second_min_grad2 - min_grad2 );
+        //         average_grad2 += std::abs(d2E_dx2[i]);
+        //     }
+        // }
+        // average_grad2 /= d2E_dx2.size();
+        // if( min_grad2 < 0 )
+        // {
+        //     for(int i=0; i<d2E_dx2.size(); ++i)
+        //     {
+        //         d2E_dx2[i] += average_grad2 * 0.001;
         //     }
         // }
 
-        double average_grad2 = 0.0;
-        if( min_grad2 < 0 )
-        {
-            for(int i=0; i<d2E_dx2.size(); ++i)
-            {
-                d2E_dx2[i] -= min_grad2;
-                // d2E_dx2[i] = std::max( d2E_dx2[i], second_min_grad2 - min_grad2 );
-                average_grad2 += std::abs(d2E_dx2[i]);
-            }
-        }
-        average_grad2 /= d2E_dx2.size();
-        if( min_grad2 < 0 )
-        {
-            for(int i=0; i<d2E_dx2.size(); ++i)
-            {
-                d2E_dx2[i] += average_grad2 * 0.001;
-            }
-        }
-
+        double min_shift_grad2 = compute_min_shift(d2E_dx2, 2.0);
+        rdmft::shift_precond( d2E_dx2 , min_shift_grad2, 0.001);
+        std::cout << "\n\nmin_shift_grad2 in ONs-opti: " << min_shift_grad2 << "\n" << std::endl;
 
 
         // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2 after shifting", 10);
@@ -377,41 +380,42 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
 
                 // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, diag_Bk.data(), "diag_Bk", 10);
 
-                double min_Bk = *std::min_element(diag_Bk.begin(), diag_Bk.end());
+                // double min_Bk = *std::min_element(diag_Bk.begin(), diag_Bk.end());
 
-                // double second_min_Bk = std::numeric_limits<double>::infinity();
-                // for (int j=0; j<diag_Bk.size(); ++j)
+                // // double second_min_Bk = std::numeric_limits<double>::infinity();
+                // // for (int j=0; j<diag_Bk.size(); ++j)
+                // // {
+                // //     if (diag_Bk[j] > min_Bk && diag_Bk[j] < second_min_Bk)
+                // //     {
+                // //         second_min_Bk = diag_Bk[j];
+                // //     }
+                // // }
+            
+                // double average_Bk = 0.0;
+                // if( min_Bk < 0 )
                 // {
-                //     if (diag_Bk[j] > min_Bk && diag_Bk[j] < second_min_Bk)
+                //     for(int i=0; i<diag_Bk.size(); ++i)
                 //     {
-                //         second_min_Bk = diag_Bk[j];
+                //         diag_Bk[i] -= min_Bk;
+                //         // diag_Bk[i] = std::max(  diag_Bk[i], second_min_Bk - min_Bk );
+                //         average_Bk += std::abs(diag_Bk[i]);
                 //     }
                 // }
-            
-                double average_Bk = 0.0;
-                if( min_Bk < 0 )
-                {
-                    for(int i=0; i<diag_Bk.size(); ++i)
-                    {
-                        diag_Bk[i] -= min_Bk;
-                        // diag_Bk[i] = std::max(  diag_Bk[i], second_min_Bk - min_Bk );
-                        average_Bk += std::abs(diag_Bk[i]);
-                    }
-                }
-                average_Bk /= diag_Bk.size();
+                // average_Bk /= diag_Bk.size();
 
-                if( min_Bk < 0 )
-                {
-                    for(int i=0; i<diag_Bk.size(); ++i)
-                    {
-                        diag_Bk[i] += average_Bk * 0.001;
-                    }
-                }
-                // // print
+                // if( min_Bk < 0 )
+                // {
+                //     for(int i=0; i<diag_Bk.size(); ++i)
+                //     {
+                //         diag_Bk[i] += average_Bk * 0.001;
+                //     }
+                // }
+                // // // print
 
-                // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, diag_Bk.data(), "diag_Bk after shifting", 10);
-
-
+                // // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, diag_Bk.data(), "diag_Bk after shifting", 10);
+                double min_shift_Bk = compute_min_shift(diag_Bk, 2.0);
+                rdmft::shift_precond( diag_Bk , min_shift_Bk, 0.001);
+                std::cout << "\n\nmin_shift_Bk in ONs-opti: " << min_shift_Bk << "\n" << std::endl;
 
                 for(int i=0; i<diag_Bk.size(); ++i)
                 {

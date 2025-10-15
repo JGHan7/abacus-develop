@@ -1043,6 +1043,59 @@ void torch_print_options(const torch::optim::LBFGS& opt);
 
 
 
+/********* the following function is used by PCG *********/
+
+template <typename T>
+void shift_precond(std::vector<T>& Px,
+                       double shift_min = 1e-6,
+                       double empirical_offset = 0.0)
+{
+    //
+    double min_real = std::real(Px[0]);
+    for (int i = 1; i < Px.size(); ++i)
+    {
+        min_real = std::min(min_real, std::real(Px[i]));
+    }
+
+    //
+    double shift = 0.0;
+    if (min_real < shift_min)
+    {   
+        shift = empirical_offset - min_real;
+        if (shift < shift_min)
+        {
+            shift = shift_min;
+        }
+    }
+
+    //
+    for (auto& val : Px)
+    {
+        val += shift;
+    }
+}
+
+
+template <typename T>
+double compute_min_shift(const std::vector<T>& diag, double scale = 2.0)
+{
+    double shift = 0.0;
+    for (int i = 0; i < diag.size(); ++i)
+    {
+        for (int j = i+1; j < diag.size(); ++j)
+        {
+            shift = std::min( shift, std::real(diag[j]-diag[i]) );
+        }
+    }
+    return std::abs(-scale * shift);
+}
+
+
+
+
+
+
+
 }
 
 #endif

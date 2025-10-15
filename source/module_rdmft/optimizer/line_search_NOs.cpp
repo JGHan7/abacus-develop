@@ -96,7 +96,7 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in, LineSearch_ONs<TK, TR
         {
             this->R_optimizer[ik] = std::make_unique< rdmft::BFGS_method<TK> >();
         }
-        this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 1e-10 );
+        this->R_optimizer[ik]->init( PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 1e-8 );
 
         this->dE_dR_global[ik].resize(PARAM.inp.nbands * PARAM.inp.nbands, 0.0);
         this->dE_dthetaR_global[ik].resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
@@ -550,50 +550,110 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
             // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2", 10);
 
             // // vec_temp;
-            // int min_location = 0;
-            // double min_real_grad2 = 0.0;
+            int min_location = 0;
+            double min_real_grad2 = 0.0;
+            int max_location = 0;
+            double max_real_grad2 = 0.0;
+            for(int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+            {
+                if( std::real(d2E_dthetaR_2_global[j]) < min_real_grad2 )
+                {
+                    min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+                    min_location = j;
+                }
+
+                if( std::real(d2E_dthetaR_2_global[j]) > max_real_grad2 )
+                {
+                    max_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+                    max_location = j;
+                }
+            }
+
+            // double eps_abs = 1e-8;
+            // double eps_rel = 1e-6 * std::max(1.0, max_real_grad2);
+            // double safety = std::max(eps_abs, eps_rel);
+
             // for(int j=0; j<d2E_dthetaR_2_global.size(); ++j)
             // {
-            //     if( std::real(d2E_dthetaR_2_global[j]) < min_real_grad2 )
+            //     if( std::real(d2E_dthetaR_2_global[j]) < 0 )
             //     {
-            //         min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
-            //         min_location = j;
+            //         d2E_dthetaR_2_global[j] = safety;
             //     }
             // }
 
-            // // double second_min_real_grad2 = std::numeric_limits<double>::infinity();
-            // // TK second_min_grad2 = 0.0;
-            // // for (int j=0; j<d2E_dthetaR_2_global.size(); ++j)
-            // // {
-            // //     if (std::real(d2E_dthetaR_2_global[j]) > min_real_grad2 && std::real(d2E_dthetaR_2_global[j]) < second_min_real_grad2)
-            // //     {
-            // //         second_min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
-            // //         second_min_grad2 = d2E_dthetaR_2_global[j];
-            // //     }
-            // // }
-
-            // double average_grad2 = 0.0;
-            // TK min_grad2 = d2E_dthetaR_2_global[min_location];
-            // if( min_real_grad2 < 0 )
+            
+            // // double offset = 1e-3;
+            // // offset += 0.5 * std::abs(min_real_grad2);
+            // double offset = 0.1;
+            // if( std::abs(max_real_grad2) > 1.0 )
             // {
-            //     for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
-            //     {
-            //         d2E_dthetaR_2_global[i] -= min_grad2;
-            //         // if( std::real(d2E_dthetaR_2_global[i]) < std::real(second_min_grad2 - min_grad2) )
-            //         // {
-            //         //     d2E_dthetaR_2_global[i] = second_min_grad2 - min_grad2;
-            //         // }
-            //         average_grad2 += std::abs(d2E_dthetaR_2_global[i]);
-            //     }
-
+            //     offset = 2.0;
             // }
+            // else if( std::abs(max_real_grad2) > 0.01 )
+            // {
+            //     offset = 0.5;
+            // }
+
+            // in the future, the min_shift of different spins should be obtained separately, and then the maximum value is taken.
+            // compute_min_shift()
+
+
+
+
+            // double min_shift = compute_min_shift(d2E_dthetaR_2_global, 2.0);
+
+            // std::cout << "\n\nmin_shift in NOs-opti: " << min_shift << "\n" << std::endl;
+
+            // rdmft::shift_precond( d2E_dthetaR_2_global , min_shift, 0.001);
+
+
+            // rdmft::shift_precond( d2E_dthetaR_2_global , 0.001, 0.0);
+
+
+
+
+
+
+
+
+
+            // double second_min_real_grad2 = std::numeric_limits<double>::infinity();
+            // TK second_min_grad2 = 0.0;
+            // for (int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+            // {
+            //     if (std::real(d2E_dthetaR_2_global[j]) > min_real_grad2 && std::real(d2E_dthetaR_2_global[j]) < second_min_real_grad2)
+            //     {
+            //         second_min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+            //         second_min_grad2 = d2E_dthetaR_2_global[j];
+            //     }
+            // }
+
+            double average_grad2 = 0.0;
+            TK min_grad2 = d2E_dthetaR_2_global[min_location];
+            if( min_real_grad2 < 0 )
+            {
+                for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
+                {
+                    d2E_dthetaR_2_global[i] -= min_grad2;
+                    // // if( std::real(d2E_dthetaR_2_global[i]) < std::real(second_min_grad2 - min_grad2) )
+                    // // {
+                    // //     d2E_dthetaR_2_global[i] = second_min_grad2 - min_grad2;
+                    // // }
+                    // average_grad2 += std::abs(d2E_dthetaR_2_global[i]);
+                    if( std::real(d2E_dthetaR_2_global[i]) < 0.001 )
+                    {
+                        d2E_dthetaR_2_global[i] = 0.001;
+                    }
+                }
+
+            }
 
             // average_grad2 /= d2E_dthetaR_2_global.size();
             // if( min_real_grad2 < 0 )
             // {
             //     for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
             //     {
-            //         d2E_dthetaR_2_global[i] += average_grad2 * 1e-5;
+            //         d2E_dthetaR_2_global[i] += average_grad2 * 1e-3;
             //     }
             // }
 
