@@ -63,21 +63,6 @@ class LineSearch_ONs
 
   protected:
 
-    // //! Strong Wolfe condition, get the appropriate step length
-    // void strong_wolfe();
-
-    // //! Strong Wolfe condition, get the appropriate step length. By myself
-    // void strong_wolfe2();
-
-    // //! exact line search, get the most appropriate step length, just be used to test or solve simple problem
-    // void exact_ls();
-
-    // //! Wolfe condition
-    // void wolfe();
-
-    // //! used in Strong Wolfe condition, get the appropriate step length
-    // void zoom(double step_size_low, double phi_low, double step_size_high, double phi_high, double dphi_low);
-
     //! calculate the new x based on the current step size
     void update_x(std::vector<double>& x_new);
 

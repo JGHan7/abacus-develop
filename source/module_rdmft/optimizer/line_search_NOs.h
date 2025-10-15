@@ -12,6 +12,8 @@
 #include "module_rdmft/optimizer/opti_method.h"
 #include  "module_rdmft/optimizer/line_search_method.h"
 
+#include "module_rdmft/optimizer/line_search_ONs.h" // temp
+
 
 namespace rdmft
 {
@@ -27,7 +29,7 @@ class LineSearch_NOs
     LineSearch_NOs();
     ~LineSearch_NOs();
 
-    void init(RDMFT<TK, TR>* rdmft_in);
+    void init(RDMFT<TK, TR>* rdmft_in, LineSearch_ONs<TK, TR>* ls_opti_occ_num_in);
 
     //! generate start guess
     virtual void get_start_guess();
@@ -133,6 +135,10 @@ class LineSearch_NOs
     void update_R_wfc(const int* ik = nullptr);
 
     void update_thetaR(const int* ik = nullptr);
+
+    // test and maybe temp
+    //! optimizing natural occupation numbers by line search and quasi-Newton method BFGS combined with EBI method
+    rdmft::LineSearch_ONs<TK, TR>* ls_opti_occ_num;
 
 
 };

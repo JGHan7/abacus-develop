@@ -109,7 +109,8 @@ void ESolver_RDMFT<TK, TR>::before_all_runners(UnitCell& ucell, const Input_para
     else if( PARAM.inp.rdmft_orb_opti == "bfgs" || PARAM.inp.rdmft_orb_opti == "cg" )
     {
         this->ls_opti_occ_num.init(this->kv, &this->rdmft_solver);
-        this->ls_opti_orb.init(&this->rdmft_solver);
+        // this->ls_opti_orb.init(&this->rdmft_solver);
+        this->ls_opti_orb.init(&this->rdmft_solver, &this->ls_opti_occ_num);
     }
 
     this->DM.resize(rdmft_solver.nk_total, std::vector<TK>(this->pv.nloc, 0.0));
@@ -592,11 +593,11 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             double diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
             double E_new1 = this->rdmft_solver.Etotal;
 
-            // optimize NOs using the gradient before optimizing ONs (the gradient of the previous step)
-            if( !this->dft_optimize )
-            {
-                this->rdmft_solver.update_elec( &occ_num_old, nullptr );
-            }
+            // // optimize NOs using the gradient before optimizing ONs (the gradient of the previous step)
+            // if( !this->dft_optimize )
+            // {
+            //     this->rdmft_solver.update_elec( &occ_num_old, nullptr );
+            // }
             double E_new2 = this->ls_opti_orb.do_line_search();
 
             // "optimize occ_num"
@@ -641,6 +642,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                         << "\ndiff_occ_num_max: " << diff_occ_num_max
                         << "\n\nEtotal_rdmft by opti NOs and ONs: " << E_new
                         << "\ndiff_E_all: " << diff_E_all
+                        << "\ndiff_E_all - diff_E1 - diff_E2: " << diff_E_all - diff_E1 - diff_E2
                         << "\n\ndE_dR_norm: " << this->ls_opti_orb.get_grad_norm()
                         << "\ndE_dx_norm: " << this->ls_opti_occ_num.get_grad_norm()
                         // << "\ndiff_DM_max: " << this->diff_DM_max
@@ -648,6 +650,76 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                         // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
                         // << "\n\ndiff_wfc_max: " << this->diff_wfc_max
                         << std::endl;
+
+
+
+
+            // // // record the occ_num obtained from the previous optimization
+            // // ModuleBase::matrix occ_num_old = this->ls_opti_occ_num.get_occ_num();
+
+            // // // optimize occ_num
+            // // double diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
+            // // double E_new1 = this->rdmft_solver.Etotal;
+
+            // // // optimize NOs using the gradient before optimizing ONs (the gradient of the previous step)
+            // // if( !this->dft_optimize )
+            // // {
+            // //     this->rdmft_solver.update_elec( &occ_num_old, nullptr );
+            // // }
+            // double E_new = this->ls_opti_orb.do_line_search();
+
+            // // // "optimize occ_num"
+            // // if( !this->dft_optimize )
+            // // {
+            // //     ModuleBase::matrix occ_num_new = this->ls_opti_occ_num.get_occ_num();
+            // //     this->rdmft_solver.update_elec( &occ_num_new, nullptr );
+            // // }
+            // // double E_new = this->rdmft_solver.cal_Energy();
+
+            // // double diff_E1 = E_new1 - Etotal_old;
+            // // double diff_E2 = E_new2 - Etotal_old;
+            // double diff_E_all =  E_new - Etotal_old;
+            // Etotal_old = E_new;
+
+            // if( diff_E_all > 0 )
+            // {
+            //     ++E1_rise;
+            //     if( E1_rise >= 3 )
+            //     {
+            //         // restart of turn-off precond ?
+            //         this->ls_opti_occ_num.restart_opti();
+            //         this->ls_opti_orb.restart_opti();
+            //         E1_rise = 0;
+            //     }
+            // }
+            // // if( diff_E2 > 0 )
+            // // {
+            // //     ++E2_rise;
+            // //     if( E2_rise >= 3 )
+            // //     {
+            // //         this->ls_opti_orb.restart_opti();
+            // //         E2_rise = 0;
+            // //     }
+            // // }
+
+            // std::cout << "\n******\nniter of rdmft: " << iter 
+            //             << std::fixed << std::setprecision(15);
+            // // std::cout << "\n\nEtotal_rdmft by opti ONs: " << E_new1
+            // //             << "\ndiff_E: " << diff_E1 
+            // //             << "\n\nEtotal_rdmft by opti NOs: " << E_new2
+            // //             << "\ndiff_E: " << diff_E2
+            // // std::cout << "\ndiff_occ_num_max: " << diff_occ_num_max
+            // std::cout << "\n\nEtotal_rdmft by opti NOs and ONs: " << E_new
+            //             << "\ndiff_E_all: " << diff_E_all
+            //             << "\n\ndE_dR_norm: " << this->ls_opti_orb.get_grad_norm()
+            //             << "\ndE_dx_norm: " << this->ls_opti_occ_num.get_grad_norm()
+            //             // << "\ndiff_DM_max: " << this->diff_DM_max
+            //             // << "\n\nmax_off_diag_F: " << this->max_off_diag_Fock
+            //             // << "\n\ndiff_wfc_norm: " << this->diff_wfc_norm
+            //             // << "\n\ndiff_wfc_max: " << this->diff_wfc_max
+            //             << std::endl;
+
+
 
             if( iter%10 == 1 )
             {

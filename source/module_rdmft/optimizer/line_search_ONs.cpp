@@ -169,7 +169,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
         // std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
     }
 
-    std::vector<double> var_x_old = this->var_x;
+    // std::vector<double> var_x_old = this->var_x;
 
     auto phi = [this](const double trial_alpha)
     {
@@ -331,6 +331,42 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
         std::vector<double> d2E_dx2(rdmft_solver->nk_total * PARAM.inp.nbands, 0.0);
         this->param_occ_num->get_d2E_dx2(dE_docc_num, d2E_dx2);
 
+        // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2", 10);
+
+        double min_grad2 = *std::min_element(d2E_dx2.begin(), d2E_dx2.end());
+
+        // double second_min_grad2 = std::numeric_limits<double>::infinity();
+        // for (int j=0; j<d2E_dx2.size(); ++j)
+        // {
+        //     if (d2E_dx2[j] > min_grad2 && d2E_dx2[j] < second_min_grad2)
+        //     {
+        //         second_min_grad2 = d2E_dx2[j];
+        //     }
+        // }
+
+        double average_grad2 = 0.0;
+        if( min_grad2 < 0 )
+        {
+            for(int i=0; i<d2E_dx2.size(); ++i)
+            {
+                d2E_dx2[i] -= min_grad2;
+                // d2E_dx2[i] = std::max( d2E_dx2[i], second_min_grad2 - min_grad2 );
+                average_grad2 += std::abs(d2E_dx2[i]);
+            }
+        }
+        average_grad2 /= d2E_dx2.size();
+        if( min_grad2 < 0 )
+        {
+            for(int i=0; i<d2E_dx2.size(); ++i)
+            {
+                d2E_dx2[i] += average_grad2 * 0.001;
+            }
+        }
+
+
+
+        // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2 after shifting", 10);
+
         if( PARAM.inp.precond_type == 1 )
         {
             if( PARAM.inp.occ_num_opti == "cg" ) // || PARAM.inp.occ_num_opti == "bfgs" is test
@@ -339,9 +375,42 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
                 this->precond_bfgs->get_diag_Bk(this->dE_dx, this->var_x, diag_Bk, new_landscape);
                 const double g_factor = PARAM.inp.precond_g;
 
-                // print
-                rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, diag_Bk.data(), "diag_Bk", 10);
-                rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2", 10);
+                // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, diag_Bk.data(), "diag_Bk", 10);
+
+                double min_Bk = *std::min_element(diag_Bk.begin(), diag_Bk.end());
+
+                // double second_min_Bk = std::numeric_limits<double>::infinity();
+                // for (int j=0; j<diag_Bk.size(); ++j)
+                // {
+                //     if (diag_Bk[j] > min_Bk && diag_Bk[j] < second_min_Bk)
+                //     {
+                //         second_min_Bk = diag_Bk[j];
+                //     }
+                // }
+            
+                double average_Bk = 0.0;
+                if( min_Bk < 0 )
+                {
+                    for(int i=0; i<diag_Bk.size(); ++i)
+                    {
+                        diag_Bk[i] -= min_Bk;
+                        // diag_Bk[i] = std::max(  diag_Bk[i], second_min_Bk - min_Bk );
+                        average_Bk += std::abs(diag_Bk[i]);
+                    }
+                }
+                average_Bk /= diag_Bk.size();
+
+                if( min_Bk < 0 )
+                {
+                    for(int i=0; i<diag_Bk.size(); ++i)
+                    {
+                        diag_Bk[i] += average_Bk * 0.001;
+                    }
+                }
+                // // print
+
+                // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, diag_Bk.data(), "diag_Bk after shifting", 10);
+
 
 
                 for(int i=0; i<diag_Bk.size(); ++i)

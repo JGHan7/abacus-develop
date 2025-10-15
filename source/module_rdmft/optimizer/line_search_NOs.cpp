@@ -31,8 +31,11 @@ LineSearch_NOs<TK, TR>::~LineSearch_NOs()
 
 
 template<typename TK, typename TR>
-void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in)
+void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in, LineSearch_ONs<TK, TR>* ls_opti_occ_num_in)
 {
+    // test
+    this->ls_opti_occ_num = ls_opti_occ_num_in;
+
     this->rdmft_solver = rdmft_in;
     this->nk_total = this->rdmft_solver->nk_total;
     this->ParaV = this->rdmft_solver->ParaV;
@@ -244,6 +247,115 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 }
 
 
+
+
+
+// template<typename TK, typename TR>
+// double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
+// {
+//     // if( start_guess )
+//     // {
+//     //     this->restart_opti();
+//     // }
+
+//     bool new_landscape = (this->iter == 0) ? true: false;
+//     // bool new_landscape = (this->iter == 0 || (PARAM.inp.precond_type != 1 && this->iter%10 == 0) ) ? true: false;
+
+
+//     for(int ik=0; ik<this->nk_total; ++ik)
+//     {
+//         // this->ls_opti_occ_num;
+
+//         // for multiple k-point problems, we need to consider whether these two functions should be inside or outside the loop !!!!!!!!!!!!!!!!!
+//         // as well as the state update of rdmft_solver (k-point update or overall update) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//         this->cal_dE_dR(&ik);
+//         this->cal_pk_dphi0(new_landscape, &ik);
+//         // std::cout << "\n******\n" << "ls, dphi_0_k: " << this->dphi_0_k[ik] << "\n******\n" << std::endl;
+
+//         this->ls_opti_occ_num->cal_dE_dx(this->ls_opti_occ_num->dE_dx);
+//         this->ls_opti_occ_num->cal_pk_dphi0(new_landscape);
+
+//         if( this->iter != 0 )
+//         {
+//             this->init_step_k[ik] = 1.01 * 2.0 * ( this->Ek_iter[ik].back() - this->Ek_iter[ik][this->Ek_iter[ik].size() - 2] ) / this->dphi_0_k[ik];
+//             this->init_step_k[ik] = std::min(1.0, std::abs(init_step_k[ik]));
+//             std::cout << "\n" << "init_step by quadratic: " << this->init_step << "\n" << std::endl;
+//         }
+
+//         auto phi = [this, ik](const double trial_alpha)
+//         {
+//             this->step_size_k[ik] = trial_alpha;
+//             this->update_thetaR(&ik);
+//             double trial_phi = this->cal_phi(&ik);
+
+//             std::vector<double> x_new(this->ls_opti_occ_num->var_x.size(), 0.0);
+//             this->ls_opti_occ_num->step_size = trial_alpha;
+//             this->ls_opti_occ_num->update_x(x_new);
+//             trial_phi = this->ls_opti_occ_num->cal_phi(x_new);
+
+//             return trial_phi;
+//         };
+
+//         auto dphi = [this, ik]()
+//         {
+//             double trial_dphi = this->cal_dphi(&ik);;
+
+//             std::vector<double> trial_dE_dx(this->ls_opti_occ_num->dE_dx.size(), 0.0);
+//             trial_dphi += this->ls_opti_occ_num->cal_dphi(trial_dE_dx);
+
+//             return trial_dphi;
+//         };
+
+//         double max_elem_pk = 0.0;
+//         for(int j=0; j<this->search_direction[ik].size(); ++j)
+//         {
+//             max_elem_pk = std::max( max_elem_pk, std::abs(this->search_direction[ik][j]) );
+//         }
+//         for(int i=0; i<this->ls_opti_occ_num->search_direction.size(); ++i)
+//         {
+//             max_elem_pk = std::max( max_elem_pk, std::abs(this->ls_opti_occ_num->search_direction[i]) );
+//         }
+
+//         // do line search
+//         this->step_size_k[ik] = this->ls[ik]->do_line_search(phi, dphi, this->phi_0_k[ik], this->dphi_0_k[ik], max_elem_pk, this->init_step_k[ik]);
+//         // this->step_size_k[ik] = PARAM.inp.ls_fixed_step;
+
+//         // use the final_step_size to update 
+//         for(int i=0; i<this->ls_opti_occ_num->var_x.size(); ++i)
+//         {
+//             this->ls_opti_occ_num->var_x[i] += this->step_size_k[ik] * this->ls_opti_occ_num->search_direction[i]; 
+//         }
+//         this->phi_0_k[ik] = phi(this->step_size_k[ik]);
+//         this->Ek_iter[ik].push_back(this->phi_0_k[ik]);
+//         std::cout << "\n" << "the final step_size by lineSearch_NOs: " << step_size_k[ik] << "\n" << std::endl;
+
+//         // 
+//         torch::Tensor pk_tensor = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<TK>());
+//         rdmft::vector2tensor(this->search_direction[ik], pk_tensor, { nbands64*(nbands64 + 1) / 2 });
+//         this->var_thetaR_for_bfgs[ik] = this->var_thetaR_for_bfgs[ik] + this->step_size_k[ik] * pk_tensor;
+
+//         if( this->opti_deltaR )
+//         {
+
+//             this->wfc_0_tensor[ik] = this->wfc_new_tensor[ik].detach().clone();
+//             this->var_thetaR_tensor[ik].data().zero_();
+//         }
+//         else
+//         {
+//             this->var_thetaR_tensor[ik] = this->thetaR[ik].detach().clone();
+//         }
+
+//     }
+
+//     ++this->iter;
+//     return this->rdmft_solver->Etotal;
+
+// }
+
+
+
+
+
 template<typename TK, typename TR>
 void LineSearch_NOs<TK, TR>::update_thetaR(const int* ik)
 {
@@ -377,6 +489,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
     torch::Tensor d2E_dR2_tensor;
     torch::Tensor d2E_dthetaR_2_tensor;
     std::vector<TK> d2E_dthetaR_2_global;
+    // std::vector<double> vec_temp;
     std::vector<TK> dE_dthetaR_u; // test
     // std::vector<TK> transport; // test
     if( PARAM.inp.precond_orb )
@@ -385,6 +498,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
         d2E_dR2_global.resize(PARAM.inp.nbands * PARAM.inp.nbands, 0.0);
         d2E_dthetaR_2_tensor = torch::zeros({ nbands64*(nbands64 + 1) / 2 }, torch_dtype<TK>());
         d2E_dthetaR_2_global.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
+        // vec_temp.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
         dE_dthetaR_u.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
         // transport.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
     }
@@ -434,6 +548,57 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
 
             // // print
             // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2", 10);
+
+            // // vec_temp;
+            // int min_location = 0;
+            // double min_real_grad2 = 0.0;
+            // for(int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+            // {
+            //     if( std::real(d2E_dthetaR_2_global[j]) < min_real_grad2 )
+            //     {
+            //         min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+            //         min_location = j;
+            //     }
+            // }
+
+            // // double second_min_real_grad2 = std::numeric_limits<double>::infinity();
+            // // TK second_min_grad2 = 0.0;
+            // // for (int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+            // // {
+            // //     if (std::real(d2E_dthetaR_2_global[j]) > min_real_grad2 && std::real(d2E_dthetaR_2_global[j]) < second_min_real_grad2)
+            // //     {
+            // //         second_min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+            // //         second_min_grad2 = d2E_dthetaR_2_global[j];
+            // //     }
+            // // }
+
+            // double average_grad2 = 0.0;
+            // TK min_grad2 = d2E_dthetaR_2_global[min_location];
+            // if( min_real_grad2 < 0 )
+            // {
+            //     for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
+            //     {
+            //         d2E_dthetaR_2_global[i] -= min_grad2;
+            //         // if( std::real(d2E_dthetaR_2_global[i]) < std::real(second_min_grad2 - min_grad2) )
+            //         // {
+            //         //     d2E_dthetaR_2_global[i] = second_min_grad2 - min_grad2;
+            //         // }
+            //         average_grad2 += std::abs(d2E_dthetaR_2_global[i]);
+            //     }
+
+            // }
+
+            // average_grad2 /= d2E_dthetaR_2_global.size();
+            // if( min_real_grad2 < 0 )
+            // {
+            //     for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
+            //     {
+            //         d2E_dthetaR_2_global[i] += average_grad2 * 1e-5;
+            //     }
+            // }
+
+            // // print
+            // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2 after shifting", 10);
 
             if( PARAM.inp.precond_type == 1 )
             {

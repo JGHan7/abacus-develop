@@ -45,14 +45,19 @@ void CG_method<TX>::get_pk(const std::vector<TX>& dE_dx_new, const std::vector<T
     const bool precond = (d2E_dx2 == nullptr) ? false : true;
     if( precond )
     {
+        // rdmft::printMatrix_pointer(1, this->dim, (*d2E_dx2).data(), "d2E_dx2 in PCG", 10);
+        std::cout << "\nstd::max( this->precond_eps, std::abs((*d2E_dx2)[i]) ): " << std::endl;
         for(int i=0; i<this->dim; ++i)
         {
             this->precond_grad[i] = dE_dx_new[i] / std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) );
             // this->precond_grad[i] = dE_dx_new[i] / (*d2E_dx2)[i];
 
+            std:: cout << " " << std::max( this->precond_eps, std::abs((*d2E_dx2)[i]) ) << " " ;
+
             // TX num_temp = this->precond_eps > std::abs((*d2E_dx2)[i]) ? this->precond_eps: (*d2E_dx2)[i];
             // this->precond_grad[i] = dE_dx_new[i] / num_temp;
         }
+        std::cout << std::endl;
     }
     else
     {
