@@ -1090,9 +1090,29 @@ double compute_min_shift(const std::vector<T>& diag, double scale = 2.0)
     return std::abs(-scale * shift);
 }
 
+template <typename T>
+double median_sorted(std::vector<T> data)
+{
+    if (data.empty())
+    {
+        throw std::domain_error("median of empty vector");
+    }
+
+    std::sort(data.begin(), data.end());
+    size_t n = data.size();
+    if (n % 2 == 1)
+    {
+        return data[n / 2];
+    }
+    else
+    {
+        return 0.5 * (data[n / 2 - 1] + data[n / 2]);
+    }
+}
 
 
-
+template <>
+double median_sorted(std::vector<std::complex<double>> data);
 
 
 

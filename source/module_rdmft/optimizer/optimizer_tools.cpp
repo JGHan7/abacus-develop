@@ -547,7 +547,31 @@ void torch_print_options(const torch::optim::LBFGS& opt)
 }
 
 
+template <>
+double median_sorted(std::vector<std::complex<double>> data)
+{
+    if (data.empty())
+    {
+        throw std::domain_error("median of empty vector");
+    }
 
+    std::vector<double> data_dou(data.size());
+    for(int i=0; i<data.size(); ++i)
+    {
+        data_dou[i] = std::real(data[i]);
+    }
+
+    std::sort(data_dou.begin(), data_dou.end());
+    int n = data_dou.size();
+    if (n % 2 == 1)
+    {
+        return data_dou[n / 2];
+    }
+    else
+    {
+        return 0.5 * (data_dou[n / 2 - 1] + data_dou[n / 2]);
+    }
+}
 
 
 

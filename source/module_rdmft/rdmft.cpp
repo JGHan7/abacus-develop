@@ -355,12 +355,16 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
                     // Pij_global[p*M + q] = (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (occ_number(ik, q) - occ_number(ik, p))
                     //                         - (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p);
 
-                    // consider wk
+                    // // consider wk
+                    // const double eta_q = this->wk_fun_occNum(ik, q);
+                    // const double eta_p = this->wk_fun_occNum(ik, p);
+                    // Pij_global[p*M + q] = (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (this->wg(ik, q) - this->wg(ik, p))
+                    //                         - (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p);
+
                     const double eta_q = this->wk_fun_occNum(ik, q);
                     const double eta_p = this->wk_fun_occNum(ik, p);
-                    Pij_global[p*M + q] = (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (this->wg(ik, q) - this->wg(ik, p))
-                                            - (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p);
-
+                    Pij_global[p*M + q] = std::abs( (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (this->wg(ik, q) - this->wg(ik, p)) )
+                                            + std::abs( (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p) );
                     // // test 
                     // Pij_global[p*M + q] *= 0.2;
                 }

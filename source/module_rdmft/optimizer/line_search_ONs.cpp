@@ -363,10 +363,10 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
         //     }
         // }
 
-        double min_shift_grad2 = compute_min_shift(d2E_dx2, 2.0);
-        rdmft::shift_precond( d2E_dx2 , min_shift_grad2, 0.001);
-        std::cout << "\n\nmin_shift_grad2 in ONs-opti: " << min_shift_grad2 << "\n" << std::endl;
-
+        // double min_shift_grad2 = compute_min_shift(d2E_dx2, 2.0);
+        // rdmft::shift_precond( d2E_dx2 , min_shift_grad2, 0.001);
+        // std::cout << "\n\nmin_shift_grad2 in ONs-opti: " << min_shift_grad2 << "\n" << std::endl;
+        rdmft::shift_precond( d2E_dx2 , 1e-6, 0.0 );
 
         // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, d2E_dx2.data(), "d2E_dx2 after shifting", 10);
 
@@ -413,9 +413,10 @@ void LineSearch_ONs<TK, TR>::cal_pk_dphi0(const bool new_landscape)
                 // // // print
 
                 // // rdmft::printMatrix_pointer(this->rdmft_solver->nk_total, PARAM.inp.nbands, diag_Bk.data(), "diag_Bk after shifting", 10);
-                double min_shift_Bk = compute_min_shift(diag_Bk, 2.0);
-                rdmft::shift_precond( diag_Bk , min_shift_Bk, 0.001);
-                std::cout << "\n\nmin_shift_Bk in ONs-opti: " << min_shift_Bk << "\n" << std::endl;
+                // double min_shift_Bk = compute_min_shift(diag_Bk, 2.0);
+                // rdmft::shift_precond( diag_Bk , min_shift_Bk, 0.001);
+                // std::cout << "\n\nmin_shift_Bk in ONs-opti: " << min_shift_Bk << "\n" << std::endl;
+                rdmft::shift_precond( diag_Bk , 1e-6, 0.0 );
 
                 for(int i=0; i<diag_Bk.size(); ++i)
                 {

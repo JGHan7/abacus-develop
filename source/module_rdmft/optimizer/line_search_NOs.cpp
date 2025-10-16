@@ -546,7 +546,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
             // // print
             // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dR2_global.data(), "d2E_dR2", 10);
 
-            // // print
+            // print
             // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2", 10);
 
             // // vec_temp;
@@ -617,36 +617,53 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
 
 
 
-            // double second_min_real_grad2 = std::numeric_limits<double>::infinity();
-            // TK second_min_grad2 = 0.0;
-            // for (int j=0; j<d2E_dthetaR_2_global.size(); ++j)
-            // {
-            //     if (std::real(d2E_dthetaR_2_global[j]) > min_real_grad2 && std::real(d2E_dthetaR_2_global[j]) < second_min_real_grad2)
-            //     {
-            //         second_min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
-            //         second_min_grad2 = d2E_dthetaR_2_global[j];
-            //     }
-            // }
+            double second_min_real_grad2 = std::numeric_limits<double>::infinity();
+            TK second_min_grad2 = 0.0;
+            for (int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+            {
+                if (std::real(d2E_dthetaR_2_global[j]) > min_real_grad2 && std::real(d2E_dthetaR_2_global[j]) < second_min_real_grad2)
+                {
+                    second_min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+                    second_min_grad2 = d2E_dthetaR_2_global[j];
+                }
+            }
+
+            double median_grad2 = median_sorted(d2E_dthetaR_2_global);
 
             double average_grad2 = 0.0;
             TK min_grad2 = d2E_dthetaR_2_global[min_location];
             if( min_real_grad2 < 0 )
             {
-                for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
-                {
-                    d2E_dthetaR_2_global[i] -= min_grad2;
-                    // // if( std::real(d2E_dthetaR_2_global[i]) < std::real(second_min_grad2 - min_grad2) )
-                    // // {
-                    // //     d2E_dthetaR_2_global[i] = second_min_grad2 - min_grad2;
-                    // // }
-                    // average_grad2 += std::abs(d2E_dthetaR_2_global[i]);
-                    if( std::real(d2E_dthetaR_2_global[i]) < 0.001 )
-                    {
-                        d2E_dthetaR_2_global[i] = 0.001;
-                    }
-                }
+                median_grad2 -= min_real_grad2;
+                max_real_grad2 -= min_real_grad2;
+                second_min_real_grad2 -= min_real_grad2;
+                // for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
+                // {
+                //     d2E_dthetaR_2_global[i] -= min_grad2;
+                //     // // if( std::real(d2E_dthetaR_2_global[i]) < std::real(second_min_grad2 - min_grad2) )
+                //     // // {
+                //     // //     d2E_dthetaR_2_global[i] = second_min_grad2 - min_grad2;
+                //     // // }
+                //     // average_grad2 += std::abs(d2E_dthetaR_2_global[i]);
+                //     if( std::real(d2E_dthetaR_2_global[i]) < 0.001 )
+                //     {
+                //         d2E_dthetaR_2_global[i] = 0.001;
+                //     }
+                // }
 
             }
+
+            rdmft::shift_precond( d2E_dthetaR_2_global , 0.0, max_real_grad2 * 0.001); // 0.05
+            // rdmft::shift_precond( d2E_dthetaR_2_global, 1e-6);
+
+            // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2 after shifting", 10);
+
+            // max_real_grad2
+            std::cout << "\n\nmax_real_grad2: " << max_real_grad2 
+                        << "\nmedian_grad2: " << median_grad2 
+                        << "\nmedian_grad2 / size(): " << median_grad2/d2E_dthetaR_2_global.size()
+                        << "\nsecond_min_real_grad2: " << second_min_real_grad2
+                         << std::endl;
 
             // average_grad2 /= d2E_dthetaR_2_global.size();
             // if( min_real_grad2 < 0 )
