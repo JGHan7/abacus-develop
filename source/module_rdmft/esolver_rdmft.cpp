@@ -357,7 +357,7 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                 // optimize natural occupation numbers
                 diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
                 std::cout << "\n******\nniter_occ_number of rdmft: " << iter_occ_num  << "\ndiff_occ_num_max(*num_symm_k): " << diff_occ_num_max << std::endl << std::fixed << std::setprecision(7);
-                rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
+                
 
                 if( diff_occ_num_max < this->occ_num_thr ) // || (!this->dft_optimize && this->ls_opti_occ_num.diff_rate_max < 0.01)
                 {
@@ -366,6 +366,8 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
                     break;
                 }
             }
+            rdmft::printMatrix_pointer(rdmft_solver.nk_total, rdmft_solver.nbands_total, rdmft_solver.occ_number.c, "occ_number", 10);
+            
             if( !occ_num_conv  )
             {
                 tot_occ_num_iter += PARAM.inp.maxniter_occ_num;
@@ -593,11 +595,12 @@ void ESolver_RDMFT<TK, TR>::runner(UnitCell& ucell, const int istep)
             double diff_occ_num_max = this->opti_occ_num(this->dft_optimize);
             double E_new1 = this->rdmft_solver.Etotal;
 
-            // // optimize NOs using the gradient before optimizing ONs (the gradient of the previous step)
-            // if( !this->dft_optimize )
-            // {
-            //     this->rdmft_solver.update_elec( &occ_num_old, nullptr );
-            // }
+            // optimize NOs using the gradient before optimizing ONs (the gradient of the previous step)
+            if( !this->dft_optimize )
+            {
+                this->rdmft_solver.update_elec( &occ_num_old, nullptr );
+                this->rdmft_solver.cal_Energy();// test
+            }
             double E_new2 = this->ls_opti_orb.do_line_search();
 
             // "optimize occ_num"

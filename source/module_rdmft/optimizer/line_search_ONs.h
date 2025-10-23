@@ -61,7 +61,7 @@ class LineSearch_ONs
     // double min_step_size = 0.0;
 
 
-  protected:
+  // protected:
 
     //! calculate the new x based on the current step size
     void update_x(std::vector<double>& x_new);

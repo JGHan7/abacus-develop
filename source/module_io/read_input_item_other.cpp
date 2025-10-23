@@ -791,8 +791,14 @@ void ReadInput::item_others()
     }
     {
         Input_Item item("rdmft_auto_diff");
-        item.annotation = "whether to use libTorch's automatic differentiation";
+        item.annotation = "whether to use libTorch's automatic differentiation to obtain the first-order gradient";
         read_sync_bool(input.rdmft_auto_diff);
+        this->add_item(item);
+    }
+    {
+        Input_Item item("rdmft_auto_diff2");
+        item.annotation = "whether to use libTorch's automatic differentiation to obtain second-order gradient";
+        read_sync_bool(input.rdmft_auto_diff2);
         this->add_item(item);
     }
     {

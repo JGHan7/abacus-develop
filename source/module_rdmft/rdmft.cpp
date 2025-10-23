@@ -142,10 +142,10 @@ void RDMFT<TK, TR>::init(Gint_Gamma& GG_in,
     // HK_XC_pass.resize(nk_total, ParaV->get_row_size(), ParaV->get_col_size());
 
 
-    Eij_TV.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
-    Eij_hartree.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
-    Eij_exx_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
-    Eij_dft_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size() );
+    Eij_TV.resize( para_Eij.get_row_size()*para_Eij.get_col_size(), 0.0 );
+    Eij_hartree.resize( para_Eij.get_row_size()*para_Eij.get_col_size(), 0.0 );
+    Eij_exx_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size(), 0.0 );
+    Eij_dft_XC.resize( para_Eij.get_row_size()*para_Eij.get_col_size(), 0.0 );
     if( need_lambda )
     {
         Hij_no_exx.resize(nk_total);
@@ -335,7 +335,9 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
             std::vector<TK> Pij_exx(para_Eij.get_row_size()*para_Eij.get_col_size(), 0.0);
             for(int iloc=0; iloc<Pij_no_exx.size(); ++iloc)
             {
-                Pij_no_exx[iloc] = Eij_TV[iloc] * 2.0 + ( Eij_hartree[iloc] + Eij_dft_XC[iloc] ) * 4.0;
+                Pij_no_exx[iloc] = Eij_TV[iloc] * 2.0 + ( Eij_hartree[iloc] - Eij_dft_XC[iloc] ) * 4.0; // +dft_XC or -dft_XC ?
+                // Pij_no_exx[iloc] = ( Eij_hartree[iloc] + Eij_dft_XC[iloc] ) * 4.0;  // +dft_XC or -dft_XC ?
+
                 Pij_exx[iloc] = Eij_exx_XC[iloc] * 4.0;
             }
 
@@ -361,10 +363,34 @@ void RDMFT<TK, TR>::cal_Hk_Hpsi()
                     // Pij_global[p*M + q] = (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (this->wg(ik, q) - this->wg(ik, p))
                     //                         - (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p);
 
-                    const double eta_q = this->wk_fun_occNum(ik, q);
-                    const double eta_p = this->wk_fun_occNum(ik, p);
-                    Pij_global[p*M + q] = std::abs( (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (this->wg(ik, q) - this->wg(ik, p)) )
-                                            + std::abs( (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p) );
+                    if( p == q )
+                    {
+                        Pij_global[p*M + q] = 1.0;
+                    }
+                    else
+                    {
+                        // // consider wk
+                        // const double eta_q = this->wk_fun_occNum(ik, q);
+                        // const double eta_p = this->wk_fun_occNum(ik, p);
+                        // Pij_global[p*M + q] = (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (this->wg(ik, q) - this->wg(ik, p))
+                        //                         - (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p);
+
+
+                        const double eta_q = this->wk_fun_occNum(ik, q);
+                        const double eta_p = this->wk_fun_occNum(ik, p);
+                        Pij_global[p*M + q] = std::abs( (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (this->wg(ik, q) - this->wg(ik, p)) )
+                                                + std::abs( (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p) );
+                    }
+                    // const double eta_q = this->wk_fun_occNum(ik, q);
+                    // const double eta_p = this->wk_fun_occNum(ik, p);
+                    // Pij_global[p*M + q] =  (Pij_no_exx_global[p*M + p] ) * (this->wg(ik, q) ) 
+                    //                         -  (Pij_exx_global[p*M + p] ) * (eta_q ) ;
+
+                    // const double eta_q = this->wk_fun_occNum(ik, q);
+                    // const double eta_p = this->wk_fun_occNum(ik, p);
+                    // Pij_global[p*M + q] = (Pij_no_exx_global[p*M + p] - Pij_no_exx_global[q*M + q]) * (this->wg(ik, q) - this->wg(ik, p))
+                    //                         + (Pij_exx_global[p*M + p] - Pij_exx_global[q*M + q]) * (eta_q - eta_p);
+
                     // // test 
                     // Pij_global[p*M + q] *= 0.2;
                 }

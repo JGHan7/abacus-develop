@@ -257,7 +257,7 @@ void RDMFT<TK, TR>::inital_wfc_occNum(const ModuleBase::matrix& wg_in, const psi
     }
 
 
-    rdmft::printMatrix_pointer(occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number_ks_inital", 10);
+    rdmft::printMatrix_pointer(GlobalV::ofs_running, occ_number_ks.nr, occ_number_ks.nc, &occ_number_ks(0, 0), "occ_number_ks_inital", 10);
     // rdmft::printMatrix_pointer(ParaV->ncol_bands, ParaV->nrow, &(*this->psi)(0, 0, 0), "wfc_ks_inital", 10);
 
     GlobalV::ofs_running << "\n******\n" << "test: cal once rdmft after get inital values" << "\n******\n" << std::endl;

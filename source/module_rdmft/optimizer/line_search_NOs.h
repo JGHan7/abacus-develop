@@ -10,6 +10,7 @@
 
 #include "module_rdmft/rdmft.h"
 #include "module_rdmft/optimizer/opti_method.h"
+#include "module_rdmft/optimizer/bfgs_method.h" // temp
 #include  "module_rdmft/optimizer/line_search_method.h"
 
 #include "module_rdmft/optimizer/line_search_ONs.h" // temp
@@ -63,11 +64,13 @@ class LineSearch_NOs
 
     //! calculate dE/dx
     //! R_new = R_k + alpha*p_k, if R is the same as the R in the last call to cal_phi(), nullptr is used.
-    virtual void cal_dE_dR(const int* ik);
+    virtual void cal_dE_dR(const int* ik, const bool auto_cal_grad2 = false);
 
     RDMFT<TK, TR>* rdmft_solver = nullptr;
 
     std::vector< std::unique_ptr<rdmft::Opti_method<TK>> > R_optimizer;
+
+    // std::vector< std::unique_ptr<rdmft::BFGS_method<TK>> > precond_bfgs;
 
     // rdmft::LineSearch<TK> ls;
     std::vector< std::unique_ptr<rdmft::LineSearch<double>> > ls;

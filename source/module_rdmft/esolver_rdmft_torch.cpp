@@ -448,7 +448,7 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
                         << "Etotal_rdmft: " << E_new
                         << "\ndiff_E: " << diff_E;
                         // << "\ndiff_DM_max: " << this->iter_diag_orb.get_diff_DM_max()
-            rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
+            // rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
             // std::cout << x_old << std::endl;
             std::cout << "\n******" << std::endl << std::defaultfloat;
 
@@ -466,6 +466,7 @@ void ESolver_RDMFT_Torch<TK, TR>::decouple_opti()
             }
         }
         double diff_E_tot = diff_E;
+        rdmft::printMatrix_pointer(this->nk_total, this->rdmft_solver.nbands_total, this->rdmft_solver.occ_number.c, "occ_number", 10);
 
         if( occ_number_conv == true )
         {

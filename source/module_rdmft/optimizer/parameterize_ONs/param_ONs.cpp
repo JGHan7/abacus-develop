@@ -68,7 +68,7 @@ void PARAM_ONs::init(const int nk_total, const int nkstot_full, const std::vecto
         this->num_symm_k[iks] *= nkstot_full;
     }
     std::cout << "\n******\n" << "this->num_symm_k.size(): " << this->num_symm_k.size() << "\n******\n" << std::endl;
-    rdmft::printMatrix_pointer(1, nk_total, this->num_symm_k.data(), "num_symm_k", 10);
+    // rdmft::printMatrix_pointer(1, nk_total, this->num_symm_k.data(), "num_symm_k", 10);
 }
 
 

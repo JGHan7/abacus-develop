@@ -67,6 +67,10 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
     {
         this->wolfe(cal_phi, cal_dphi);
     }
+    else if(this->ls_condition == "quad_inter")
+    {
+        this->quad_inter(cal_phi, cal_dphi);
+    }
     else if(this->ls_condition == "test")
     {
         this->strong_wolfe2(cal_phi, cal_dphi);
@@ -79,6 +83,17 @@ double LineSearch<TX>::do_line_search(const std::function<double(const double)>&
     std::cout << "\n***\nin ls, ls_time: " << this->ls_times  << "\n***\n" << std::endl;
 
     return this->step_size;
+}
+
+
+template<typename TX>
+void LineSearch<TX>::quad_inter(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi)
+{
+    double trial_phi = cal_phi(this->step_size);
+    double trial_dphi = cal_dphi();
+    ++this->num_cal_phi;
+
+    this->step_size = this->phi_0 * this->step_size / ( this->phi_0 - trial_dphi );
 }
 
 

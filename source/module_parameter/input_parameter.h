@@ -678,6 +678,7 @@ struct Input_para
     double adam_beta2 = 0.9;
     bool opti_by_torch = false;
     bool rdmft_auto_diff = false;
+    bool rdmft_auto_diff2 = false;
     bool rdmft_one_opti = false;
     double adam_lr_occ_num = 0.01;
     bool rdmft_dm_conv = true;

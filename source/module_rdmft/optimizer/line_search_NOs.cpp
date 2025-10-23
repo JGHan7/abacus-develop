@@ -53,6 +53,7 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in, LineSearch_ONs<TK, TR
     this->var_thetaR_for_bfgs.resize(this->nk_total);
 
     this->R_optimizer.resize(this->nk_total);
+    // this->precond_bfgs.resize(this->nk_total);
     this->ls.resize(this->nk_total);
     this->thetaR.resize(nk_total);
     this->R_tensor.resize(this->nk_total);
@@ -103,6 +104,13 @@ void LineSearch_NOs<TK, TR>::init(RDMFT<TK, TR>* rdmft_in, LineSearch_ONs<TK, TR
         this->search_direction[ik].resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
 
         this->scaling_P_old[ik].resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
+
+        // if( PARAM.inp.precond_orb )
+        // {
+        //     this->precond_bfgs[ik] = std::make_unique< rdmft::BFGS_method<TK> >();
+        //     this->precond_bfgs[ik]->init(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2);
+        // }
+
     }
 
     this->scaling_P.resize(PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, 0.0);
@@ -177,7 +185,7 @@ double LineSearch_NOs<TK, TR>::do_line_search(const bool start_guess)
 
         // for multiple k-point problems, we need to consider whether these two functions should be inside or outside the loop !!!!!!!!!!!!!!!!!
         // as well as the state update of rdmft_solver (k-point update or overall update) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        this->cal_dE_dR(&ik);
+        this->cal_dE_dR(&ik, true);
         this->cal_pk_dphi0(new_landscape, &ik);
         // std::cout << "\n******\n" << "ls, dphi_0_k: " << this->dphi_0_k[ik] << "\n******\n" << std::endl;
 
@@ -403,8 +411,17 @@ void LineSearch_NOs<TK, TR>::update_R_wfc(const int* ik)
         // although it is a temporary variable, the release time is managed by torch and does not destroy the calculation graph
         torch::Tensor R_upper = torch::zeros({this->nbands64, this->nbands64}, torch_dtype<TK>());
 
-        // fill thetaR with upper triangular indices
-        R_upper = R_upper.index_put({idx[0], idx[1]}, this->thetaR[jk]);
+
+        // // fill thetaR with upper triangular indices
+        // R_upper = R_upper.index_put({idx[0], idx[1]}, this->thetaR[jk]);
+
+        // flatten the (i,j) index into one dimension (for easy use with scatter)
+        auto flat_index = idx[0] * this->nbands64 + idx[1];
+        // reshape to one dimension and then scatter
+        R_upper = R_upper.flatten();
+        R_upper = R_upper.scatter(0, flat_index, this->thetaR[jk]);
+        R_upper = R_upper.view({this->nbands64, this->nbands64});
+
 
         // constructing a skew-Hermitian matrix R_skew = R_upper - R_upper^\dagger
         // this->R_tensor[jk] = ( R_upper - R_upper.transpose(0,1).conj() ) * this->scaling_R;
@@ -517,165 +534,302 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
         // rdmft::tensor2vector(this->thetaR[jk], thetaR_vec); this->var_thetaR_for_bfgs[ik]
         rdmft::tensor2vector(this->var_thetaR_for_bfgs[jk], thetaR_vec);
         // get pk: provide thetaR and dE_dthetaR to BFGS
-        if( PARAM.inp.precond_orb ) // && this->iter >= 5
+        if( PARAM.inp.precond_orb ) // && this->iter >= 5 // && this->grad_norm > 1e-2
         {
-            // get d2E_dR2
-            this->rdmft_solver->cal_E_grad2_Rpq(jk, d2E_dR2_local);
-            rdmft::collect_vec(this->para_Fij, d2E_dR2_local, d2E_dR2_global);
-            rdmft::vector2tensor(d2E_dR2_global, d2E_dR2_tensor, {nbands64, nbands64});
+            // this->precond_bfgs[jk]->get_diag_Bk(this->dE_dthetaR_global[jk], thetaR_vec, d2E_dthetaR_2_global, new_landscape);
 
-            // generate upper triangle index
-            auto idx = torch::triu_indices(this->nbands64, this->nbands64);
-
-            // // fill upper triangle dE_dthetaR_tensor
-            // d2E_dthetaR_2_tensor = d2E_dR2_tensor.index({idx[0], idx[1]}) 
-            //                                 - d2E_dR2_tensor.index({idx[1], idx[0]}).conj();
-            // auto d2E_dthetaR_2_tensor = torch::zeros({this->nbands64, this->nbands64}, d2E_dR2_tensor.options());
-            // for (int i = 0; i < this->nbands64; ++i)
-            // {
-            //     for (int j = i; j < this->nbands64; ++j)
-            //     {
-            //         d2E_dthetaR_2_tensor[i][j] = d2E_dR2_tensor[i][j] - d2E_dR2_tensor[j][i].conj();
-            //     }
-            // }
-            d2E_dthetaR_2_tensor = 2.0 * d2E_dR2_tensor.index({idx[0], idx[1]});
-
-            // convert data formats
-            rdmft::tensor2vector(d2E_dthetaR_2_tensor, d2E_dthetaR_2_global);
-
-            // // print
-            // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dR2_global.data(), "d2E_dR2", 10);
-
-            // print
-            // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2", 10);
-
-            // // vec_temp;
-            int min_location = 0;
-            double min_real_grad2 = 0.0;
-            int max_location = 0;
-            double max_real_grad2 = 0.0;
-            for(int j=0; j<d2E_dthetaR_2_global.size(); ++j)
-            {
-                if( std::real(d2E_dthetaR_2_global[j]) < min_real_grad2 )
-                {
-                    min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
-                    min_location = j;
-                }
-
-                if( std::real(d2E_dthetaR_2_global[j]) > max_real_grad2 )
-                {
-                    max_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
-                    max_location = j;
-                }
-            }
-
-            // double eps_abs = 1e-8;
-            // double eps_rel = 1e-6 * std::max(1.0, max_real_grad2);
-            // double safety = std::max(eps_abs, eps_rel);
-
+            // int min_location = 0;
+            // double min_real_grad2 = 0.0;
+            // int max_location = 0;
+            // double max_real_grad2 = 0.0;
             // for(int j=0; j<d2E_dthetaR_2_global.size(); ++j)
             // {
-            //     if( std::real(d2E_dthetaR_2_global[j]) < 0 )
+            //     if( std::real(d2E_dthetaR_2_global[j]) < min_real_grad2 )
             //     {
-            //         d2E_dthetaR_2_global[j] = safety;
+            //         min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+            //         min_location = j;
+            //     }
+
+            //     if( std::real(d2E_dthetaR_2_global[j]) > max_real_grad2 )
+            //     {
+            //         max_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+            //         max_location = j;
             //     }
             // }
 
-            
-            // // double offset = 1e-3;
-            // // offset += 0.5 * std::abs(min_real_grad2);
-            // double offset = 0.1;
-            // if( std::abs(max_real_grad2) > 1.0 )
+            // if( min_real_grad2 < 0 )
             // {
-            //     offset = 2.0;
+            //     max_real_grad2 -= min_real_grad2;
             // }
-            // else if( std::abs(max_real_grad2) > 0.01 )
+            // // rdmft::shift_precond( d2E_dthetaR_2_global , max_real_grad2 * 1e-9, 0.0);
+            // rdmft::shift_precond( d2E_dthetaR_2_global , 0.0, 0.0);
+
+            // for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
             // {
-            //     offset = 0.5;
+            //     if( std::real(d2E_dthetaR_2_global[i]) < 1e-6 )
+            //     {
+            //         d2E_dthetaR_2_global[i] =1e-6;
+            //     }
             // }
 
-            // in the future, the min_shift of different spins should be obtained separately, and then the maximum value is taken.
-            // compute_min_shift()
-
-
-
-
-            // double min_shift = compute_min_shift(d2E_dthetaR_2_global, 2.0);
-
-            // std::cout << "\n\nmin_shift in NOs-opti: " << min_shift << "\n" << std::endl;
-
-            // rdmft::shift_precond( d2E_dthetaR_2_global , min_shift, 0.001);
-
-
-            // rdmft::shift_precond( d2E_dthetaR_2_global , 0.001, 0.0);
-
-
-
-
-
-
-
-
-
-            double second_min_real_grad2 = std::numeric_limits<double>::infinity();
-            TK second_min_grad2 = 0.0;
-            for (int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+            if( PARAM.inp.rdmft_auto_diff2 )
             {
-                if (std::real(d2E_dthetaR_2_global[j]) > min_real_grad2 && std::real(d2E_dthetaR_2_global[j]) < second_min_real_grad2)
+                // // /*grad_outputs=*/{}, /*retain_graph=*/true, /*create_graph=*/false
+                // auto grad2 = torch::autograd::grad( { this->dE_dthetaR_tensor[jk].sum() }, { this->thetaR[jk] },
+                //                                     /*grad_outputs=*/{}, /*retain_graph=*/true, /*create_graph=*/false)[0];
+
+                // d2E_dthetaR_2_global;
+
+                const int M = PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2;
+
+                for (int i = 0; i < M; ++i)
                 {
-                    second_min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
-                    second_min_grad2 = d2E_dthetaR_2_global[j];
+                    // 
+                    auto grad2_i = torch::autograd::grad(
+                        /*outputs=*/{ this->dE_dthetaR_tensor[jk][i] },
+                        /*inputs=*/{ this->thetaR[jk] },
+                        /*grad_outputs=*/{ torch::ones_like(this->dE_dthetaR_tensor[jk][i]) },
+                        /*retain_graph=*/true,
+                        /*create_graph=*/false
+                    )[0];
+
+                    if constexpr ( std::is_same<TK, std::complex<double>>::value )
+                    {
+                        d2E_dthetaR_2_global[i] = std::complex<double>(torch::real(grad2_i[i]).template item<double>(),
+                                                                    torch::imag(grad2_i[i]).template item<double>());
+                    }
+                    else if constexpr (std::is_same<TK, double>::value)
+                    {
+                        d2E_dthetaR_2_global[i] = grad2_i[i].template item<double>();
+                    }
                 }
+
+                // get d2E_dR2
+                std::vector<TK> d2E_dthetaR_2_temp(d2E_dthetaR_2_global.size(), 0.0);
+                this->rdmft_solver->cal_E_grad2_Rpq(jk, d2E_dR2_local);
+                rdmft::collect_vec(this->para_Fij, d2E_dR2_local, d2E_dR2_global);
+                rdmft::vector2tensor(d2E_dR2_global, d2E_dR2_tensor, {nbands64, nbands64});
+                // generate upper triangle index
+                auto idx = torch::triu_indices(this->nbands64, this->nbands64);
+                // d2E_dthetaR_2_tensor = 2.0 * d2E_dR2_tensor.index({idx[0], idx[1]});
+                d2E_dthetaR_2_tensor = d2E_dR2_tensor.index({idx[0], idx[1]});
+                rdmft::tensor2vector(d2E_dthetaR_2_tensor, d2E_dthetaR_2_temp);
+
+                rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dthetaR_2_global.data(), "d2E_dR2 by auto-diff", 10);
+                rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dthetaR_2_temp.data(), "d2E_dR2 from rdmft.cpp", 10);
+
+                rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dR2_global.data(), "d2E_dR2_global from rdmft.cpp", 10);
+
+                // std::cout << "\nd2E_dthetaR_2_tensor from rdmft.cpp: \n" << d2E_dthetaR_2_tensor << std::endl;
+
+                // 
+                int min_location = 0;
+                double min_real_grad2 = 0.0;
+                int max_location = 0;
+                double max_real_grad2 = 0.0;
+                for(int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+                {
+                    if( std::real(d2E_dthetaR_2_global[j]) < min_real_grad2 )
+                    {
+                        min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+                        min_location = j;
+                    }
+
+                    if( std::real(d2E_dthetaR_2_global[j]) > max_real_grad2 )
+                    {
+                        max_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+                        max_location = j;
+                    }
+                }
+
+                if( min_real_grad2 < 0 )
+                {
+                    max_real_grad2 -= min_real_grad2;
+                }
+                // rdmft::shift_precond( d2E_dthetaR_2_global , max_real_grad2 * 1e-9, 0.0);
+                rdmft::shift_precond( d2E_dthetaR_2_global , 0.0, 0.0);
+
+                for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
+                {
+                    if( std::real(d2E_dthetaR_2_global[i]) < 1e-6 )
+                    {
+                        d2E_dthetaR_2_global[i] =1e-6;
+                    }
+                }
+
+                std::cout << "\n use libTorch's auto-diff-grad2 \n" << std::endl;
+
+
             }
-
-            double median_grad2 = median_sorted(d2E_dthetaR_2_global);
-
-            double average_grad2 = 0.0;
-            TK min_grad2 = d2E_dthetaR_2_global[min_location];
-            if( min_real_grad2 < 0 )
+            else
             {
-                median_grad2 -= min_real_grad2;
-                max_real_grad2 -= min_real_grad2;
-                second_min_real_grad2 -= min_real_grad2;
-                // for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
+                // get d2E_dR2
+                this->rdmft_solver->cal_E_grad2_Rpq(jk, d2E_dR2_local);
+                rdmft::collect_vec(this->para_Fij, d2E_dR2_local, d2E_dR2_global);
+                rdmft::vector2tensor(d2E_dR2_global, d2E_dR2_tensor, {nbands64, nbands64});
+
+                // generate upper triangle index
+                auto idx = torch::triu_indices(this->nbands64, this->nbands64);
+
+                // // fill upper triangle dE_dthetaR_tensor
+                // d2E_dthetaR_2_tensor = d2E_dR2_tensor.index({idx[0], idx[1]}) 
+                //                                 - d2E_dR2_tensor.index({idx[1], idx[0]}).conj();
+                // auto d2E_dthetaR_2_tensor = torch::zeros({this->nbands64, this->nbands64}, d2E_dR2_tensor.options());
+                // for (int i = 0; i < this->nbands64; ++i)
                 // {
-                //     d2E_dthetaR_2_global[i] -= min_grad2;
-                //     // // if( std::real(d2E_dthetaR_2_global[i]) < std::real(second_min_grad2 - min_grad2) )
-                //     // // {
-                //     // //     d2E_dthetaR_2_global[i] = second_min_grad2 - min_grad2;
-                //     // // }
-                //     // average_grad2 += std::abs(d2E_dthetaR_2_global[i]);
-                //     if( std::real(d2E_dthetaR_2_global[i]) < 0.001 )
+                //     for (int j = i; j < this->nbands64; ++j)
                 //     {
-                //         d2E_dthetaR_2_global[i] = 0.001;
+                //         d2E_dthetaR_2_tensor[i][j] = d2E_dR2_tensor[i][j] - d2E_dR2_tensor[j][i].conj();
+                //     }
+                // }
+                d2E_dthetaR_2_tensor = 2.0 * d2E_dR2_tensor.index({idx[0], idx[1]});
+
+                // convert data formats
+                rdmft::tensor2vector(d2E_dthetaR_2_tensor, d2E_dthetaR_2_global);
+
+                // // print
+                // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dR2_global.data(), "d2E_dR2", 10);
+
+                // print
+                // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2", 10);
+
+                // // vec_temp;
+                int min_location = 0;
+                double min_real_grad2 = 0.0;
+                int max_location = 0;
+                double max_real_grad2 = 0.0;
+                for(int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+                {
+                    if( std::real(d2E_dthetaR_2_global[j]) < min_real_grad2 )
+                    {
+                        min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+                        min_location = j;
+                    }
+
+                    if( std::real(d2E_dthetaR_2_global[j]) > max_real_grad2 )
+                    {
+                        max_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+                        max_location = j;
+                    }
+                }
+
+                // double eps_abs = 1e-8;
+                // double eps_rel = 1e-6 * std::max(1.0, max_real_grad2);
+                // double safety = std::max(eps_abs, eps_rel);
+
+                // for(int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+                // {
+                //     if( std::real(d2E_dthetaR_2_global[j]) < 0 )
+                //     {
+                //         d2E_dthetaR_2_global[j] = safety;
                 //     }
                 // }
 
+                
+                // // double offset = 1e-3;
+                // // offset += 0.5 * std::abs(min_real_grad2);
+                // double offset = 0.1;
+                // if( std::abs(max_real_grad2) > 1.0 )
+                // {
+                //     offset = 2.0;
+                // }
+                // else if( std::abs(max_real_grad2) > 0.01 )
+                // {
+                //     offset = 0.5;
+                // }
+
+                // in the future, the min_shift of different spins should be obtained separately, and then the maximum value is taken.
+                // compute_min_shift()
+
+
+
+
+                // double min_shift = compute_min_shift(d2E_dthetaR_2_global, 2.0);
+
+                // std::cout << "\n\nmin_shift in NOs-opti: " << min_shift << "\n" << std::endl;
+
+                // rdmft::shift_precond( d2E_dthetaR_2_global , min_shift, 0.001);
+
+
+                // rdmft::shift_precond( d2E_dthetaR_2_global , 0.001, 0.0);
+
+
+
+
+
+
+
+
+
+                double second_min_real_grad2 = std::numeric_limits<double>::infinity();
+                TK second_min_grad2 = 0.0;
+                for (int j=0; j<d2E_dthetaR_2_global.size(); ++j)
+                {
+                    if (std::real(d2E_dthetaR_2_global[j]) > min_real_grad2 && std::real(d2E_dthetaR_2_global[j]) < second_min_real_grad2)
+                    {
+                        second_min_real_grad2 = std::real(d2E_dthetaR_2_global[j]);
+                        second_min_grad2 = d2E_dthetaR_2_global[j];
+                    }
+                }
+
+                double median_grad2 = median_sorted(d2E_dthetaR_2_global);
+
+                double average_grad2 = 0.0;
+                TK min_grad2 = d2E_dthetaR_2_global[min_location];
+                if( min_real_grad2 < 0 )
+                {
+                    median_grad2 -= min_real_grad2;
+                    max_real_grad2 -= min_real_grad2;
+                    second_min_real_grad2 -= min_real_grad2;
+                    // for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
+                    // {
+                    //     d2E_dthetaR_2_global[i] -= min_grad2;
+                    //     // // if( std::real(d2E_dthetaR_2_global[i]) < std::real(second_min_grad2 - min_grad2) )
+                    //     // // {
+                    //     // //     d2E_dthetaR_2_global[i] = second_min_grad2 - min_grad2;
+                    //     // // }
+                    //     // average_grad2 += std::abs(d2E_dthetaR_2_global[i]);
+                    //     if( std::real(d2E_dthetaR_2_global[i]) < 0.001 )
+                    //     {
+                    //         d2E_dthetaR_2_global[i] = 0.001;
+                    //     }
+                    // }
+
+                }
+
+                // // test2
+                // rdmft::shift_precond( d2E_dthetaR_2_global , 0.0, max_real_grad2 * 1e-6); // 0.05
+
+                // rdmft::shift_precond( d2E_dthetaR_2_global , 0.0, max_real_grad2 * 1e-3);
+                // test
+                // rdmft::shift_precond( d2E_dthetaR_2_global, 1e-6);
+                // test3
+                rdmft::shift_precond( d2E_dthetaR_2_global , max_real_grad2 * 1e-6, 0.0);
+                // // test4
+                // rdmft::shift_precond( d2E_dthetaR_2_global , max_real_grad2 * 1e-9, 0.0);
+
+                // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2 after shifting", 10);
+
+                // max_real_grad2
+                std::cout << "\n\nmax_real_grad2: " << max_real_grad2 
+                            << "\nmedian_grad2: " << median_grad2 
+                            << "\nmedian_grad2 / size(): " << median_grad2/d2E_dthetaR_2_global.size()
+                            << "\nsecond_min_real_grad2: " << second_min_real_grad2
+                            << std::endl;
+
+                // average_grad2 /= d2E_dthetaR_2_global.size();
+                // if( min_real_grad2 < 0 )
+                // {
+                //     for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
+                //     {
+                //         d2E_dthetaR_2_global[i] += average_grad2 * 1e-3;
+                //     }
+                // }
+
+                // // print
+                // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2 after shifting", 10);
+
             }
-
-            rdmft::shift_precond( d2E_dthetaR_2_global , 0.0, max_real_grad2 * 0.001); // 0.05
-            // rdmft::shift_precond( d2E_dthetaR_2_global, 1e-6);
-
-            // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2 after shifting", 10);
-
-            // max_real_grad2
-            std::cout << "\n\nmax_real_grad2: " << max_real_grad2 
-                        << "\nmedian_grad2: " << median_grad2 
-                        << "\nmedian_grad2 / size(): " << median_grad2/d2E_dthetaR_2_global.size()
-                        << "\nsecond_min_real_grad2: " << second_min_real_grad2
-                         << std::endl;
-
-            // average_grad2 /= d2E_dthetaR_2_global.size();
-            // if( min_real_grad2 < 0 )
-            // {
-            //     for(int i=0; i<d2E_dthetaR_2_global.size(); ++i)
-            //     {
-            //         d2E_dthetaR_2_global[i] += average_grad2 * 1e-3;
-            //     }
-            // }
-
-            // // print
-            // rdmft::printMatrix_pointer(1, PARAM.inp.nbands*(PARAM.inp.nbands + 1) / 2, d2E_dthetaR_2_global.data(), "d2E_dthetaR_2 after shifting", 10);
 
             if( PARAM.inp.precond_type == 1 )
             {
@@ -713,6 +867,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
                     this->search_direction[jk][i] /= this->scaling_P[i];
                 }
             }
+
         }
         else
         {
@@ -727,7 +882,7 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
 
 
 template<typename TK, typename TR>
-void LineSearch_NOs<TK, TR>::cal_dE_dR(const int* ik)
+void LineSearch_NOs<TK, TR>::cal_dE_dR(const int* ik, const bool auto_cal_grad2)
 {
     std::vector<TK> dE_dR_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
     // std::vector<TK> d2E_dR2_local(this->para_Fij->get_row_size() * this->para_Fij->get_col_size(), 0.0);
@@ -753,7 +908,15 @@ void LineSearch_NOs<TK, TR>::cal_dE_dR(const int* ik)
             this->dE_dwfc_tensor[jk] = torch::from_blob(dE_dwfc_vec.data(), {nbands64, nbasis64}, torch_dtype<TK>()).clone();
 
             // auto diff
-            this->wfc_new_tensor[jk].backward( this->dE_dwfc_tensor[jk] );
+            if( PARAM.inp.rdmft_auto_diff2 && auto_cal_grad2 )
+            {
+                // /*keep_graph=*/true, /*create_graph=*/true
+                this->wfc_new_tensor[jk].backward(this->dE_dwfc_tensor[jk], true, true);
+            }
+            else
+            {
+                this->wfc_new_tensor[jk].backward( this->dE_dwfc_tensor[jk] );
+            }
 
             // get dE_dthetaR
             this->dE_dthetaR_tensor[jk] = this->thetaR[jk].grad().clone();

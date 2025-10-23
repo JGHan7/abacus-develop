@@ -82,6 +82,9 @@ class LineSearch
     //! Wolfe condition
     void wolfe(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
 
+    //! only one search is performed via quadratic interpolation
+    void quad_inter(const std::function<double(const double)>& cal_phi, const std::function<double()>& cal_dphi);
+
     //! used in Strong Wolfe condition, get the appropriate step length
     void zoom(const std::function<double(const double)>& cal_phi,
                 const std::function<double()>& cal_dphi,

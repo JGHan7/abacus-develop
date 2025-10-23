@@ -69,7 +69,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
                                                     this->sys_nelec_spin[is],
                                                     random_num,
                                                     this->num_symm_k.data()+is*this->nk_nospin);
-            rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, random_num.data(), "random_num used in EBI", 10);
+            rdmft::printMatrix_pointer(GlobalV::ofs_running, nk_nospin, PARAM.inp.nbands, random_num.data(), "random_num used in EBI", 10);
 
             // to avoid the low bands with large-k points getting too small values ​
             // ​and the high bands with small-k points getting too large values
@@ -102,7 +102,7 @@ void EBI::get_inital_guess(std::vector<double>& x_pass, const ModuleBase::matrix
             Parallel_Common::bcast_double(this->x[is].data(), nk_nospin*nbands);
         }
         
-        rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, this->x[0].data(), "random inital var_x", 10);
+        rdmft::printMatrix_pointer(GlobalV::ofs_running, nk_nospin, PARAM.inp.nbands, this->x[0].data(), "random inital var_x", 10);
         this->solving_mu();
         rdmft::printMatrix_pointer(nk_nospin, PARAM.inp.nbands, this->occ_number[0].data(), "random inital occ_number", 10);
     }
