@@ -219,7 +219,8 @@ void BFGS_method<TX>::cal_Hk(const std::vector<TX>& dE_dx_new, const std::vector
         //     std::cout << "******\n" << "in BFGS_method::get_pk(), this->scaling_gamma0: " << this->scaling_gamma0 << "\n******" << std::endl;
         // }
 
-        std::cout << "******\n" << "in BFGS_method::get_pk(), 1.0/rho = y^/dagger s: " << rho_temp << "\n******" << std::endl;
+        // std::cout << "******\n" << "in BFGS_method::get_pk(), 1.0/rho = y^/dagger s: " << rho_temp << "\n******" << std::endl;
+
         // std::cout << "******\n" << "in BFGS_method::get_pk(), rho: " << this->rho << "\n******" << std::endl;
 
         rho_temp = this->rho;

@@ -423,8 +423,9 @@ void EBI::solving_mu()
                 // determine whether it converges to a local minimum
                 if( std::abs(occ_num_error) > this->tot_nelec_thr )
                 {
-                    std::cout << "******\n" << "local minimum mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << "\n******" << std::endl;
-
+                    // std::cout << "******\n" << "local minimum mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << "\n******" << std::endl;
+                    GlobalV::ofs_running << "******\n" << "local minimum mu: " << this->mu[is] << ", occ_num_error: " << occ_num_error << "\n******" << std::endl;
+                    
                     if( std::abs(occ_num_error) >= 0.5 && f1_divided_f2 < 0.5 )
                     {
                         double step = (occ_num_error > 0) ? 1.0 : -1.0;

@@ -615,10 +615,10 @@ void LineSearch_NOs<TK, TR>::cal_pk_dphi0(const bool new_landscape, const int* i
                 d2E_dthetaR_2_tensor = d2E_dR2_tensor.index({idx[0], idx[1]});
                 rdmft::tensor2vector(d2E_dthetaR_2_tensor, d2E_dthetaR_2_temp);
 
-                rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dthetaR_2_global.data(), "d2E_dR2 by auto-diff", 10);
-                rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dthetaR_2_temp.data(), "d2E_dR2 from rdmft.cpp", 10);
+                // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dthetaR_2_global.data(), "d2E_dR2 by auto-diff", 10);
+                // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dthetaR_2_temp.data(), "d2E_dR2 from rdmft.cpp", 10);
 
-                rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dR2_global.data(), "d2E_dR2_global from rdmft.cpp", 10);
+                // rdmft::printMatrix_pointer(PARAM.inp.nbands, PARAM.inp.nbands, d2E_dR2_global.data(), "d2E_dR2_global from rdmft.cpp", 10);
 
                 // std::cout << "\nd2E_dthetaR_2_tensor from rdmft.cpp: \n" << d2E_dthetaR_2_tensor << std::endl;
 

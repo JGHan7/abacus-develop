@@ -159,7 +159,7 @@ double LineSearch_ONs<TK, TR>::do_line_search(const bool start_guess)
     this->cal_dE_dx(this->dE_dx);
 
     this->cal_pk_dphi0( new_landscape );
-    std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
+    // std::cout << "\n******\n" << "ls, dphi_0: " << this->dphi_0 << "\n******\n" << std::endl;
 
     if( this->iter != 0 )
     {

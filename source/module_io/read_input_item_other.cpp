@@ -610,6 +610,12 @@ void ReadInput::item_others()
         this->add_item(item);
     }
     {
+        Input_Item item("energy_thr");
+        item.annotation = "convergence criterion of the Etotal in ADAM method which used to optimize NOs";
+        read_sync_double(input.energy_thr);
+        this->add_item(item);
+    }
+    {
         Input_Item item("solve_mu_thr");
         item.annotation = "convergence criterion of EBI method for solving mu";
         read_sync_double(input.solve_mu_thr);

@@ -31,7 +31,7 @@ class IterDiag_NOs
     void restart_opti(hamilt::Hamilt<TK>* p_hamilt_in = nullptr, int* scale_factor = nullptr);
 
     //! optimizing natural orbitals
-    double optimize_orb(RDMFT<TK, TR>& rdmft_solver_in);
+    double optimize_orb(RDMFT<TK, TR>& rdmft_solver_in, const int iter_orb = 1);
 
     //! check the Hermitian property of lambda for all k points
     double check_hermi_lambda();
@@ -161,6 +161,7 @@ class IterDiag_NOs
     void modify_learn_rate()
     {
       this->learn_rate *= PARAM.inp.adam_scaling_lr;
+      std::cout << "\n******\nlr in adam: " << this->learn_rate << "\n******\n" << std::endl;
     }
 
     // ******* used by ADAM ******* //

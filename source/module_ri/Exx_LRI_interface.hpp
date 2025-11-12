@@ -248,7 +248,7 @@ void Exx_LRI_Interface<T, Tdata>::exx_iter_finish(const K_Vectors& kv,
             elec.f_en.etot,
             scf_ene_thr);
     }
-    else if ( PARAM.inp.esolver_type == "rdmft" && two_level_step )
+    else if ( PARAM.inp.esolver_type == "rdmft" && two_level_step && PARAM.inp.rdmft_orb_opti != "none" )
     {
         // for RDMFT to quit after the first iter of the exx-loop
         if( !PARAM.inp.conv_inital_value )
