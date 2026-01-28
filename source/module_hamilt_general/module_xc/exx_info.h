@@ -54,6 +54,7 @@ struct Exx_Info
         double cauchy_stress_threshold = 0;
         double ccp_rmesh_times = 10;
         double kmesh_times = 4;
+        double Cs_inv_thr = -1;
 
         int abfs_Lmax = 0; // tmp
 

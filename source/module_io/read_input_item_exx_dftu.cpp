@@ -184,6 +184,12 @@ void ReadInput::item_exx()
         this->add_item(item);
     }
     {
+        Input_Item item("exx_cs_inv_thr");
+        item.annotation = "threshold to inverse Vq in abfs for generating Cs";
+        read_sync_double(input.exx_cs_inv_thr);
+        this->add_item(item);
+    }
+    {
         Input_Item item("exx_ccp_rmesh_times");
         item.annotation = "how many times larger the radial mesh required for "
                           "calculating Columb potential is to that "

@@ -8,12 +8,14 @@
 #include <RI/global/Tensor.h>
 #include <vector>
 
+#include "ABFs_Construct-PCA.h"
+
 template<typename Tdata>
 class Inverse_Matrix
 {
 public:
-	enum class Method{potrf};	//, syev};
-	void cal_inverse(const Method &method);
+	enum class Method{potrf, syev};
+	void cal_inverse(const Method& method, const double& threshold_condition_number = 0.);
 
 	void input(const RI::Tensor<Tdata> &m);
 	void input(const std::vector<std::vector<RI::Tensor<Tdata>>> &ms);
@@ -22,6 +24,7 @@ public:
 
 private:
 	void using_potrf();
+	void using_syev(const double& threshold_condition_number);
 	void copy_down_triangle();
 	RI::Tensor<Tdata> A;
 };

@@ -1,0 +1,765 @@
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_lcao/module_tddft/evolve_elec.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_lcao/module_tddft/evolve_elec.h:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao_tddft.h:11:38: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   11 | class ESolver_KS_LCAO_TDDFT : public ESolver_KS_LCAO<std::complex<double>, double>
+      |                                      ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.cpp:535:16: note: in instantiation of template class 'rdmft::RDMFT<double, double>' requested here
+  535 | template class RDMFT<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.cpp:536:16: note: in instantiation of template class 'rdmft::RDMFT<std::complex<double>, double>' requested here
+  536 | template class RDMFT<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+1 warning generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_lcao/module_tddft/bandenergy.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_lcao/module_tddft/evolve_elec.h:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao_tddft.h:11:38: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   11 | class ESolver_KS_LCAO_TDDFT : public ESolver_KS_LCAO<std::complex<double>, double>
+      |                                      ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+1 warning generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:3:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:13:29: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   13 | class ESolver_GetS : public ESolver_KS<std::complex<double>>
+      |                             ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:8:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:21:10: warning: 'after_all_runners' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   21 |     void after_all_runners(UnitCell& ucell){};
+      |          ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.h:29:18: note: overridden virtual function is here
+   29 |     virtual void after_all_runners(UnitCell& ucell){};
+      |                  ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:8:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:26:12: warning: 'cal_energy' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   26 |     double cal_energy() {};
+      |            ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.h:36:20: note: overridden virtual function is here
+   36 |     virtual double cal_energy() = 0;
+      |                    ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:8:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:29:10: warning: 'cal_force' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   29 |     void cal_force(UnitCell& ucell, ModuleBase::matrix& force) {};
+      |          ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.h:39:18: note: overridden virtual function is here
+   39 |     virtual void cal_force(UnitCell& ucell, ModuleBase::matrix& force) = 0;
+      |                  ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:8:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:32:10: warning: 'cal_stress' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   32 |     void cal_stress(UnitCell& ucell, ModuleBase::matrix& stress) {};
+      |          ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.h:42:18: note: overridden virtual function is here
+   42 |     virtual void cal_stress(UnitCell& ucell, ModuleBase::matrix& stress) = 0;
+      |                  ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:8:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:26:26: warning: non-void function does not return a value [-Wreturn-type]
+   26 |     double cal_energy() {};
+      |                          ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:3:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:14:30: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<float>>' requested here
+   14 | class ESolver_KS_PW : public ESolver_KS<T, Device>
+      |                              ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:152:15: note: in instantiation of template class 'ModuleESolver::ESolver_KS_PW<std::complex<float>>' requested here
+  152 |                         return new ESolver_KS_PW<std::complex<float>, base_device::DEVICE_CPU>();
+      |                                    ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver.cpp:3:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requgmake[2]: *** Deleting file `source/module_psi/CMakeFiles/psi_initializer.dir/psi_initializer_atomic.cpp.o'
+gmake[2]: gmake[2]: *** Deleting file `source/module_cell/CMakeFiles/cell.dir/read_pp_upf100.cpp.o'*** Deleting file `source/module_hsolver/CMakeFiles/hsolver.dir/diago_david.cpp.o'gmake[2]: 
+
+*** Deleting file `source/module_hamilt_lcao/module_hcontainer/CMakeFiles/hcontainer.dir/transfer.cpp.o'
+gmake[2]: *** Deleting file `source/module_hamilt_lcao/module_deltaspin/CMakeFiles/deltaspin.dir/spin_constrain.cpp.o'
+gmake[2]: gmake[2]: *** Deleting file `source/module_cell/module_symmetry/CMakeFiles/symmetry.dir/symmetry.cpp.o'*** Deleting file `source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdw.cpp.o'
+
+gmake[2]: gmake[2]: *** Deleting file `source/CMakeFiles/device.dir/module_hamilt_pw/hamilt_pwdft/kernels/wf_op.cpp.o'gmake[2]: 
+*** [source/module_hsolver/CMakeFiles/hsolver.dir/diago_david.cpp.o] Hangupgmake[2]: 
+*** Deleting file `source/module_cell/CMakeFiles/cell.dir/read_pp_complete.cpp.o'*** Deleting file `source/module_psi/CMakeFiles/psi_initializer.dir/psi_initializer_random.cpp.o'
+
+gmake[2]: gmake[2]: gmake[2]: *** [source/module_cell/module_symmetry/CMakeFiles/symmetry.dir/symmetry.cpp.o] Hangup*** Deleting file `source/module_base/module_container/CMakeFiles/container.dir/ATen/core/tensor_map.cpp.o'*** [source/module_hamilt_lcao/module_deltaspin/CMakeFiles/deltaspin.dir/spin_constrain.cpp.o] Terminated
+
+gmake[2]: gmake[2]: *** Deleting file `source/module_hamilt_lcao/module_hcontainer/CMakeFiles/hcontainer.dir/func_folding.cpp.o'
+*** Deleting file `source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdwd3_autoset_xcparam.cpp.o'
+
+gmake[2]: *** [source/module_psi/CMakeFiles/psi_initializer.dir/psi_initializer_random.cpp.o] Hangup
+gmake[2]: *** [source/module_psi/CMakeFiles/psi_initializer.dir/psi_initializer_atomic.cpp.o] Hangup
+gmake[2]: *** Deleting file `source/module_hamilt_lcao/module_hcontainer/CMakeFiles/hcontainer.dir/hcontainer.cpp.o'
+gmake[2]: *** Deleting file `source/CMakeFiles/device.dir/module_hamilt_pw/hamilt_pwdft/kernels/stress_op.cpp.o'
+gmake[2]: gmake[2]: *** Deleting file `source/module_cell/CMakeFiles/cell.dir/read_pp.cpp.o'gmake[1]: *** Deleting file `source/module_base/module_container/CMakeFiles/container.dir/ATen/core/tensor_buffer.cpp.o'
+
+*** [source/module_cell/module_symmetry/CMakeFiles/symmetry.dir/all] Terminated
+gmake[2]: *** Deleting file `source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdwd3_autoset_xcname.cpp.o'
+gmake[2]: gmake[2]: *** [source/module_cell/CMakeFiles/cell.dir/read_pp.cpp.o] Hangup
+*** Deleting file `source/module_base/module_container/CMakeFiles/container.dir/ATen/core/tensor.cpp.o'
+gmake[2]: *** [source/module_hamilt_lcao/module_hcontainer/CMakeFiles/hcontainer.dir/hcontainer.cpp.o] Hangup
+gmake[2]: *** [source/module_cell/CMakeFiles/cell.dir/read_pp_complete.cpp.o] Hangup
+gmake[2]: *** Deleting file `source/CMakeFiles/device.dir/module_hamilt_pw/hamilt_pwdft/kernels/force_op.cpp.o'
+gmake[2]: *** [source/module_hamilt_lcao/module_hcontainer/CMakeFiles/hcontainer.dir/func_folding.cpp.o] Hangup
+gmake[2]: *** [source/module_cell/CMakeFiles/cell.dir/read_pp_upf100.cpp.o] Hangup
+gmake[2]: *** [source/module_hamilt_lcao/module_hcontainer/CMakeFiles/hcontainer.dir/transfer.cpp.o] Hangup
+gmake: *** [all] Terminated
+gmake[2]: *** [source/CMakeFiles/device.dir/module_hamilt_pw/hamilt_pwdft/kernels/force_op.cpp.o] Hangup
+gmake[2]: *** [source/CMakeFiles/device.dir/module_hamilt_pw/hamilt_pwdft/kernels/stress_op.cpp.o] Hangup
+gmake[2]: *** [source/CMakeFiles/device.dir/module_hamilt_pw/hamilt_pwdft/kernels/wf_op.cpp.o] Hangup
+gmake[2]: *** Deleting file `source/module_base/module_container/CMakeFiles/container.dir/ATen/ops/linalg_op.cpp.o'
+gmake[2]: *** Deleting file `source/module_base/module_container/CMakeFiles/container.dir/ATen/ops/einsum_op.cpp.o'
+gmake[2]: *** Deleting file `source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdwd3.cpp.o'
+gmake[2]: *** [source/module_base/module_container/CMakeFiles/container.dir/ATen/ops/einsum_op.cpp.o] Hangup
+gmake[2]: *** [source/module_base/module_container/CMakeFiles/container.dir/ATen/ops/linalg_op.cpp.o] Hangup
+gmake[2]: *** Deleting file `source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdwd2.cpp.o'
+gmake[2]: *** [source/module_base/module_container/CMakeFiles/container.dir/ATen/core/tensor.cpp.o] Hangup
+gmake[2]: *** [source/module_base/module_container/CMakeFiles/container.dir/ATen/core/tensor_buffer.cpp.o] Hangup
+gmake[2]: *** [source/module_base/module_container/CMakeFiles/container.dir/ATen/core/tensor_map.cpp.o] Hangup
+gmake[2]: *** [source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdwd2.cpp.o] Hangup
+gmake[2]: *** [source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdwd3.cpp.o] Hangup
+gmake[2]: *** [source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdwd3_autoset_xcname.cpp.o] Hangup
+gmake[2]: *** [source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdwd3_autoset_xcparam.cpp.o] Hangup
+gmake[2]: *** [source/module_hamilt_general/module_vdw/CMakeFiles/vdw.dir/vdw.cpp.o] Hangup
+_esolver/esolver_ks_pw.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:14:30: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<float>>' requested here
+   14 | class ESolver_KS_PW : public ESolver_KS<T, Device>
+      |                              ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.cpp:806:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_PW<std::complex<float>>' requested here
+  806 | template class ESolver_KS_PW<std::complex<float>, base_device::DEVICE_CPU>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:14:30: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   14 | class ESolver_KS_PW : public ESolver_KS<T, Device>
+      |                              ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.cpp:807:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_PW<std::complex<double>>' requested here
+  807 | template class ESolver_KS_PW<std::complex<double>, base_device::DEVICE_CPU>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_sdft_pw.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_sdft_pw.h:4:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:14:30: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   14 | class ESolver_KS_PW : public ESolver_KS<T, Device>
+      |                              ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_sdft_pw.h:14:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS_PW<std::complex<double>>' requested here
+   14 | class ESolver_SDFT_PW : public ESolver_KS_PW<T, Device>
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_sdft_pw.cpp:259:6: note: in instantiation of template class 'ModuleESolver::ESolver_SDFT_PW<std::complex<double>>' requested here
+  259 | void ESolver_SDFT_PW<std::complex<double>, base_device::DEVICE_CPU>::after_all_runners(UnitCell& ucell)
+      |      ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcaopw.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcaopw.h:3:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:14:30: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<float>>' requested here
+   14 | class ESolver_KS_PW : public ESolver_KS<T, Device>
+      |                              ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcaopw.h:13:35: note: in instantiation of template class 'ModuleESolver::ESolver_KS_PW<std::complex<float>>' requested here
+   13 |     class ESolver_KS_LIP : public ESolver_KS_PW<T, base_device::DEVICE_CPU>
+      |                                   ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcaopw.cpp:265:20: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LIP<std::complex<float>>' requested here
+  265 |     template class ESolver_KS_LIP<std::complex<float>>;
+      |                    ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcaopw.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcaopw.h:3:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:14:30: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   14 | class ESolver_KS_PW : public ESolver_KS<T, Device>
+      |                              ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcaopw.h:13:35: note: in instantiation of template class 'ModuleESolver::ESolver_KS_PW<std::complex<double>>' requested here
+   13 |     class ESolver_KS_LIP : public ESolver_KS_PW<T, base_device::DEVICE_CPU>
+      |                                   ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcaopw.cpp:266:20: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LIP<std::complex<double>>' requested here
+  266 |     template class ESolver_KS_LIP<std::complex<double>>;
+      |                    ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/pw_others.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:14:30: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<float>>' requested here
+   14 | class ESolver_KS_PW : public ESolver_KS<T, Device>
+      |                              ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/pw_others.cpp:79:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_PW<std::complex<float>>' requested here
+   79 | template class ESolver_KS_PW<std::complex<float>, base_device::DEVICE_CPU>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/pw_others.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_pw.h:14:30: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   14 | class ESolver_KS_PW : public ESolver_KS<T, Device>
+      |                              ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/pw_others.cpp:80:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_PW<std::complex<double>>' requested here
+   80 | template class ESolver_KS_PW<std::complex<double>, base_device::DEVICE_CPU>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/./esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+1 warning generated.
+1 warning generated.
+2 warnings generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:13:29: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   13 | class ESolver_GetS : public ESolver_KS<std::complex<double>>
+      |                             ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.cpp:1:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:21:10: warning: 'after_all_runners' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   21 |     void after_all_runners(UnitCell& ucell){};
+      |          ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.h:29:18: note: overridden virtual function is here
+   29 |     virtual void after_all_runners(UnitCell& ucell){};
+      |                  ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.cpp:1:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:26:12: warning: 'cal_energy' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   26 |     double cal_energy() {};
+      |            ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.h:36:20: note: overridden virtual function is here
+   36 |     virtual double cal_energy() = 0;
+      |                    ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.cpp:1:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:29:10: warning: 'cal_force' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   29 |     void cal_force(UnitCell& ucell, ModuleBase::matrix& force) {};
+      |          ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.h:39:18: note: overridden virtual function is here
+   39 |     virtual void cal_force(UnitCell& ucell, ModuleBase::matrix& force) = 0;
+      |                  ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.cpp:1:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:32:10: warning: 'cal_stress' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   32 |     void cal_stress(UnitCell& ucell, ModuleBase::matrix& stress) {};
+      |          ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver.h:42:18: note: overridden virtual function is here
+   42 |     virtual void cal_stress(UnitCell& ucell, ModuleBase::matrix& stress) = 0;
+      |                  ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.cpp:1:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_gets.h:26:26: warning: non-void function does not return a value [-Wreturn-type]
+   26 |     double cal_energy() {};
+      |                          ^
+1 warning generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao_tddft.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao_tddft.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao_tddft.h:11:38: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   11 | class ESolver_KS_LCAO_TDDFT : public ESolver_KS_LCAO<std::complex<double>, double>
+      |                                      ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/lcao_before_scf.cpp:2:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/lcao_before_scf.cpp:385:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+  385 | template class ESolver_KS_LCAO<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/lcao_before_scf.cpp:2:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/lcao_before_scf.cpp:386:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+  386 | template class ESolver_KS_LCAO<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.cpp:1301:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+ 1301 | template class ESolver_KS_LCAO<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.cpp:1302:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+ 1302 | template class ESolver_KS_LCAO<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+2 warnings generated.
+1 warning generated.
+6 warnings generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_cal_V.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_cal_V.cpp:336:16: note: in instantiation of template class 'rdmft::RDMFT<double, double>' requested here
+  336 | template class RDMFT<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_cal_V.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_cal_V.cpp:337:16: note: in instantiation of template class 'rdmft::RDMFT<std::complex<double>, double>' requested here
+  337 | template class RDMFT<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_update_state.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_update_state.cpp:275:16: note: in instantiation of template class 'rdmft::RDMFT<double, double>' requested here
+  275 | template class RDMFT<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:7:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.h:8:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.h:61:26: note: in instantiation of template class 'rdmft::RDMFT<double, double>' requested here
+   61 |     rdmft::RDMFT<TK, TR> rdmft_solver;
+      |                          ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:364:16: note: in instantiation of template class 'rdmft::ESolver_RDMFT<double, double>' requested here
+  364 | template class ESolver_RDMFT<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_update_state.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_update_state.cpp:276:16: note: in instantiation of template class 'rdmft::RDMFT<std::complex<double>, double>' requested here
+  276 | template class RDMFT<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:326:1: warning: non-void function does not return a value [-Wreturn-type]
+  326 | }
+      | ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:364:16: note: in instantiation of member function 'rdmft::ESolver_RDMFT<double, double>::update_occ_num_dft' requested here
+  364 | template class ESolver_RDMFT<double, double>;
+      |                ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:7:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.h:8:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.h:61:26: note: in instantiation of template class 'rdmft::RDMFT<std::complex<double>, double>' requested here
+   61 |     rdmft::RDMFT<TK, TR> rdmft_solver;
+      |                          ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:365:16: note: in instantiation of template class 'rdmft::ESolver_RDMFT<std::complex<double>, double>' requested here
+  365 | template class ESolver_RDMFT<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:326:1: warning: non-void function does not return a value [-Wreturn-type]
+  326 | }
+      | ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:365:16: note: in instantiation of member function 'rdmft::ESolver_RDMFT<std::complex<double>, double>::update_occ_num_dft' requested here
+  365 | template class ESolver_RDMFT<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:326:1: warning: non-void function does not return a value [-Wreturn-type]
+  326 | }
+      | ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/esolver_rdmft.cpp:366:16: note: in instantiation of member function 'rdmft::ESolver_RDMFT<std::complex<double>, std::complex<double>>::update_occ_num_dft' requested here
+  366 | template class ESolver_RDMFT<std::complex<double>, std::complex<double>>;
+      |                ^
+5 warnings generated.
+2 warnings generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/iter_diag_NOs.cpp:8:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_tools.h:20:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/iter_diag_NOs.cpp:69:41: note: in instantiation of template class 'rdmft::RDMFT<double, double>' requested here
+   69 |     int nkstot_full = this->rdmft_solver->get_kv().get_nkstot_full();
+      |                                         ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/iter_diag_NOs.cpp:710:16: note: in instantiation of member function 'rdmft::IterDiag_NOs<double, double>::init' requested here
+  710 | template class IterDiag_NOs<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/iter_diag_NOs.cpp:8:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft_tools.h:20:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/iter_diag_NOs.cpp:69:41: note: in instantiation of template class 'rdmft::RDMFT<std::complex<double>, double>' requested here
+   69 |     int nkstot_full = this->rdmft_solver->get_kv().get_nkstot_full();
+      |                                         ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/iter_diag_NOs.cpp:711:16: note: in instantiation of member function 'rdmft::IterDiag_NOs<std::complex<double>, double>::init' requested here
+  711 | template class IterDiag_NOs<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/line_search_rdmft.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/line_search_rdmft.h:8:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/line_search_rdmft.cpp:33:32: note: in instantiation of template class 'rdmft::RDMFT<double, double>' requested here
+   33 |     this->ebi.init(rdmft_solver->nk_total, rdmft_solver->get_kv().get_nkstot_full(), rdmft_solver->get_kv().wk);
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/line_search_rdmft.cpp:420:16: note: in instantiation of member function 'rdmft::LineSearch<double, double>::init' requested here
+  420 | template class LineSearch<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/line_search_rdmft.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/line_search_rdmft.h:8:
+In file included from /home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_pw/hamilt_pwdft/global.h:9:
+In file included from /home/jghan/software/rdmft-abacus/source/module_relax/relax_driver.h:6:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/rdmft.h:45:22: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   45 | class RDMFT : public ModuleESolver::ESolver_KS_LCAO<TK,TR>
+      |                      ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/line_search_rdmft.cpp:33:32: note: in instantiation of template class 'rdmft::RDMFT<std::complex<double>, double>' requested here
+   33 |     this->ebi.init(rdmft_solver->nk_total, rdmft_solver->get_kv().get_nkstot_full(), rdmft_solver->get_kv().wk);
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_rdmft/optimizer/line_search_rdmft.cpp:421:16: note: in instantiation of member function 'rdmft::LineSearch<std::complex<double>, double>::init' requested here
+  421 | template class LineSearch<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_elecstate/potentials/H_TDDFT_pw.cpp:7:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_lcao/module_tddft/evolve_elec.h:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao_tddft.h:11:38: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   11 | class ESolver_KS_LCAO_TDDFT : public ESolver_KS_LCAO<std::complex<double>, double>
+      |                                      ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+2 warnings generated.
+1 warning generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/lcao_others.cpp:2:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/lcao_others.cpp:377:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+  377 | template class ESolver_KS_LCAO<double, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/lcao_others.cpp:2:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/lcao_others.cpp:378:16: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+  378 | template class ESolver_KS_LCAO<std::complex<double>, double>;
+      |                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+2 warnings generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_ri/Matrix_Orbs22.cpp:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_ri/Matrix_Orbs22.h:120:
+/home/jghan/software/rdmft-abacus/source/module_ri/Matrix_Orbs22.hpp:221:21: warning: 24 enumeration values not handled in switch: 'A1A2B1B2', 'A1A2B2B1', 'A1B1A2B2'... [-Wswitch]
+  221 |                                                                                                         switch(matrix_order)
+      |                                                                                                                ^~~~~~~~~~~~
+2 warnings generated.
+1 warning generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_io/write_dipole.cpp:3:
+In file included from /home/jghan/software/rdmft-abacus/source/module_hamilt_lcao/module_tddft/evolve_elec.h:6:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao_tddft.h:11:38: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+   11 | class ESolver_KS_LCAO_TDDFT : public ESolver_KS_LCAO<std::complex<double>, double>
+      |                                      ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+1 warning generated.
+In file included from /home/jghan/software/rdmft-abacus/source/module_lr/esolver_lrtd_lcao.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_lr/esolver_lrtd_lcao.h:13:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<double>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_lr/esolver_lrtd_lcao.cpp:153:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<double, double>' requested here
+  153 |     this->kv = std::move(ks_sol.kv);
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_lr/esolver_lrtd_lcao.cpp:663:20: note: in instantiation of member function 'LR::ESolver_LR<double, double>::ESolver_LR' requested here
+  663 | template class LR::ESolver_LR<double, double>;
+      |                    ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_lr/esolver_lrtd_lcao.cpp:1:
+In file included from /home/jghan/software/rdmft-abacus/source/module_lr/esolver_lrtd_lcao.h:13:
+In file included from /home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:3:
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks.h:40:18: warning: 'before_scf' overrides a member function but is not marked 'override' [-Winconsistent-missing-override]
+   40 |     virtual void before_scf(UnitCell& ucell, const int istep) {};
+      |                  ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_ks_lcao.h:28:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS<std::complex<double>>' requested here
+   28 | class ESolver_KS_LCAO : public ESolver_KS<TK> {
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_lr/esolver_lrtd_lcao.cpp:153:32: note: in instantiation of template class 'ModuleESolver::ESolver_KS_LCAO<std::complex<double>, double>' requested here
+  153 |     this->kv = std::move(ks_sol.kv);
+      |                                ^
+/home/jghan/software/rdmft-abacus/source/module_lr/esolver_lrtd_lcao.cpp:664:20: note: in instantiation of member function 'LR::ESolver_LR<std::complex<double>, double>::ESolver_LR' requested here
+  664 | template class LR::ESolver_LR<std::complex<double>, double>;
+      |                    ^
+/home/jghan/software/rdmft-abacus/source/module_esolver/esolver_fp.h:37:22: note: overridden virtual function is here
+   37 |         virtual void before_scf(UnitCell& ucell, const int istep);
+      |                      ^
+In file included from /home/jghan/software/rdmft-abacus/source/module_ri/exx_opt_orb.cpp:11:
+In file included from /home/jghan/software/rdmft-abacus/source/module_ri/Matrix_Orbs22.h:120:
+/home/jghan/software/rdmft-abacus/source/module_ri/Matrix_Orbs22.hpp:221:21: warning: 24 enumeration values not handled in switch: 'A1A2B1B2', 'A1A2B2B1', 'A1B1A2B2'... [-Wswitch]
+  221 |                                                                                                         switch(matrix_order)
+      |                                                                                                                ^~~~~~~~~~~~
+2 warnings generated.
+2 warnings generated.
+1 warning generated.
+2 warnings generated.
+2 warnings generated.
+2 warnings generated.
+/usr/bin/ld: warning: libifport.so.5, needed by /home/jghan/resource/elpa-2021.11/lib/libelpa_openmp.so, not found (try using -rpath or -rpath-link)
+/usr/bin/ld: warning: libifcoremt.so.5, needed by /home/jghan/resource/elpa-2021.11/lib/libelpa_openmp.so, not found (try using -rpath or -rpath-link)
+/usr/bin/ld: warning: libimf.so, needed by /home/jghan/resource/elpa-2021.11/lib/libelpa_openmp.so, not found (try using -rpath or -rpath-link)
+/usr/bin/ld: warning: libintlc.so.5, needed by /home/jghan/resource/elpa-2021.11/lib/libelpa_openmp.so, not found (try using -rpath or -rpath-link)
+/usr/bin/ld: warning: libsvml.so, needed by /home/jghan/resource/elpa-2021.11/lib/libelpa_openmp.so, not found (try using -rpath or -rpath-link)
