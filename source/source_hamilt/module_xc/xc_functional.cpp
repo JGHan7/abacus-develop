@@ -3,6 +3,8 @@
 #include "source_io/module_parameter/parameter.h"
 #include "source_base/global_function.h"
 
+#include "source_hamilt/module_xc/xc_funcs.h"
+
 #ifdef USE_LIBXC
 #include "xc_functional_libxc.h"
 #endif
@@ -83,6 +85,14 @@ void XC_Functional::set_xc_type(const std::string xc_func_in)
         func_type = 1;
         use_libxc = false;
     }
+	else if ( xc_func == "LDATHETA") //E_theta at LDA level
+	{
+        func_id.push_back(XC_LDA_X);
+        func_id.push_back(XC_LDA_C_PZ);
+        func_id.push_back(XC_LDA_THETA);
+        func_type = 1;
+        use_libxc = false;
+	}
 	else if ( xc_func == "PBE" || xc_func == "SLAPWPBXPBC") //PBX+PBC
 	{
         func_id.push_back(XC_GGA_X_PBE);

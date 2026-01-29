@@ -233,6 +233,10 @@ class XC_Functional
 	static void slater_rxc_spin( const double &rho, const double &z,
 		double &ex, double &vxup, double &vxdw);
 
+	// For LDA E_theta in TAO-DFT
+	static void lda_theta(const double &rho, double &ex, double &vx);
+	static void lda_theta_spin(const double &rho, const double &zeta, double &ex, double &vxup, double &vxdw);
+
 //-------------------
 //  xc_funct_corr_lda.cpp
 //-------------------

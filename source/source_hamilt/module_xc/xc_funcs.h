@@ -17,3 +17,4 @@
 #define  XC_GGA_C_P86                   132  /*Perdew 86                                                             */
 #define  XC_GGA_C_PBE_SOL               133  /* Perdew, Burke & Ernzerhof correlation SOL                            */
 #define  XC_GGA_C_PW91                  134  /*Perdew & Wang 91                                                      */
+#define  XC_LDA_THETA                   555  /* E_theta functionals of TAO-DFT at LDA level, id must be incorrect    */

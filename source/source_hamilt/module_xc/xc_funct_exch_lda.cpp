@@ -9,6 +9,8 @@
 //  3. slater_rxc_spin
 
 #include "xc_functional.h"
+#include "source_io/module_parameter/parameter.h"
+#include "source_base/constants.h"
 
 //Slater exchange with alpha=2/3
 void XC_Functional::slater(const double &rs, double &ex, double &vx)
@@ -143,3 +145,135 @@ void XC_Functional::slater_rxc_spin( const double &rho, const double &z,
 
     return;
 }
+
+
+// E_theta functionals of TAO-DFT at LDA level
+void XC_Functional::lda_theta(const double &rho, double &ex, double &vx)
+{
+    // theta (atomic units)
+    const double theta = PARAM.inp.smearing_sigma;
+
+    // constants
+    const double CF   = 0.3 * std::pow(3.0 * ModuleBase::PI * ModuleBase::PI, 2.0 / 3.0);
+    const double pref = (ModuleBase::PI * ModuleBase::PI) / std::sqrt(2.0);
+    const double y0   = 3.0 * ModuleBase::PI / (4.0 * std::sqrt(2.0));
+
+    // y and u
+    const double y = pref * rho * std::pow(theta, -1.5);
+    const double u = std::pow(y, 2.0 / 3.0);
+
+    double f    = 0.0;
+    double dfdy = 0.0;
+
+    if (y <= y0)
+    {
+        // -------- small-y branch --------
+        const std::vector<double> coef1 = {
+            -0.8791880215,        // y^0
+             0.1989718742,        // y^1
+             0.001068697043,      // y^2
+            -0.008812685726,      // y^3
+             0.01272183027,       // y^4
+            -0.009772758583,      // y^5
+             0.003820630477,      // y^6
+            -0.0005971217041      // y^7
+        };
+
+        // f(y)
+        f = std::log(y);
+        for (int n = 0; n <= 7; ++n)
+        {
+            f += coef1[n] * std::pow(y, n);
+        }
+
+        // f'(y)
+        dfdy = 1.0 / y;
+        for (int n = 1; n <= 7; ++n)
+        {
+            dfdy += n * coef1[n] * std::pow(y, n - 1);
+        }
+
+    }
+    else
+    {
+        // -------- large-y branch --------
+        const std::vector<double> coef2 = {
+             0.7862224183,    // u^1
+            -1.882979454,     // u^{-1}
+             0.5321952681,    // u^{-3}
+             2.304457955,     // u^{-5}
+           -16.14280772,      // u^{-7}
+            52.28431386,      // u^{-9}
+           -95.92645619,      // u^{-11}
+            94.62230172,      // u^{-13}
+           -38.93753937       // u^{-15}
+        };
+
+        const std::vector<int> powers = {
+             1, -1, -3, -5, -7, -9, -11, -13, -15
+        };
+
+        // f(y)
+        for (size_t i = 0; i < coef2.size(); ++i)
+        {
+            f += coef2[i] * std::pow(u, powers[i]);
+        }
+
+        // df/du
+        double dfdu = 0.0;
+        for (size_t i = 0; i < coef2.size(); ++i)
+        {
+            dfdu += coef2[i] * powers[i] * std::pow(u, powers[i] - 1);
+        }
+
+        // df/dy = (df/du)*(du/dy), du/dy = (2/3) y^{-1/3}
+        dfdy = dfdu * (2.0 / 3.0) * std::pow(y, -1.0 / 3.0);
+    }
+
+    // per-particle energy density
+    ex = CF * std::pow(rho, 2.0 / 3.0) - theta * f;
+
+    // functional derivative
+    vx = (5.0 / 3.0) * CF * std::pow(rho, 2.0 / 3.0)
+         - theta * (f + y * dfdy);
+
+    return;
+}
+
+
+// LDA-theta, spin-polarized case
+// rho : total density = rho_up + rho_down
+// zeta = (rho_up - rho_down) / rho   (仅用于构造 rho_up / rho_down)
+// ex   : per-particle energy
+// vxup, vxdw : spin-dependent potentials
+
+void XC_Functional::lda_theta_spin(const double &rho,
+                                   const double &zeta,
+                                   double &ex,
+                                   double &vxup,
+                                   double &vxdw)
+{
+    // spin densities
+    const double rho_up = 0.5 * rho * (1.0 + zeta);
+    const double rho_dw = 0.5 * rho * (1.0 - zeta);
+
+    double ex_up = 0.0;
+    double ex_dw = 0.0;
+
+    // unpolarized functional evaluated at 2*rho_sigma
+    if (rho_up > 0.0)
+    {
+        lda_theta(2.0 * rho_up, ex_up, vxup);
+    }
+
+    if (rho_dw > 0.0)
+    {
+        lda_theta(2.0 * rho_dw, ex_dw, vxdw);
+    }
+
+    // total per-particle energy
+    ex = 0.5 * ( ex_up + ex_dw );
+
+    return;
+}
+

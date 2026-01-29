@@ -1,0 +1,55 @@
+In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_hamilt/module_xc/xc_functional.cpp:6:
+/home/jghan/software/pure-abacus/abacus-develop/source/source_hamilt/module_xc/xc_funcs.h:13:10: warning: 'XC_GGA_X_PBE_R' macro redefined [-Wmacro-redefined]
+   13 | #define  XC_GGA_X_PBE_R                 117  /*Y. Zhang and W. Yang (PBE-like)                                   */
+      |          ^
+/home/jghan/resource/libxc/include/xc_funcs.h:102:10: note: previous definition is here
+  102 | #define  XC_GGA_X_PBE_R                    102 /* Revised PBE from Zhang & Yang */
+      |          ^
+In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_hamilt/module_xc/xc_functional.cpp:9:
+In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_hamilt/module_xc/xc_functional_libxc.h:10:
+/home/jghan/resource/libxc/include/xc_funcs.h:102:10: warning: 'XC_GGA_X_PBE_R' macro redefined [-Wmacro-redefined]
+  102 | #define  XC_GGA_X_PBE_R                    102 /* Revised PBE from Zhang & Yang */
+      |          ^
+/home/jghan/software/pure-abacus/abacus-develop/source/source_hamilt/module_xc/xc_funcs.h:13:10: note: previous definition is here
+   13 | #define  XC_GGA_X_PBE_R                 117  /*Y. Zhang and W. Yang (PBE-like)                                   */
+      |          ^
+2 warnings generated.
+In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_hamilt/module_xc/xc_functional_wrapper_xc.cpp:14:
+/home/jghan/software/pure-abacus/abacus-develop/source/source_hamilt/module_xc/xc_funcs.h:13:10: warning: 'XC_GGA_X_PBE_R' macro redefined [-Wmacro-redefined]
+   13 | #define  XC_GGA_X_PBE_R                 117  /*Y. Zhang and W. Yang (PBE-like)                                   */
+      |          ^
+/home/jghan/resource/libxc/include/xc_funcs.h:102:10: note: previous definition is here
+  102 | #define  XC_GGA_X_PBE_R                    102 /* Revised PBE from Zhang & Yang */
+      |          ^
+1 warning generated.
+/home/jghan/software/pure-abacus/abacus-develop/source/source_pw/module_pwdft/operator_pw/exx_pw_pot.cpp:52:69: warning: instantiation of variable 'hamilt::OperatorEXXPW<std::complex<float>, base_device::DEVICE_CPU>::fock_div' required here, but no definition is available [-Wundefined-var-template]
+   52 |         double exx_div = OperatorEXXPW<std::complex<Real>, Device>::fock_div[i];
+      |                                                                     ^
+/home/jghan/software/pure-abacus/abacus-develop/source/source_pw/module_pwdft/operator_pw/op_exx_pw.h:58:30: note: forward declaration of template entity is here
+   58 |     static std::vector<Real> fock_div, erfc_div;
+      |                              ^
+/home/jghan/software/pure-abacus/abacus-develop/source/source_pw/module_pwdft/operator_pw/exx_pw_pot.cpp:52:69: note: add an explicit instantiation declaration to suppress this warning if 'hamilt::OperatorEXXPW<std::complex<float>, base_device::DEVICE_CPU>::fock_div' is explicitly instantiated in another translation unit
+   52 |         double exx_div = OperatorEXXPW<std::complex<Real>, Device>::fock_div[i];
+      |                                                                     ^
+/home/jghan/software/pure-abacus/abacus-develop/source/source_pw/module_pwdft/operator_pw/exx_pw_pot.cpp:52:69: warning: instantiation of variable 'hamilt::OperatorEXXPW<std::complex<double>, base_device::DEVICE_CPU>::fock_div' required here, but no definition is available [-Wundefined-var-template]
+   52 |         double exx_div = OperatorEXXPW<std::complex<Real>, Device>::fock_div[i];
+      |                                                                     ^
+/home/jghan/software/pure-abacus/abacus-develop/source/source_pw/module_pwdft/operator_pw/op_exx_pw.h:58:30: note: forward declaration of template entity is here
+   58 |     static std::vector<Real> fock_div, erfc_div;
+      |                              ^
+/home/jghan/software/pure-abacus/abacus-develop/source/source_pw/module_pwdft/operator_pw/exx_pw_pot.cpp:52:69: note: add an explicit instantiation declaration to suppress this warning if 'hamilt::OperatorEXXPW<std::complex<double>, base_device::DEVICE_CPU>::fock_div' is explicitly instantiated in another translation unit
+   52 |         double exx_div = OperatorEXXPW<std::complex<Real>, Device>::fock_div[i];
+      |                                                                     ^
+2 warnings generated.
+In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/Matrix_Orbs22.cpp:6:
+In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/Matrix_Orbs22.h:116:
+/home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/Matrix_Orbs22.hpp:222:21: warning: 24 enumeration values not handled in switch: 'A1A2B1B2', 'A1A2B2B1', 'A1B1A2B2'... [-Wswitch]
+  222 |                                                                                                         switch(matrix_order)
+      |                                                                                                                ^~~~~~~~~~~~
+1 warning generated.
+In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/exx_opt_orb.cpp:12:
+In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/Matrix_Orbs22.h:116:
+/home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/Matrix_Orbs22.hpp:222:21: warning: 24 enumeration values not handled in switch: 'A1A2B1B2', 'A1A2B2B1', 'A1B1A2B2'... [-Wswitch]
+  222 |                                                                                                         switch(matrix_order)
+      |                                                                                                                ^~~~~~~~~~~~
+1 warning generated.

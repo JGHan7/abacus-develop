@@ -11,6 +11,7 @@
 
 #include "xc_functional.h"
 #include <stdexcept>
+#include "source_hamilt/module_xc/xc_funcs.h"
 
 void XC_Functional::xc(const double &rho, double &exc, double &vxc)
 {
@@ -60,6 +61,11 @@ void XC_Functional::xc(const double &rho, double &exc, double &vxc)
             case XC_GGA_C_LYP:
             //  BLYP
                 XC_Functional::lyp(rs, e, v);break;
+
+            // E_theta functionals of TAO-DFT at LDA level
+            case XC_LDA_THETA:
+            //  E_lda_theta
+                XC_Functional::lda_theta(rho, e, v);break;
                             
             default:
                 e = v = 0.0;
@@ -114,6 +120,11 @@ void XC_Functional::xc_spin(const double &rho, const double &zeta,
             case XC_GGA_C_PBE: case XC_GGA_C_PBE_SOL: case XC_LDA_C_PW:
             //   PBC,PBCsol
                 XC_Functional::pw_spin(rs, zeta, e, vup, vdw); break;
+
+            // E_theta functionals of TAO-DFT at LDA level
+            case XC_LDA_THETA: 
+            //   E_lda_theta
+                XC_Functional::lda_theta_spin(rho, zeta, e, vup, vdw); break;
 
             // Cases that are only realized in LIBXC
             default:
