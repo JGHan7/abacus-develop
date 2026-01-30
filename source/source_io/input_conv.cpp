@@ -279,7 +279,8 @@ void Input_Conv::Convert()
         }
         else if ( dft_functional_lower == "muller" || dft_functional_lower == "power" 
             || dft_functional_lower == "wp22" 
-            || dft_functional_lower == "cwp22" ) // added by jghan, 2024-07-07
+            || dft_functional_lower == "cwp22"
+            || dft_functional_lower == "hftheta" ) // added by jghan, 2024-07-07
         {
             GlobalC::restart.info_save.save_charge = true;
             GlobalC::restart.info_save.save_H = true;
@@ -309,7 +310,8 @@ void Input_Conv::Convert()
         }
         else if ( dft_functional_lower == "muller" || dft_functional_lower == "power" 
             || dft_functional_lower == "wp22" 
-            || dft_functional_lower == "cwp22" ) // added by jghan, 2024-07-07
+            || dft_functional_lower == "cwp22"
+            || dft_functional_lower == "hftheta" ) // added by jghan, 2024-07-07
         {
             GlobalC::restart.info_load.load_charge = true;
             GlobalC::restart.info_load.load_H = true;
@@ -332,6 +334,7 @@ void Input_Conv::Convert()
     || dft_functional_lower == "scan0"
     || dft_functional_lower == "muller" || dft_functional_lower == "power"
     || dft_functional_lower == "cwp22" || dft_functional_lower == "wp22" 
+    || dft_functional_lower == "hftheta"
     || dft_functional_lower == "lc_pbe"
     || dft_functional_lower == "lc_wpbe" 
     || dft_functional_lower == "lrc_wpbe"
@@ -431,7 +434,8 @@ void Input_Conv::Convert()
     if (dft_functional_lower == "hf"
      || dft_functional_lower == "pbe0" || dft_functional_lower == "b3lyp"
      || dft_functional_lower == "scan0"
-     || dft_functional_lower == "muller" || dft_functional_lower == "power")
+     || dft_functional_lower == "muller" || dft_functional_lower == "power"
+     || dft_functional_lower == "hftheta" )
     {
         GlobalC::exx_info.info_global.ccp_type = Conv_Coulomb_Pot_K::Ccp_Type::Hf;
     }

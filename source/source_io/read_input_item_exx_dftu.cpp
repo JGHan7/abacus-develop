@@ -25,7 +25,8 @@ void ReadInput::item_exx()
                     dft_functional_lower == "lc_pbe" || dft_functional_lower == "lc_wpbe" ||
                     dft_functional_lower == "lrc_wpbe" || dft_functional_lower == "lrc_wpbeh" ||
                     dft_functional_lower == "muller" || dft_functional_lower == "power"      // added by jghan 2024-07-06
-                    || dft_functional_lower == "wp22" )
+                    || dft_functional_lower == "wp22"
+                    || dft_functional_lower == "hftheta" )
                 {
                     para.input.exx_fock_alpha = {"1"};
                 }
@@ -221,6 +222,7 @@ void ReadInput::item_exx()
                     || dft_functional_lower == "scan0"
                     || dft_functional_lower == "muller" || dft_functional_lower == "power"
                     || dft_functional_lower == "wp22" 
+                    || dft_functional_lower == "hftheta"
                     || dft_functional_lower == "lc_pbe"
                     || dft_functional_lower == "lc_wpbe" 
                     || dft_functional_lower == "lrc_wpbe"
@@ -312,7 +314,7 @@ void ReadInput::item_exx()
                     para.input.exx_ccp_rmesh_times = "1.5";
                 }
                 // added by jghan 2024-07-06
-                else if (dft_functional_lower == "muller" || dft_functional_lower == "power")
+                else if (dft_functional_lower == "muller" || dft_functional_lower == "power" || dft_functional_lower == "hftheta")
                 {
                     para.input.exx_ccp_rmesh_times = "5";
                 }
