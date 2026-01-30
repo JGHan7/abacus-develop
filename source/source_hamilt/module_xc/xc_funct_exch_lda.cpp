@@ -153,6 +153,13 @@ void XC_Functional::lda_theta(const double &rho, double &ex, double &vx)
     // theta (atomic units)
     const double theta = 0.5 * PARAM.inp.smearing_sigma;    // Rydberg to Hartree
 
+    if (rho <= 0.0)
+    {
+        ex = 0.0;
+        vx = 0.0;
+        return;
+    }
+
     // constants
     const double CF   = 0.3 * std::pow(3.0 * ModuleBase::PI * ModuleBase::PI, 2.0 / 3.0);
     const double pref = (ModuleBase::PI * ModuleBase::PI) / std::sqrt(2.0);
@@ -253,6 +260,15 @@ void XC_Functional::lda_theta_spin(const double &rho,
                                    double &vxup,
                                    double &vxdw)
 {
+    ex   = 0.0;
+    vxup = 0.0;
+    vxdw = 0.0;
+
+    if (rho <= 0.0)
+    {
+        return;
+    }
+
     // spin densities
     const double rho_up = 0.5 * rho * (1.0 + zeta);
     const double rho_dw = 0.5 * rho * (1.0 - zeta);
