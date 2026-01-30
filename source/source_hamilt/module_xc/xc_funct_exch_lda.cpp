@@ -151,7 +151,7 @@ void XC_Functional::slater_rxc_spin( const double &rho, const double &z,
 void XC_Functional::lda_theta(const double &rho, double &ex, double &vx)
 {
     // theta (atomic units)
-    const double theta = PARAM.inp.smearing_sigma;
+    const double theta = 0.5 * PARAM.inp.smearing_sigma;    // Rydberg to Hartree
 
     // constants
     const double CF   = 0.3 * std::pow(3.0 * ModuleBase::PI * ModuleBase::PI, 2.0 / 3.0);

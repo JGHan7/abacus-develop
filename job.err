@@ -46,10 +46,10 @@ In file included from /home/jghan/software/pure-abacus/abacus-develop/source/sou
 /home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/Matrix_Orbs22.hpp:222:21: warning: 24 enumeration values not handled in switch: 'A1A2B1B2', 'A1A2B2B1', 'A1B1A2B2'... [-Wswitch]
   222 |                                                                                                         switch(matrix_order)
       |                                                                                                                ^~~~~~~~~~~~
-1 warning generated.
 In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/exx_opt_orb.cpp:12:
 In file included from /home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/Matrix_Orbs22.h:116:
 /home/jghan/software/pure-abacus/abacus-develop/source/source_lcao/module_ri/Matrix_Orbs22.hpp:222:21: warning: 24 enumeration values not handled in switch: 'A1A2B1B2', 'A1A2B2B1', 'A1B1A2B2'... [-Wswitch]
   222 |                                                                                                         switch(matrix_order)
       |                                                                                                                ^~~~~~~~~~~~
+1 warning generated.
 1 warning generated.

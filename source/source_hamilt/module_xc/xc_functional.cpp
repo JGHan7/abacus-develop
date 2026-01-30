@@ -222,6 +222,12 @@ void XC_Functional::set_xc_type(const std::string xc_func_in)
         func_type = 4;
         use_libxc = false;
     }
+	else if ( xc_func == "HFTHETA") //E_theta at LDA level
+	{
+        func_id.push_back(XC_LDA_THETA);
+        func_type = 4;
+        use_libxc = false;
+	}
 #ifdef USE_LIBXC
     else if( xc_func == "HSE")
     {
