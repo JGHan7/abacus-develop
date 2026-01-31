@@ -174,7 +174,10 @@ std::tuple<double, double, ModuleBase::matrix> XC_Functional::v_xc(const int& nr
     // the dummy variable dum contains gradient correction to stress
     // which is not used here
     std::vector<double> dum;
-    gradcorr(etxc, vtxc, v, chr, chr->rhopw, ucell, dum);
+    if( PARAM.inp.dft_functional != "ldatheta" && PARAM.inp.dft_functional != "hftheta" )
+    {
+        gradcorr(etxc, vtxc, v, chr, chr->rhopw, ucell, dum);
+    }
 
     // parallel code : collect vtxc,etxc
     // mohan add 2008-06-01

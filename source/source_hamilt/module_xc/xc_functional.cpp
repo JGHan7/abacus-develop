@@ -225,6 +225,7 @@ void XC_Functional::set_xc_type(const std::string xc_func_in)
     }
 	else if ( xc_func == "HFTHETA") //E_theta at LDA level
 	{
+        // func_id.push_back(XC_LDA_C_PZ);
         func_id.push_back(XC_LDA_THETA);
         func_type = 4;
         use_libxc = false;
@@ -335,7 +336,7 @@ void XC_Functional::set_xc_type(const std::string xc_func_in)
 #ifndef USE_LIBXC
     if(xc_func == "SCAN" || xc_func == "HSE" || xc_func == "SCAN0" 
         || xc_func == "MULLER" || xc_func == "POWER" || xc_func == "WP22" || xc_func == "CWP22" ||
-        xc_func == "HFTHETA" || xc_func == "LC_PBE" || xc_func == "LC_WPBE" || xc_func == "LRC_WPBE" ||
+        xc_func == "LC_PBE" || xc_func == "LC_WPBE" || xc_func == "LRC_WPBE" ||
         xc_func == "LRC_PBEH" || xc_func == "CAM_PBEH")
     {
         ModuleBase::WARNING_QUIT("set_xc_type","to use SCAN, SCAN0, HSE, long-range corrected (LC_PBE, LC_WPBE...) or CAM_PBEH LIBXC is required");
